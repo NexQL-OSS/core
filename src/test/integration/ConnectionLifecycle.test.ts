@@ -79,7 +79,7 @@ describe('Connection Lifecycle Integration Tests', () => {
       const client = await connectionManager.getPooledClient(config);
       client.release();
 
-      await expect(connectionManager.closeAllConnectionsById('test-close-conn')).to.eventually.be.fulfilled;
+      await connectionManager.closeAllConnectionsById('test-close-conn');
     });
   });
 
