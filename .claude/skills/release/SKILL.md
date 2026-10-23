@@ -16,18 +16,20 @@ Releases are manual. `package.json` version, CHANGELOG headings, README badges, 
 
 ## Version rules (semver + channel)
 
-| Channel | Minor parity | Published as |
-|---------|--------------|--------------|
-| **stable** | even (`2.2`, `2.4`) | VS Marketplace release |
-| **nightly** | odd (`2.3`, `2.5`) | VS Marketplace pre-release |
+| Channel | Where the number lives | Published as |
+|---------|-------------------------|--------------|
+| **stable** | `package.json` even minor (`2.4.0`) and tag `v` + that version | VS Marketplace release |
+| **nightly** | Computed by `scripts/compute-nightly-version.js`. Not written to `package.json`. Not a git tag. | VS Marketplace pre-release (`2.4.0` → `2.5.0`) |
 
-Bump logic (matches `scripts/bump-version.js`):
+`node scripts/check-release-version.js` must pass before tagging. It fails on an odd `package.json` minor, a lockfile mismatch, a changelog stable heading that is not `package.json`, a nightly heading newer than the computed nightly, or a tag that is not exactly `v` + the package version. `vvX.Y.Z` is refused. Steps: [RELEASING.md](../../../RELEASING.md).
 
-| Bump | Stable | Nightly |
-|------|--------|---------|
-| **patch** | +1 patch from last `v*` tag with even minor; if current minor is odd, jump to next even minor @ patch 0 | +1 patch; if even minor, bump to next odd minor @ patch 0 |
-| **minor** | +2 minor (even→even), patch 0 | +1 or +2 minor to land on odd, patch 0 |
-| **major** | major+1, minor 0, patch 0 | major+1, minor 1, patch 0 |
+Bump logic for `package.json` (even minor only; `scripts/bump-version.js` refuses an odd result and a doubled `v`):
+
+| Bump | Stable `package.json` | Published nightly |
+|------|------------------------|-------------------|
+| **patch** | +1 patch from the last even `v*` tag | `compute-nightly-version.js` on that version |
+| **minor** | +2 minor (even→even), patch 0 | same derivation |
+| **major** | major+1, minor 0, patch 0 | same derivation |
 
 **Do not** run `make git-tag` or `scripts/bump-version.js` unless the user explicitly wants commit + tag + push — that script is interactive and pushes to `origin`/`upstream` automatically.
 

@@ -10,16 +10,18 @@ env:
 on:
   push:
     tags:
-      - 'v*'
+      # Digit after v so `vv0.1.5` does not match. The job still requires
+      # exactly vMAJOR.MINOR.PATCH.
+      - 'v[0-9]*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version to republish (e.g. 2.4.0). Must match an existing v* tag.'
+        description: 'Release version to republish (2.4.0 or v2.4.0). Must match an existing tag. Do not pass vv2.4.0.'
         required: true
         type: string
 
 concurrency:
-  group: publish-stable-${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.version) || github.ref }}
+  group: publish-stable
   cancel-in-progress: false
 
 jobs:
@@ -29,18 +31,40 @@ jobs:
     steps:
       - name: Resolve release version
         id: release
+        env:
+          RAW_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.version }}"
-            REF="v${VERSION}"
+          RAW="$RAW_VERSION"
+          if [[ "$RAW" == vv* ]]; then
+            printf '::error::Refusing %s. A second v was prefixed onto a version that already had one. Use 2.4.0 or v2.4.0. Tags are vMAJOR.MINOR.PATCH, never vvMAJOR.MINOR.PATCH.\n' "$RAW"
+            exit 1
+          fi
+          if [[ "$RAW" == v* ]]; then
+            VERSION="${RAW#v}"
           else
-            VERSION="${GITHUB_REF_NAME#v}"
-            REF="${GITHUB_REF_NAME}"
+            VERSION="$RAW"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf '::error::Version must be MAJOR.MINOR.PATCH with at most one leading v. Got %s.\n' "$RAW"
+            exit 1
           fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
-          echo "Publishing stable release ${REF}"
+          echo "ref=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing stable release v${VERSION}"
+
+      # Keep the guard from this workflow's commit. A republish checks out an
+      # older tag that does not contain the script.
+      - name: Checkout workflow commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Preserve version guard
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/version-guard"
+          cp scripts/check-release-version.js scripts/compute-nightly-version.js "$RUNNER_TEMP/version-guard/"
 
       - name: Checkout release commit
         uses: actions/checkout@v4
@@ -55,29 +79,13 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      - name: Verify tag, package.json, lockfile, and CHANGELOG
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.ref }}
+        run: node "$RUNNER_TEMP/version-guard/check-release-version.js" --tag "$RELEASE_TAG"
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Verify stable version
-        env:
-          EXPECTED_VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          set -euo pipefail
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if [ "$EXPECTED_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::Expected package.json version $EXPECTED_VERSION, found $PKG_VERSION"
-            exit 1
-          fi
-          MINOR=$(echo "$PKG_VERSION" | cut -d. -f2)
-          if [ $((MINOR % 2)) -ne 0 ]; then
-            echo "::error::Stable releases require an even minor version (got $PKG_VERSION)"
-            exit 1
-          fi
-          if ! git rev-parse "${{ steps.release.outputs.ref }}" >/dev/null 2>&1; then
-            echo "::error::Git ref ${{ steps.release.outputs.ref }} does not exist in this repository"
-            exit 1
-          fi
-          echo "Verified stable version v${PKG_VERSION}"
 
       - name: Package extension
         run: make package
@@ -126,31 +134,17 @@ jobs:
             capture { print }
           ' CHANGELOG.md > "$NOTES_FILE"
           if [ ! -s "$NOTES_FILE" ]; then
-            echo "No CHANGELOG section found for ${VERSION}; falling back to generated notes."
-            echo "use_generated=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "use_generated=false" >> "$GITHUB_OUTPUT"
-            echo "notes_file=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
+            echo "::error::CHANGELOG.md has no notes under ## [${VERSION}]. Refusing to publish."
+            exit 1
           fi
+          echo "notes_file=${NOTES_FILE}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release (from CHANGELOG)
-        if: steps.changelog.outputs.use_generated == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.ref }}
           name: ${{ steps.release.outputs.ref }}
           body_path: ${{ steps.changelog.outputs.notes_file }}
-          files: ${{ steps.vsix.outputs.path }}
-          draft: false
-          prerelease: false
-
-      - name: Create GitHub Release (generated notes)
-        if: steps.changelog.outputs.use_generated == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.release.outputs.ref }}
-          name: ${{ steps.release.outputs.ref }}
-          generate_release_notes: true
           files: ${{ steps.vsix.outputs.path }}
           draft: false
           prerelease: false

@@ -240,7 +240,7 @@ help:
 	@echo "  publish-nightly : Publish nightly builds to BOTH VS Code Marketplace and Open VSX"
 	@echo "  publish-vsx     : Publish to VS Code Marketplace only"
 	@echo "  publish-ovsx    : Publish to Open VSX Registry only"
-	@echo "  git-tag         : Interactive version bump, commit, tag, and push"
+	@echo "  git-tag         : Stable version bump, commit, tag, and push (refuses odd minors and vv tags)"
 	@echo ""
 	@echo "Testing targets:"
 	@echo "  test            : Run unit tests"

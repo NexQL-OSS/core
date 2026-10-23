@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { execSync } = require('child_process');
+const { normalizeReleaseVersion } = require('./check-release-version');
 
 function parseBaseSemver(versionField) {
   if (typeof versionField !== 'string') {
@@ -88,6 +89,24 @@ function getNextVersion(currentVersion, channel, bumpType) {
   return `${major}.${minor}.${patch}`;
 }
 
+function syncLockfileVersion(lockPath, version) {
+  const lines = fs.readFileSync(lockPath, 'utf8').split('\n');
+  let replaced = 0;
+  const headerLineLimit = 30;
+  for (let i = 0; i < Math.min(lines.length, headerLineLimit); i += 1) {
+    if (lines[i].includes('"version":') && replaced < 2) {
+      lines[i] = lines[i].replace(/"version": "[^"]+"/, `"version": "${version}"`);
+      replaced += 1;
+    }
+  }
+  if (replaced !== 2) {
+    throw new Error(
+      `Expected to update 2 version fields in the ${lockPath} header, updated ${replaced}.`
+    );
+  }
+  fs.writeFileSync(lockPath, lines.join('\n'), 'utf8');
+}
+
 function askQuestion(rl, query) {
   return new Promise((resolve) => rl.question(query, resolve));
 }
@@ -120,34 +139,33 @@ async function main() {
   });
 
   try {
-    let channel = channelArg;
-    if (!channel) {
-      console.log('\nSelect Release Channel:');
-      console.log('  1) Stable  (even minor version)');
-      console.log('  2) Nightly (odd minor version)');
-      const answer = await askQuestion(rl, 'Choose [1-2, default: stable]: ');
-      if (answer.trim() === '2' || answer.toLowerCase().startsWith('n')) {
-        channel = 'nightly';
-      } else {
-        channel = 'stable';
-      }
+    let channel = channelArg ? channelArg.toLowerCase() : 'stable';
+    if (channel !== 'stable' && channel !== 'nightly') {
+      console.error(`Unknown channel "${channelArg}". Use stable. Nightly versions are computed, not selected.`);
+      process.exit(1);
     }
 
     const lastStable = getLastStableVersion();
-    if (channel === 'stable') {
-      if (lastStable) {
-        console.log(`Last stable version: ${lastStable}`);
-      } else {
-        console.log('Last stable version: None found');
-      }
+    if (channel === 'nightly') {
+      console.error('Nightly publishes do not get a package.json version or a git tag.');
+      console.error('package.json stays on an even minor. That version is the stable release.');
+      console.error('scripts/compute-nightly-version.js derives the odd nightly (2.4.1 → 2.5.1).');
+      console.error('Bump a stable patch, push main, then run Publish Extension (Nightly).');
+      process.exit(1);
+    }
+
+    if (lastStable) {
+      console.log(`Last stable version: ${lastStable}`);
+    } else {
+      console.log('Last stable version: None found');
     }
 
     let bumpType = bumpArg;
     if (!bumpType) {
       console.log('\nSelect Release Type:');
-      console.log('  1) patch — patch bump (e.g. 1.0.0 → 1.0.1)');
-      console.log('  2) minor — minor bump (e.g. 1.0.0 → 1.1.0)');
-      console.log('  3) major — major bump (e.g. 1.0.0 → 2.0.0)');
+      console.log('  1) patch — patch bump (e.g. 2.4.0 → 2.4.1)');
+      console.log('  2) minor — even minor bump (e.g. 2.4.0 → 2.6.0)');
+      console.log('  3) major — major bump (e.g. 2.4.0 → 3.0.0)');
       console.log('  4) custom — enter custom version string');
       const answer = await askQuestion(rl, 'Choose [1-4]: ');
       if (answer.trim() === '1' || answer.toLowerCase() === 'patch' || answer.toLowerCase() === 'fix') {
@@ -166,18 +184,12 @@ async function main() {
 
     let nextVersion;
     if (bumpType === 'custom') {
-      const customAns = await askQuestion(rl, 'Enter custom version: ');
-      nextVersion = customAns.trim().replace(/^v/, '');
-      if (!/^\d+\.\d+\.\d+(?:-[\w.]+)?$/.test(nextVersion)) {
-        console.error(`Invalid semver version: ${nextVersion}`);
+      const customAns = await askQuestion(rl, 'Enter custom version (2.4.1 or v2.4.1): ');
+      try {
+        nextVersion = normalizeReleaseVersion(customAns);
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : String(error));
         process.exit(1);
-      }
-      const parts = nextVersion.split('-');
-      const core = parts[0];
-      const [, minorStr] = core.split('.');
-      const minorNum = Number(minorStr);
-      if (!Number.isNaN(minorNum)) {
-        channel = (minorNum % 2 === 0) ? 'stable' : 'nightly';
       }
     } else {
       let baseVersion = currentVersion;
@@ -188,7 +200,22 @@ async function main() {
       }
       nextVersion = getNextVersion(baseVersion, channel, bumpType);
     }
-    console.log(`\nNext version computed: v${nextVersion} (${channel} release)`);
+    const nextMinor = Number(nextVersion.split('.')[1]);
+    if (nextMinor % 2 !== 0) {
+      console.error(`Refusing to write ${nextVersion} into package.json.`);
+      console.error('package.json is the stable version and must use an even minor.');
+      console.error('A doubled v (vv0.1.5) is also refused. Tags are exactly vMAJOR.MINOR.PATCH.');
+      process.exit(1);
+    }
+
+    const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8');
+    const heading = new RegExp(`^## \\[${nextVersion.replace(/\./g, '\\.')}\\]`, 'm');
+    if (!heading.test(changelog)) {
+      console.error(`CHANGELOG.md has no "## [${nextVersion}]" section. Add it, then re-run.`);
+      process.exit(1);
+    }
+
+    console.log(`\nNext version computed: v${nextVersion} (stable release)`);
 
     if (!skipConfirm) {
       const confirm = await askQuestion(rl, `Proceed with v${nextVersion}? [y/N]: `);
@@ -198,15 +225,20 @@ async function main() {
       }
     }
 
-    // Write updated version to package.json
+    // Write updated version to package.json and the lockfile header.
+    // JSON.stringify on the lockfile would reformat the whole file, so only
+    // the root package version fields in the header are replaced.
     pkg.version = nextVersion;
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-    console.log('package.json updated.');
+    syncLockfileVersion(path.join(root, 'package-lock.json'), nextVersion);
+    console.log('package.json and package-lock.json updated.');
+
+    execSync('node ./scripts/check-release-version.js', { stdio: 'inherit' });
 
     // Execute Git commands
     console.log('Executing Git commands...');
-    execSync('git add package.json', { stdio: 'inherit' });
-    execSync(`git commit -m "Bump version to ${nextVersion}"`, { stdio: 'inherit' });
+    execSync('git add package.json package-lock.json CHANGELOG.md', { stdio: 'inherit' });
+    execSync(`git commit -m "chore(release): bump version to ${nextVersion}"`, { stdio: 'inherit' });
     execSync(`git tag -a "v${nextVersion}" -m "Release v${nextVersion}"`, { stdio: 'inherit' });
     execSync('git push origin main', { stdio: 'inherit' });
     execSync(`git push origin "v${nextVersion}"`, { stdio: 'inherit' });
