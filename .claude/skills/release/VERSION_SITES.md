@@ -50,7 +50,7 @@ Separate git repo; deploy after merge to its `main`.
 
 ## Git tags
 
-Stable tags: `vX.Y.Z` where minor is **even**. Nightly tags follow the same pattern with **odd** minor.
+Stable tags: `vX.Y.Z` where `X.Y.Z` is the even-minor `package.json` version. One `v` only. Nightlies are not tagged. `scripts/compute-nightly-version.js` derives the odd version at publish time.
 
 ```bash
 git tag -l 'v*' --sort=-v:refname | head -10
