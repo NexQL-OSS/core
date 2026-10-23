@@ -9,10 +9,13 @@ describe('Notebook renderer flow smoke test', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    // Reset the static flag so every test gets a clean language-provider registration pass.
+    (PostgresKernel as any)._languageProvidersRegistered = false;
   });
 
   afterEach(() => {
     sandbox.restore();
+    (PostgresKernel as any)._languageProvidersRegistered = false;
   });
 
   it('routes notebook renderer messages through the handler registry', async () => {
@@ -83,16 +86,18 @@ describe('Notebook renderer flow smoke test', () => {
 
     const editor = { notebook: { uri: { toString: () => 'nb-uri' } } };
 
-    // Send several different message types in sequence
-    const types = ['exportRequest', 'importRequest', 'showConnectionInfo'];
+    // Send several different message types in sequence.
+    // Note: 'showConnectionInfo' is handled via an early-return command dispatch in the kernel
+    // and does NOT reach registry.handleMessage — use registry-routed types only.
+    const types = ['export_request', 'import_request', 'cancel_query'];
     for (const type of types) {
       await onDidReceiveMessageCallback!({ message: { type }, editor });
     }
 
     expect(handleMessageStub.callCount).to.equal(3);
-    expect(handleMessageStub.getCall(0).args[0].type).to.equal('exportRequest');
-    expect(handleMessageStub.getCall(1).args[0].type).to.equal('importRequest');
-    expect(handleMessageStub.getCall(2).args[0].type).to.equal('showConnectionInfo');
+    expect(handleMessageStub.getCall(0).args[0].type).to.equal('export_request');
+    expect(handleMessageStub.getCall(1).args[0].type).to.equal('import_request');
+    expect(handleMessageStub.getCall(2).args[0].type).to.equal('cancel_query');
   });
 
   it('provides the postMessage function in the handler context', async () => {
@@ -151,9 +156,10 @@ describe('Notebook renderer flow smoke test', () => {
     const messagingStub = { postMessage: sandbox.stub().resolves(true) } as any;
     new PostgresKernel(contextStub, messagingStub, 'postgres-notebook');
 
-    // Kernel should register handlers for at least these critical message types
+    // Kernel should register handlers for at least these critical message types.
+    // Keys must match the actual registered strings (snake_case constants from WEBVIEW_MESSAGE_TYPES).
     const registeredTypes = registerStub.args.map((args: any[]) => args[0]);
-    const expectedTypes = ['exportRequest', 'importPickFile', 'showErrorMessage'];
+    const expectedTypes = ['export_request', 'import_pick_file', 'showErrorMessage'];
     for (const t of expectedTypes) {
       expect(registeredTypes, `handler for '${t}' should be registered`).to.include(t);
     }

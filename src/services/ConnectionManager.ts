@@ -523,6 +523,14 @@ export class ConnectionManager {
       }
     }
 
+    // 3) Tertiary fallback: password carried directly on the config object.
+    //    Used for programmatic connections (e.g. integration tests, URL-parsed configs).
+    //    In normal UI-driven usage config.password is stripped before the config is
+    //    persisted (see connectionStore) so this branch is a no-op in production.
+    if (!password && config.password) {
+      password = config.password;
+    }
+
     let sslConfig: boolean | any = false;
     // Default to 'prefer' if empty/undefined.
     // If forceDisableSSL is true, we ignore sslmode and leave sslConfig as false.

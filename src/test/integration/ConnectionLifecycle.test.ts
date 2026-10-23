@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { ConnectionManager } from '../../services/ConnectionManager';
+import { SecretStorageService } from '../../services/SecretStorageService';
 import type { ConnectionConfig } from '../../common/types';
 
 /** CI uses GitHub Actions service on 5432; local docker-compose.test often maps 5416. */
@@ -26,6 +27,12 @@ describe('Connection Lifecycle Integration Tests', () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     connectionManager = ConnectionManager.getInstance();
+    // SecretStorageService requires a VS Code ExtensionContext that is unavailable
+    // outside the extension host. Stub it so createClientConfig can proceed; the
+    // config.password field carries the actual credential in these tests.
+    sandbox.stub(SecretStorageService, 'getInstance').returns({
+      getPassword: sandbox.stub().resolves(undefined),
+    } as any);
   });
 
   afterEach(async () => {
@@ -72,7 +79,7 @@ describe('Connection Lifecycle Integration Tests', () => {
       const client = await connectionManager.getPooledClient(config);
       client.release();
 
-      await expect(connectionManager.closeAllConnectionsById('test-close-conn')).to.eventually.be.fulfilled;
+      await connectionManager.closeAllConnectionsById('test-close-conn');
     });
   });
 
