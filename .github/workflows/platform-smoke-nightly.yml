@@ -9,6 +9,9 @@ jobs:
   hosted-postgres-smoke:
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -19,19 +22,15 @@ jobs:
           sudo apt-get install -y postgresql-client
 
       - name: Neon smoke
-        if: ${{ secrets.NEON_DATABASE_URL != '' }}
-        env:
-          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        if: env.NEON_DATABASE_URL != ''
         run: |
           set -euo pipefail
-          psql "$DATABASE_URL" -c 'SELECT version();'
-          psql "$DATABASE_URL" -c 'SHOW server_version_num;'
+          psql "$NEON_DATABASE_URL" -c 'SELECT version();'
+          psql "$NEON_DATABASE_URL" -c 'SHOW server_version_num;'
 
       - name: Supabase smoke
-        if: ${{ secrets.SUPABASE_DATABASE_URL != '' }}
-        env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        if: env.SUPABASE_DATABASE_URL != ''
         run: |
           set -euo pipefail
-          psql "$DATABASE_URL" -c 'SELECT version();'
-          psql "$DATABASE_URL" -c 'SHOW server_version_num;'
+          psql "$SUPABASE_DATABASE_URL" -c 'SELECT version();'
+          psql "$SUPABASE_DATABASE_URL" -c 'SHOW server_version_num;'
