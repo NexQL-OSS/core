@@ -80,7 +80,17 @@ make publish-nightly       # Publish nightlies (needs ./pat and ./pat-open-vsx)
 | `TransactionManager` | `src/services/TransactionManager.ts` | Per-session transaction state, savepoints, auto-rollback |
 | `QueryAnalyzer` | `src/services/QueryAnalyzer.ts` | EXPLAIN JSON parsing, performance baselines (Welford variance), degradation alerts |
 | `SchemaPoller` | `src/services/SchemaPoller.ts` | Background schema change detection for tree refresh |
+| `LicenseService` | `src/services/LicenseService.ts` | Tier cache (24h TTL, 7-day offline grace). Fails open to `free`. Validates only against `https://nexql.astrx.dev/api` outside the Extension Development Host |
+| `featureGates` / `licensePolicy` | `src/services/featureGates.ts`, `src/services/licensePolicy.ts` | Feature→tier map. `off` and a custom license endpoint apply only in `ExtensionMode.Development` |
 | `ChatViewProvider` | `src/providers/ChatViewProvider.ts` | AI assistant webview; delegates to `src/providers/chat/` services |
+
+### License enforcement
+
+`LicenseService` is the client cache for `POST /api/license/validate`. A network failure never promotes a free user and never drops a cached paid tier inside the 7-day grace window.
+
+`postgresExplorer.license.enforcement` and `postgresExplorer.license.endpoint` are **not** contributed settings. `activate` records `context.extensionMode` (`bindLicenseExtensionMode`). Shipped stable, nightly, and pro builds (`ExtensionMode.Production`) ignore both keys and always enforce `freemium` against the canonical API. Extension test hosts (`ExtensionMode.Test`) do too. The Extension Development Host (F5) still honors both, so `.vscode/launch.json` can point at `http://localhost:3000/api`. Set `postgresExplorer.license.enforcement` to `off` in that launch config when you need gates off locally. Leftover values in a user's `settings.json` are read and ignored — they do not throw.
+
+This is not DRM. A rebuilt extension can still skip the check. The setting bypass is closed so a marketplace install cannot unlock paid tiers from the Settings UI.
 
 ### Command Pattern
 Commands follow a strict two-layer pattern:

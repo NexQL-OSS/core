@@ -9,6 +9,10 @@ Quick links:
 
 ## [Unreleased]
 
+### Security
+
+- **License overrides no longer unlock paid tiers in shipped builds.** `postgresExplorer.license.enforcement=off` and a custom `postgresExplorer.license.endpoint` are ignored unless the extension is running in the Extension Development Host. Both keys were removed from the contributed settings manifest. Leftover user values are ignored and do not throw. Fail-open-to-free and the 7-day offline grace window are unchanged: a network failure never grants a paid tier and never locks out a cached paid tier inside that window.
+
 > Unpublished. These notes were drafted on 2026-08-15 as 2.5.1. That version is not on the Marketplace, Open VSX, or a git tag. The current stable release is 2.4.0. Its published nightly is 2.5.0.
 
 ### ⚡ Query execution & cancel

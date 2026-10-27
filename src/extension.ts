@@ -5,6 +5,7 @@ import { SecretStorageService } from './services/SecretStorageService';
 import { LicenseService } from './services/LicenseService';
 import { requirePro, ProFeature } from './services/featureGates';
 import { isProBuild } from './common/buildTier';
+import { bindLicenseExtensionMode } from './services/licensePolicy';
 import { ProfileManager } from './features/connections/ProfileManager';
 import { SavedQueriesService } from './features/savedQueries/SavedQueriesService';
 import { NotebookBuilder } from './commands/helper';
@@ -117,6 +118,8 @@ async function ensureRendererMessageHandlers(
 export async function activate(context: vscode.ExtensionContext) {
   const activationStart = Date.now();
   extensionContext = context;
+  // Before any gate or license call. Shipped hosts stay Production; F5 is Development.
+  bindLicenseExtensionMode(context.extensionMode);
 
   // Provide extension context to NotebookBuilder for persistent session support (Req 5.4)
   NotebookBuilder.setContext(context);

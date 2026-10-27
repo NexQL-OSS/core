@@ -4,6 +4,7 @@ import * as http from 'http';
 import { URL } from 'url';
 import { SecretStorageService } from './SecretStorageService';
 import { getDeviceName } from './deviceIdentity';
+import { buildLicenseUrl } from './licensePolicy';
 
 export type LicenseTier = 'free' | 'sponsor' | 'singularity';
 
@@ -57,22 +58,66 @@ export interface LicenseHistoryEvent {
   createdAt: number | null;
 }
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+export const LICENSE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+export const LICENSE_OFFLINE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const RETRY_INTERVALS_MS = [15 * 60_000, 30 * 60_000, 60 * 60_000] as const;
 const FOCUS_ATTEMPT_THROTTLE_MS = 60_000;
-const DEFAULT_ENDPOINT = 'https://nexql.astrx.dev/api';
+const LICENSE_HTTP_TIMEOUT_MS = 10_000;
+
+interface LicenseHttpResult {
+  statusCode?: number;
+  body: string;
+}
+
+/**
+ * POST helper. `LicenseService.transport` points here so unit tests can
+ * replace the socket call. It is not read from user settings.
+ */
+function sendLicenseHttp(url: URL, body: string): Promise<LicenseHttpResult> {
+  const lib = url.protocol === 'http:' ? http : https;
+
+  return new Promise((resolve, reject) => {
+    const req = lib.request(
+      {
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port || undefined,
+        path: url.pathname + url.search,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+        timeout: LICENSE_HTTP_TIMEOUT_MS,
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
+      },
+    );
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
 
 /**
  * Manages NexQL license activation and tier entitlement.
  *
- * Source of truth is the server (`/api/license/validate`); a cached snapshot in
- * SecretStorage lets the extension answer `getTier()` synchronously and keep
- * working offline within a 7-day grace window. Designed to fail OPEN to `free`
- * (never blocks startup, never throws into callers).
+ * Source of truth is the server (`/api/license/validate` on
+ * https://nexql.astrx.dev/api). Shipped builds ignore
+ * `postgresExplorer.license.endpoint`; only the Extension Development Host
+ * may redirect it. A cached snapshot in SecretStorage lets the extension
+ * answer `getTier()` synchronously and keep working offline within a 7-day
+ * grace window. Designed to fail OPEN to `free` (never blocks startup,
+ * never throws into callers, never promotes a tier on network failure).
  */
 export class LicenseService {
   private static instance: LicenseService;
+  /** Socket implementation. Tests replace this; production always uses `sendLicenseHttp`. */
+  private static transport: (url: URL, body: string) => Promise<LicenseHttpResult> = sendLicenseHttp;
   private cache: LicenseCache | null = null;
   private revalidating = false;
   private lastAttemptAt = 0;
@@ -200,15 +245,15 @@ export class LicenseService {
     if (!c) return false;
     if (c.status !== 'active') return false;
     if (c.expiresAt && Date.now() > c.expiresAt) return false;
-    if (Date.now() - c.validatedAt <= CACHE_TTL_MS) return true;
-    if (c.gracePeriodStartedAt && Date.now() - c.gracePeriodStartedAt > GRACE_MS) {
+    if (Date.now() - c.validatedAt <= LICENSE_CACHE_TTL_MS) return true;
+    if (c.gracePeriodStartedAt && Date.now() - c.gracePeriodStartedAt > LICENSE_OFFLINE_GRACE_MS) {
       return false;
     }
     return true;
   }
 
   private isStale(): boolean {
-    return !!this.cache && Date.now() - this.cache.validatedAt > CACHE_TTL_MS;
+    return !!this.cache && Date.now() - this.cache.validatedAt > LICENSE_CACHE_TTL_MS;
   }
 
   public async activate(licenseKey: string): Promise<{ ok: boolean; message: string; tier?: LicenseTier }> {
@@ -401,13 +446,6 @@ export class LicenseService {
     await SecretStorageService.getInstance().setLicenseCache(JSON.stringify(this.cache));
   }
 
-  private endpoint(): string {
-    const configured = vscode.workspace
-      .getConfiguration()
-      .get<string>('postgresExplorer.license.endpoint');
-    return (configured && configured.trim()) || DEFAULT_ENDPOINT;
-  }
-
   private tierLabel(tier: LicenseTier): string {
     return tier === 'free' ? 'Free' : tier[0].toUpperCase() + tier.slice(1);
   }
@@ -440,46 +478,21 @@ export class LicenseService {
   }
 
   private callApi<T>(path: string, payload: Record<string, unknown>): Promise<T> {
-    const url = new URL(`${this.endpoint().replace(/\/$/, '')}${path}`);
+    const url = buildLicenseUrl(path);
     const body = JSON.stringify(payload);
-    const lib = url.protocol === 'http:' ? http : https;
 
-    return new Promise((resolve, reject) => {
-      const req = lib.request(
-        {
-          protocol: url.protocol,
-          hostname: url.hostname,
-          port: url.port || undefined,
-          path: url.pathname + url.search,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(body),
-          },
-          timeout: 10000,
-        },
-        (res) => {
-          let data = '';
-          res.on('data', (c) => (data += c));
-          res.on('end', () => {
-            if (res.statusCode === 404) {
-              return resolve({ found: false, valid: false, status: 'unknown' } as T);
-            }
-            if (!res.statusCode || res.statusCode >= 500) {
-              return reject(new Error(`server ${res.statusCode}`));
-            }
-            try {
-              resolve(JSON.parse(data) as T);
-            } catch {
-              reject(new Error('invalid json'));
-            }
-          });
-        },
-      );
-      req.on('timeout', () => req.destroy(new Error('timeout')));
-      req.on('error', reject);
-      req.write(body);
-      req.end();
+    return LicenseService.transport(url, body).then((res) => {
+      if (res.statusCode === 404) {
+        return { found: false, valid: false, status: 'unknown' } as T;
+      }
+      if (!res.statusCode || res.statusCode >= 500) {
+        throw new Error(`server ${res.statusCode}`);
+      }
+      try {
+        return JSON.parse(res.body) as T;
+      } catch {
+        throw new Error('invalid json');
+      }
     });
   }
 
