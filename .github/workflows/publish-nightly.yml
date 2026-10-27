@@ -38,6 +38,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      - name: Check package.json, lockfile, and CHANGELOG agree
+        run: node ./scripts/check-release-version.js
+
       - name: Install dependencies
         run: npm ci
 

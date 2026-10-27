@@ -7,9 +7,9 @@ Quick links:
 
 ---
 
-## [2.5.1] - 2026-08-15
+## [Unreleased]
 
-> Nightly pre-release patch — daily-workflow QoL and query-cancel fixes.
+> Unpublished. These notes were drafted on 2026-08-15 as 2.5.1. That version is not on the Marketplace, Open VSX, or a git tag. The current stable release is 2.4.0. Its published nightly is 2.5.0.
 
 ### ⚡ Query execution & cancel
 
@@ -46,7 +46,7 @@ Quick links:
 
 ## [2.5.0] - 2026-08-08
 
-> Nightly pre-release — same feature set as [v2.4.0](#240---2026-08-08).
+> Published nightly of stable [2.4.0](#240---2026-08-08). Marketplace pre-release `2.5.0` and Open VSX package `postgres-explorer-nightly` `2.5.0`. This is not the `package.json` version. Nightlies are computed from the even stable version (`2.4.0` → `2.5.0`).
 
 ---
 

@@ -4,7 +4,7 @@ GitHub Actions publish the VS Code extension to the **VS Code Marketplace** and 
 
 | Workflow | File | Trigger |
 |----------|------|---------|
-| **Stable** | [`.github/workflows/publish.yml`](../.github/workflows/publish.yml) | Push tag `v*` |
+| **Stable** | [`.github/workflows/publish.yml`](../.github/workflows/publish.yml) | Push tag `v[0-9]*` (then exactly `vMAJOR.MINOR.PATCH`) |
 | **Nightly** | [`.github/workflows/publish-nightly.yml`](../.github/workflows/publish-nightly.yml) | Manual **Run workflow** |
 
 Local `make publish` / `make publish-nightly` still work if you keep `./pat` and `./pat-open-vsx` on your machine.
@@ -63,10 +63,10 @@ git push origin main
 
 **Source of truth:** `package.json` → `"version"`.
 
-| Channel | Minor digit | Example published version |
-|---------|-------------|---------------------------|
-| Stable | **even** | `2.4.0`, `2.4.1` |
-| Nightly | **odd** (derived at publish time) | `2.5.1` |
+| Channel | Where the number lives | Example |
+|---------|-------------------------|---------|
+| Stable | `package.json` (even minor) and tag `v` + that version | `2.4.0`, tag `v2.4.0` |
+| Nightly | Computed at publish time. Not stored in `package.json`. Not a git tag. | `2.4.0` → `2.5.0`, `2.4.1` → `2.5.1` |
 
 Nightly published version is computed by `scripts/compute-nightly-version.js` from the base in `package.json` (see [CLAUDE.md](../CLAUDE.md)).
 
@@ -81,7 +81,7 @@ Nightly published version is computed by `scripts/compute-nightly-version.js` fr
 | `MARKETPLACE.md` | Same badge as README |
 | `../website/` (separate repo) | Landing copy — see [`.claude/skills/release/VERSION_SITES.md`](../.claude/skills/release/VERSION_SITES.md) |
 
-CI reads the matching `CHANGELOG.md` section for the GitHub Release body. If none exists, it falls back to auto-generated commit notes.
+CI reads the matching `CHANGELOG.md` section for the GitHub Release body. A missing section fails the publish. `scripts/check-release-version.js` is the same check PRs run. See [RELEASING.md](../RELEASING.md).
 
 ### Verify no stale version strings
 
@@ -116,14 +116,14 @@ git push origin "v${VERSION}"
 
 ### What CI does
 
-1. Verifies tag version matches `package.json` and minor is **even**
+1. Verifies the tag, `package.json`, `package-lock.json`, and `CHANGELOG.md` agree (`scripts/check-release-version.js`). The minor must be even. A missing changelog section fails the job.
 2. Runs `make package` (stable VSIX with `MARKETPLACE.md` README)
 3. Publishes to both registries
 4. Creates a GitHub Release with the VSIX attached
 
 ### Republish a failed stable run (same version)
 
-**Actions → Publish Extension (Stable) → Run workflow** and enter the version (e.g. `2.4.0`). The tag `v2.4.0` must already exist.
+**Actions → Publish Extension (Stable) → Run workflow** and enter `2.4.0` or `v2.4.0`. The tag must already exist. `vv2.4.0` is rejected. The existing `v2.4.0` tag fails this check: its `package-lock.json` says `2.5.0`. Do not move that tag.
 
 ---
 
@@ -134,7 +134,7 @@ Nightlies do **not** use git tags. Bump `package.json` on `main` when you want a
 ### Operator checklist
 
 1. Merge changes to `main`.
-2. Bump patch in `package.json` (and `package-lock.json`); optional short `CHANGELOG.md` line.
+2. Bump the even patch in `package.json` and `package-lock.json` (`2.4.0` → `2.4.1`). Add `## [2.4.1]` to `CHANGELOG.md`. Do not set `package.json` to the odd nightly number.
 3. Push to `main`.
 4. **Actions → Publish Extension (Nightly) → Run workflow**
    - **ref:** leave as `main` (or a branch/SHA for a one-off build).
@@ -144,8 +144,10 @@ Nightlies do **not** use git tags. Bump `package.json` on `main` when you want a
 
 | `package.json` on `main` | Published nightly (Marketplace) | Open VSX package name |
 |--------------------------|--------------------------------|------------------------|
-| `2.2.4` | `2.3.4` | `postgres-explorer-nightly` |
-| `2.5.1` | `2.5.1` | `postgres-explorer-nightly` |
+| `2.4.0` | `2.5.0` | `postgres-explorer-nightly` |
+| `2.4.1` | `2.5.1` | `postgres-explorer-nightly` |
+
+Do not put the odd nightly number in `package.json`. An odd minor fails the version check.
 
 Registries reject republishing the same version — always bump patch on `main` before triggering another nightly.
 
@@ -177,8 +179,10 @@ You still need patch bumps on `main` before each scheduled run, or publishes wil
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `Tag version doesn't match package.json` | Tag pushed before version commit | Tag the commit that contains the bumped `package.json` |
-| `Stable releases require an even minor` | Tagged odd minor (nightly line) | Bump to next even minor for stable |
+| Tag, `package.json`, and CHANGELOG disagree | Version edited in only one place, or the tag has an extra `v` | `node scripts/check-release-version.js`. Tags are `vX.Y.Z` only. `vvX.Y.Z` is refused. |
+| `package-lock.json does not match` | Lockfile header not updated with `package.json` | Update the root version and `packages[""].version` |
+| Republish of tag `v2.4.0` fails the lock check | That commit's lockfile says `2.5.0` while `package.json` says `2.4.0`. The published VSIX still used `package.json`. | Do not move the tag. Ship the next fix as `2.4.1`. |
+| `odd minor` in `package.json` | Nightly number was written into `package.json` | Put the even stable version in `package.json`. The workflow derives the odd nightly. |
 | `Nightly published version must have an odd minor` | Base version in `package.json` can't map to odd minor | Adjust `package.json` per `compute-nightly-version.js` rules |
 | `Extension version already exists` | Re-published same version | Bump patch and re-run |
 | Workflow skipped on fork | `if: github.event.repository.fork == false` | Run from upstream repo or remove guard on your fork |
