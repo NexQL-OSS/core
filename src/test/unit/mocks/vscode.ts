@@ -119,7 +119,8 @@ export const commands = { registerCommand: (_name: string, _cb?: any) => ({ disp
 
 export const languages = {
   registerCompletionItemProvider: (_selector: any, _provider: any) => ({ dispose: () => { } }),
-  registerSignatureHelpProvider: (_selector: any, _provider: any, ..._chars: string[]) => ({ dispose: () => { } })
+  registerSignatureHelpProvider: (_selector: any, _provider: any, ..._chars: string[]) => ({ dispose: () => { } }),
+  registerCodeActionsProvider: (_selector: any, _provider: any, _metadata?: any) => ({ dispose: () => { } }),
 } as any;
 
 export const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 } as const;
