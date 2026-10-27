@@ -8,6 +8,7 @@ pat
 *.vsix
 dist
 pat-open-vsx
+*Zone.Identifier
 .nyc_output/
 coverage/
 test-results/
