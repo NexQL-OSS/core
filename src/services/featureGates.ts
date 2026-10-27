@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { LicenseService, LicenseTier } from './LicenseService';
 import { isProBuild } from '../common/buildTier';
 import { TelemetryService } from './TelemetryService';
+import { readEnforcement, type LicenseEnforcement } from './licensePolicy';
 
 /** Fire-and-forget gate telemetry; never let instrumentation break gating. */
-function reportGate(feature: ProFeature, mode: Enforcement, allowed: boolean, paid: boolean): void {
+function reportGate(feature: ProFeature, mode: LicenseEnforcement, allowed: boolean, paid: boolean): void {
   try {
     TelemetryService.getInstance().trackGateDecision(feature, mode, allowed, paid);
   } catch {
@@ -139,18 +140,13 @@ export function syncProviderMinTier(providerId: string): LicenseTier {
 
 const PRICING_URL = 'https://nexql.astrx.dev/#pricing';
 
-/** `off` = no metering (dev / dark-ship). `freemium` = free quotas enforced, paid unlimited. */
-type Enforcement = 'off' | 'freemium';
-
 /**
- * Reads the enforcement mode. Legacy values `hard`/`soft` (full block / nudge)
- * are mapped to `freemium` so existing settings keep working under the new model.
+ * Effective enforcement. Shipped builds always return `freemium`.
+ * `off` is honored only in the Extension Development Host.
+ * Legacy `hard`/`soft` (and any other value) map to `freemium`.
  */
-function enforcement(): Enforcement {
-  const v = vscode.workspace
-    .getConfiguration()
-    .get<string>('postgresExplorer.license.enforcement', 'freemium');
-  return v === 'off' ? 'off' : 'freemium';
+function enforcement(): LicenseEnforcement {
+  return readEnforcement();
 }
 
 /**

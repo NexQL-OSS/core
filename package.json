@@ -2544,26 +2544,6 @@
           "default": "",
           "description": "Deprecated: use ai.notebook.model or ai.chat.model."
         },
-        "postgresExplorer.license.enforcement": {
-          "type": "string",
-          "enum": [
-            "off",
-            "freemium"
-          ],
-          "enumDescriptions": [
-            "No metering \u2014 all features unlimited for everyone (development / dark-ship).",
-            "Freemium: free tier gets daily/weekly per-feature allowances; paid tiers are unlimited (default)."
-          ],
-          "default": "freemium",
-          "scope": "machine",
-          "markdownDescription": "Controls premium feature access. `freemium` (default) gives the free tier metered daily/weekly use of premium features and unlimited use to paid subscribers. `off` disables all metering. Legacy values `soft`/`hard` are treated as `freemium`."
-        },
-        "postgresExplorer.license.endpoint": {
-          "type": "string",
-          "default": "https://nexql.astrx.dev/api",
-          "scope": "machine",
-          "description": "Base URL for the NexQL license validation API."
-        },
         "postgresExplorer.sync.auto": {
           "type": "boolean",
           "default": true,

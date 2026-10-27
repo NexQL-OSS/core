@@ -83,6 +83,19 @@ export class Disposable { dispose() { } }
 
 export const env = { clipboard: { writeText: async (_s: string) => { } } } as any;
 
+/** Mirrors vscode.ExtensionMode numeric values. */
+export enum ExtensionMode {
+  Production = 1,
+  Development = 2,
+  Test = 3,
+}
+
+export const extensions = {
+  getExtension(_id: string): { extensionMode: ExtensionMode } | undefined {
+    return undefined;
+  },
+};
+
 export const window = {
   createOutputChannel: (_name?: string) => new OutputChannel(),
   showErrorMessage: async (_msg?: string) => undefined,
@@ -381,14 +394,15 @@ const vscode = {
   ThemeColor,
   ThemeIcon,
   env,
+  ExtensionMode,
+  extensions,
   lm,
   McpHttpServerDefinition,
   McpStdioServerDefinition,
   ViewColumn: Object.assign({}, ViewColumn, { Beside: 4 }),
   Webview,
   WebviewPanel,
-  // runtime `extensions` helper
-  extensions: { getExtension(id: string) { return undefined; } },
+  // runtime `extensions` helper (same object as the named export)
   QuickPickItemKind,
   CodeAction,
   CodeActionKind

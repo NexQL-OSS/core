@@ -1,6 +1,6 @@
 # NexQL Architecture
 
-> **Last Updated**: March 2026
+> **Last Updated**: October 2026
 
 This document provides a comprehensive overview of NexQL's architecture, design decisions, and component interactions.
 
@@ -12,6 +12,7 @@ This document provides a comprehensive overview of NexQL's architecture, design 
 - [Component Architecture](#component-architecture)
 - [Data Flow](#data-flow)
 - [Key Design Decisions](#key-design-decisions)
+- [Licensing](#licensing)
 - [Extension Points](#extension-points)
 
 ---
@@ -428,6 +429,24 @@ Default pool configuration:
   - Prioritizes favorites/recent objects for faster perceived responsiveness on databases with many objects.
 
 ---
+
+## Licensing
+
+Paid entitlements are resolved by `LicenseService` (`src/services/LicenseService.ts`) and applied by `featureGates` (`src/services/featureGates.ts`).
+
+| Concern | Behaviour |
+|---------|-----------|
+| Tiers | `free` < `sponsor` < `singularity` |
+| Source of truth | `POST https://nexql.astrx.dev/api/license/validate` |
+| Cache | SecretStorage, 24h TTL, 7-day offline grace |
+| Failure | Fail open to `free`. A transport error never grants a paid tier and never evicts a cached paid tier inside the grace window |
+| Shipped builds | `ExtensionMode.Production` (stable, nightly, pro installs) always enforce `freemium` and always call the canonical host |
+| Local development | `ExtensionMode.Development` (F5) honors `postgresExplorer.license.enforcement=off` and `postgresExplorer.license.endpoint` |
+| Test host | `ExtensionMode.Test` is treated as shipped |
+
+Those two keys are intentionally absent from `package.json` `contributes.configuration`. VS Code still returns a value if a user or launch config has one; production code ignores it. Policy lives in `src/services/licensePolicy.ts` so the pro package can use `isLicenseDevMode()` for the same rule (for example `postgresExplorer.sync.apiEndpoint`, which core does not read).
+
+Client gates are not a security boundary. Cloud sync, the AI proxy, and device registration are expected to authorize on the private backend. Local-only features (audit log file, sync-provider allowlist, notebook caps) stay client-side.
 
 ## Security
 
