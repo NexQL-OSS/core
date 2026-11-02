@@ -2,6 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Extension (Pro + MCP)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "preLaunchTask": "dev-pro",
+            "env": {
+                "NEXQL_MCP_BIN": "${workspaceFolder}/../mcp/target/debug/nexql-mcp"
+            },
+            "settings": {
+                "postgresExplorer.license.endpoint": "http://localhost:3000/api",
+                "postgresExplorer.mcp.enabled": true,
+                "postgresExplorer.mcp.binaryPath": "${workspaceFolder}/../mcp/target/debug/nexql-mcp"
+            }
+        },
+        {
             "name": "Run Extension (Pro)",
             "type": "extensionHost",
             "request": "launch",
@@ -12,8 +32,13 @@
                 "${workspaceFolder}/dist/**/*.js"
             ],
             "preLaunchTask": "dev-pro",
+            "env": {
+                "NEXQL_MCP_BIN": "${workspaceFolder}/../mcp/target/debug/nexql-mcp"
+            },
             "settings": {
-                "postgresExplorer.license.endpoint": "http://localhost:3000/api"
+                "postgresExplorer.license.endpoint": "http://localhost:3000/api",
+                "postgresExplorer.mcp.enabled": true,
+                "postgresExplorer.mcp.binaryPath": "${workspaceFolder}/../mcp/target/debug/nexql-mcp"
             }
         },
         {
