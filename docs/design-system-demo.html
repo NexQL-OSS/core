@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NexQL design system demo</title>
+<!-- Static demo. Open directly in a browser; add ?theme=light or ?theme=hc to switch.
+     It fakes the --vscode-* variables a real webview would receive. -->
+<link rel="stylesheet" href="../templates/shared/styles.css">
+<link rel="stylesheet" href="../templates/shared/components.css">
+<style>
+  /* ---- Faked VS Code theme variables (demo only). Like VS Code, they live on <html>; the
+     vscode-dark / vscode-light / vscode-high-contrast classes live on <body>. ---- */
+  html.t-dark {
+    --vscode-editor-background: #1e1e1e; --vscode-editor-foreground: #cccccc; --vscode-foreground: #cccccc;
+    --vscode-descriptionForeground: #9d9d9d; --vscode-font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    --vscode-editor-font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+    --vscode-input-background: #313131; --vscode-widget-border: #454545; --vscode-focusBorder: #0078d4;
+    --vscode-toolbar-hoverBackground: #5a5d5e50; --vscode-list-activeSelectionBackground: #04395e;
+    --vscode-textLink-foreground: #3794ff; --vscode-textCodeBlock-background: #2b2b2b;
+    --vscode-button-background: #0e639c; --vscode-button-foreground: #ffffff; --vscode-button-hoverBackground: #1177bb;
+    --vscode-button-secondaryBackground: #3a3d41; --vscode-button-secondaryForeground: #ffffff; --vscode-button-secondaryHoverBackground: #45494e;
+    --vscode-testing-iconPassed: #73c991; --vscode-editorWarning-foreground: #cca700; --vscode-errorForeground: #f48771;
+    --vscode-nexql-accent: #E0A4CC; --vscode-nexql-accentForeground: #0B0E14;
+    --vscode-nexql-mode-read: #7EE8A8; --vscode-nexql-mode-write: #F26B3A; --vscode-nexql-mode-admin: #F5B23A;
+  }
+  html.t-light {
+    --vscode-editor-background: #ffffff; --vscode-editor-foreground: #3b3b3b; --vscode-foreground: #3b3b3b;
+    --vscode-descriptionForeground: #5f5f5f; --vscode-font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    --vscode-editor-font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+    --vscode-input-background: #f3f3f3; --vscode-widget-border: #c8c8c8; --vscode-focusBorder: #005fb8;
+    --vscode-toolbar-hoverBackground: #b8b8b850; --vscode-list-activeSelectionBackground: #e4e6f1;
+    --vscode-textLink-foreground: #005fb8; --vscode-textCodeBlock-background: #f0f0f0;
+    --vscode-button-background: #005fb8; --vscode-button-foreground: #ffffff; --vscode-button-hoverBackground: #0258a8;
+    --vscode-button-secondaryBackground: #e5e5e5; --vscode-button-secondaryForeground: #3b3b3b; --vscode-button-secondaryHoverBackground: #cccccc;
+    --vscode-testing-iconPassed: #388a34; --vscode-editorWarning-foreground: #bf8803; --vscode-errorForeground: #a1260d;
+    --vscode-nexql-accent: #882D5A; --vscode-nexql-accentForeground: #F8F9FC;
+    --vscode-nexql-mode-read: #0A6234; --vscode-nexql-mode-write: #9A3412; --vscode-nexql-mode-admin: #7A4E00;
+  }
+  html.t-hc {
+    --vscode-editor-background: #000000; --vscode-editor-foreground: #ffffff; --vscode-foreground: #ffffff;
+    --vscode-descriptionForeground: #ffffff; --vscode-font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    --vscode-editor-font-family: Menlo, Consolas, monospace;
+    --vscode-input-background: #000000; --vscode-widget-border: #6fc3df; --vscode-focusBorder: #f38518;
+    --vscode-contrastBorder: #6fc3df; --vscode-contrastActiveBorder: #f38518;
+    --vscode-textLink-foreground: #21a6ff; --vscode-textCodeBlock-background: #000000;
+    --vscode-button-background: #000000; --vscode-button-foreground: #ffffff; --vscode-button-hoverBackground: #000000;
+    --vscode-button-secondaryBackground: #000000; --vscode-button-secondaryForeground: #ffffff;
+    --vscode-testing-iconPassed: #89d185; --vscode-editorWarning-foreground: #ffd43b; --vscode-errorForeground: #f48771;
+    --vscode-nexql-accent: #F5C2E0; --vscode-nexql-accentForeground: #0B0E14;
+    --vscode-nexql-mode-read: #7EE8A8; --vscode-nexql-mode-write: #F26B3A; --vscode-nexql-mode-admin: #F5B23A;
+  }
+  /* Ribbon stops are identical in every theme */
+  html {
+    --vscode-nexql-ribbon-blue: #3D6FE0; --vscode-nexql-ribbon-indigo: #6C4CD6; --vscode-nexql-ribbon-purple: #A23BC9;
+    --vscode-nexql-ribbon-magenta: #E0388F; --vscode-nexql-ribbon-orange: #F26B3A; --vscode-nexql-ribbon-amber: #F5B23A;
+  }
+  /* ---- Demo page layout only ---- */
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 28px 32px 48px; background: var(--vscode-editor-background); color: var(--vscode-foreground);
+         font: 13px/1.5 var(--vscode-font-family); }
+  .demo { max-width: 1080px; margin: 0 auto; }
+  .demo h1 { margin: 14px 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .demo p.lead { margin: 0 0 22px; color: var(--pg-text-muted); }
+  .demo section { margin-bottom: 26px; }
+  .demo .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .demo .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+  .demo .swatches { display: flex; gap: 0; height: 28px; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .demo .swatches span { flex: 1; }
+  .demo .steps-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; }
+  .demo .elev { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 12px; }
+  .demo .elev div { height: 64px; border-radius: 10px; display: grid; place-items: center; font-family: var(--pg-font-mono); font-size: 11px;
+                    color: var(--pg-text-muted); background: var(--pg-ui-surface-raised); background-image: var(--pg-surface-gradient); border: 1px solid var(--pg-ui-border); }
+  .demo .elev .e1 { box-shadow: var(--pg-elevation-1); } .demo .elev .e2 { box-shadow: var(--pg-elevation-2); }
+  .demo .elev .e3 { box-shadow: var(--pg-elevation-3); } .demo .elev .e4 { box-shadow: var(--pg-elevation-4); }
+  @media (max-width: 760px) { .demo .cols, .demo .steps-wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="vscode-dark">
+<script>
+  // ?theme=light | hc | dark (default)
+  (function () {
+    var t = new URLSearchParams(location.search).get('theme');
+    var k = t === 'light' ? 'light' : t === 'hc' ? 'hc' : 'dark';
+    document.documentElement.className = 't-' + k;
+    document.body.className = k === 'light' ? 'vscode-light' : k === 'hc' ? 'vscode-dark vscode-high-contrast' : 'vscode-dark';
+  })();
+</script>
+<div class="demo">
+  <div class="pg-ribbon" aria-hidden="true"></div>
+  <h1>NexQL design system</h1>
+  <p class="lead">Shared tokens and components from <code>templates/shared/</code>, rendered with faked <code>--vscode-*</code> variables.</p>
+
+  <section>
+    <p class="pg-mono-label">Brand ribbon &amp; elevation</p>
+    <div class="swatches" aria-hidden="true" style="background: var(--pg-ribbon)"></div>
+    <div class="elev">
+      <div class="e1">elevation-1</div><div class="e2">elevation-2</div><div class="e3">elevation-3</div><div class="e4">elevation-4</div>
+    </div>
+  </section>
+
+  <section>
+    <p class="pg-mono-label">Pills, live dot &amp; mode badges</p>
+    <div class="row">
+      <span class="pg-pill"><span class="pg-live-dot"></span>Connected</span>
+      <span class="pg-pill pg-pill--accent">pg 16.4</span>
+      <span class="pg-pill">orders_db</span>
+      <span class="pg-badge">PRO</span>
+      <span class="pg-mode-badge pg-mode--read">read</span>
+      <span class="pg-mode-badge pg-mode--write">write</span>
+      <span class="pg-mode-badge pg-mode--admin">admin</span>
+    </div>
+  </section>
+
+  <section>
+    <p class="pg-mono-label">Figures</p>
+    <div class="pg-stat-grid" style="margin-top:10px">
+      <div class="pg-stat pg-stat--accent"><span class="pg-stat-value">1,284</span><span class="pg-stat-label">Tables indexed</span></div>
+      <div class="pg-stat"><span class="pg-stat-value">42 ms</span><span class="pg-stat-label">p95 latency</span></div>
+      <div class="pg-stat"><span class="pg-stat-value">96.8%</span><span class="pg-stat-label">Cache hit</span></div>
+      <div class="pg-stat"><span class="pg-stat-value">3</span><span class="pg-stat-label">Open locks</span></div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <p class="pg-mono-label">Cards</p>
+      <div class="pg-card" style="margin-top:10px">
+        <div class="pg-card-header"><div><h3 class="pg-card-title">Connection</h3><p class="pg-card-desc">production-replica / orders_db</p></div><span class="pg-mode-badge pg-mode--read">read</span></div>
+        <div class="pg-card-body">
+          <div class="pg-insight"><strong>Insight.</strong> 3 sequential scans on <code>orders</code> could use an index on <code>customer_id</code>.</div>
+          <div class="pg-code"><pre><code>SELECT id, total
+FROM orders
+WHERE customer_id = 42;</code></pre><button class="pg-copy" type="button">Copy</button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="pg-mono-label">Hero card</p>
+      <div class="pg-hero-card" style="margin-top:10px">
+        <div class="pg-hero-card-header"><div><h3 class="pg-hero-card-title">Visual schema designer</h3><p class="pg-hero-card-desc">Design tables, keys and relations on a canvas.</p></div></div>
+        <div class="pg-hero-card-body"><div class="row" style="margin:0"><button class="pg-btn pg-btn--primary">Open designer</button><button class="pg-btn pg-btn--ghost">Learn more</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <p class="pg-mono-label">Route ticket</p>
+      <ol class="pg-route" style="margin-top:10px">
+        <li class="pg-route-item"><span class="pg-route-no">1</span><span class="pg-route-label">Resolve connection profile</span><span class="pg-route-meta">3 ms</span></li>
+        <li class="pg-route-item"><span class="pg-route-no">2</span><span class="pg-route-label">Validate statement (read-only)</span><span class="pg-route-meta">1 ms</span></li>
+        <li class="pg-route-item"><span class="pg-route-no">3</span><span class="pg-route-label">Run EXPLAIN, then execute</span><span class="pg-route-meta">38 ms</span></li>
+      </ol>
+    </div>
+    <div>
+      <p class="pg-mono-label">Tool trace</p>
+      <ol class="pg-steps" style="margin-top:10px">
+        <li class="pg-step is-ok"><span><span class="pg-step-name">list_tables</span><span class="pg-step-desc">public schema, 24 tables</span></span><span class="pg-step-time">12 ms</span></li>
+        <li class="pg-step is-ok"><span><span class="pg-step-name">describe_table</span><span class="pg-step-desc">orders, columns and indexes</span></span><span class="pg-step-time">9 ms</span></li>
+        <li class="pg-step is-running"><span><span class="pg-step-name">run_query</span><span class="pg-step-desc">SELECT with LIMIT 100</span></span><span class="pg-step-time">...</span></li>
+        <li class="pg-step is-error"><span><span class="pg-step-name">drop_table</span><span class="pg-step-desc">blocked by read-only guard</span></span><span class="pg-step-time">0 ms</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <p class="pg-mono-label">Wizard rail</p>
+    <div class="steps-wrap" style="margin-top:10px">
+      <div class="pg-rail" style="--pg-rail-progress: 45%">
+        <div class="pg-track"><div class="pg-track-fill"></div></div>
+        <ol>
+          <li class="pg-rail-step is-done">Choose source</li>
+          <li class="pg-rail-step is-done">Select schemas</li>
+          <li class="pg-rail-step" aria-current="step">Review options</li>
+          <li class="pg-rail-step">Run backup</li>
+        </ol>
+      </div>
+      <div class="pg-empty-state pg-brand-wash" style="border:1px dashed var(--pg-ui-border-strong); border-radius:10px">
+        <div class="pg-ribbon" style="width:64px"></div>
+        <h2 class="pg-display" style="margin:8px 0 0; font-size:20px; color:var(--vscode-foreground)">Nothing indexed yet</h2>
+        <p class="pg-serif" style="margin:0; font-size:17px; color:var(--pg-text-muted)">Brand screens only: display and serif faces, ribbon wash.</p>
+        <button class="pg-btn pg-btn--primary" style="margin-top:8px">Index a database</button>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  document.querySelectorAll('.pg-copy').forEach(function (b) {
+    b.addEventListener('click', function () { b.classList.add('is-copied'); b.textContent = 'Copied'; });
+  });
+</script>
+</body>
+</html>

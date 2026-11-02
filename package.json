@@ -91,12 +91,123 @@
     ],
     "colors": [
       {
-        "id": "postgres.accent",
-        "description": "NexQL brand accent for tree icons and highlights",
+        "id": "nexql.accent",
+        "description": "NexQL brand accent (rose). Used for links, selection highlights and brand chrome in webviews, notebook output and tree icons.",
         "defaults": {
-          "dark": "#3794ff",
-          "light": "#0066bf",
-          "highContrast": "#1aebff"
+          "dark": "#E0A4CC",
+          "light": "#882D5A",
+          "highContrast": "#F5C2E0",
+          "highContrastLight": "#882D5A"
+        }
+      },
+      {
+        "id": "nexql.accentForeground",
+        "description": "Text and icons drawn on a nexql.accent fill",
+        "defaults": {
+          "dark": "#0B0E14",
+          "light": "#F8F9FC",
+          "highContrast": "#0B0E14",
+          "highContrastLight": "#F8F9FC"
+        }
+      },
+      {
+        "id": "nexql.ribbon.blue",
+        "description": "NexQL ribbon gradient stop (blue). Same in every theme kind.",
+        "defaults": {
+          "dark": "#3D6FE0",
+          "light": "#3D6FE0",
+          "highContrast": "#3D6FE0",
+          "highContrastLight": "#3D6FE0"
+        }
+      },
+      {
+        "id": "nexql.ribbon.indigo",
+        "description": "NexQL ribbon gradient stop (indigo). Same in every theme kind.",
+        "defaults": {
+          "dark": "#6C4CD6",
+          "light": "#6C4CD6",
+          "highContrast": "#6C4CD6",
+          "highContrastLight": "#6C4CD6"
+        }
+      },
+      {
+        "id": "nexql.ribbon.purple",
+        "description": "NexQL ribbon gradient stop (purple). Same in every theme kind.",
+        "defaults": {
+          "dark": "#A23BC9",
+          "light": "#A23BC9",
+          "highContrast": "#A23BC9",
+          "highContrastLight": "#A23BC9"
+        }
+      },
+      {
+        "id": "nexql.ribbon.magenta",
+        "description": "NexQL ribbon gradient stop (magenta). Same in every theme kind.",
+        "defaults": {
+          "dark": "#E0388F",
+          "light": "#E0388F",
+          "highContrast": "#E0388F",
+          "highContrastLight": "#E0388F"
+        }
+      },
+      {
+        "id": "nexql.ribbon.orange",
+        "description": "NexQL ribbon gradient stop (orange). Same in every theme kind.",
+        "defaults": {
+          "dark": "#F26B3A",
+          "light": "#F26B3A",
+          "highContrast": "#F26B3A",
+          "highContrastLight": "#F26B3A"
+        }
+      },
+      {
+        "id": "nexql.ribbon.amber",
+        "description": "NexQL ribbon gradient stop (amber). Same in every theme kind.",
+        "defaults": {
+          "dark": "#F5B23A",
+          "light": "#F5B23A",
+          "highContrast": "#F5B23A",
+          "highContrastLight": "#F5B23A"
+        }
+      },
+      {
+        "id": "nexql.mode.read",
+        "description": "Read-only session mode indicator",
+        "defaults": {
+          "dark": "#7EE8A8",
+          "light": "#0A6234",
+          "highContrast": "#7EE8A8",
+          "highContrastLight": "#0A6234"
+        }
+      },
+      {
+        "id": "nexql.mode.write",
+        "description": "Read/write session mode indicator",
+        "defaults": {
+          "dark": "#F26B3A",
+          "light": "#9A3412",
+          "highContrast": "#F26B3A",
+          "highContrastLight": "#9A3412"
+        }
+      },
+      {
+        "id": "nexql.mode.admin",
+        "description": "Admin session mode indicator",
+        "defaults": {
+          "dark": "#F5B23A",
+          "light": "#7A4E00",
+          "highContrast": "#F5B23A",
+          "highContrastLight": "#7A4E00"
+        }
+      },
+      {
+        "id": "postgres.accent",
+        "description": "NexQL brand accent for tree icons and highlights (defaults to nexql.accent)",
+        "defaults": {
+          "dark": "nexql.accent",
+          "light": "nexql.accent",
+          "highContrast": "nexql.accent",
+          "highContrastLight": "nexql.accent"
         }
       },
       {

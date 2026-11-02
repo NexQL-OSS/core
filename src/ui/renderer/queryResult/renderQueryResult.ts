@@ -50,7 +50,7 @@ import {
   normalizeNoticesPayload,
   renderNoticesPanel,
 } from '../../../renderer/components/notices/NoticesPanel';
-import { BRAND_ACCENT, RENDERER_ELEVATION_2, RENDERER_GLASS_BG, RENDERER_GLASS_BLUR } from '../rendererConstants';
+import { BRAND_ACCENT, RENDERER_ELEVATION_1, RENDERER_GLASS_BG, RENDERER_GLASS_BLUR } from '../rendererConstants';
 import {
   buildChatResultsSampleJson,
   buildPivotOptimizeUserMessage,
@@ -442,7 +442,7 @@ export function renderPostgresNotebookResult(
         border-radius: 6px;
         overflow: hidden;
         margin-bottom: 8px;
-        box-shadow: ${RENDERER_ELEVATION_2};
+        box-shadow: ${RENDERER_ELEVATION_1};
         background: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-sideBar-background));
         background-image: radial-gradient(ellipse 80% 50% at 100% 0%, color-mix(in srgb, ${BRAND_ACCENT} 6%, transparent), transparent 60%);
       `;

@@ -13,7 +13,7 @@
   overflow: hidden;
   transition: border-color var(--pg-transition-normal), box-shadow var(--pg-transition-normal);
   box-shadow: var(--pg-elevation-1);
-  background-image: var(--pg-accent-gradient);
+  background-image: var(--pg-accent-gradient), var(--pg-surface-gradient);
   background-repeat: no-repeat;
 }
 
@@ -72,13 +72,14 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--pg-brand-accent), color-mix(in srgb, var(--pg-brand-accent) 55%, #311b92));
+  background: var(--pg-ribbon);
 }
 
 .pg-hero-card:hover {
   transform: translateY(-2px);
   border-color: var(--pg-ui-border-strong);
-  box-shadow: var(--pg-elevation-3), 0 0 0 1px color-mix(in srgb, var(--pg-brand-accent) 20%, transparent);
+  box-shadow: var(--pg-elevation-3);
+  border-color: color-mix(in srgb, var(--pg-brand-accent) 35%, var(--pg-ui-border-strong));
 }
 
 .pg-hero-card-header {
@@ -139,14 +140,482 @@
 .pg-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 10px;
+  gap: 7px;
+  padding: 3px 11px;
   border-radius: var(--pg-radius-pill);
   font-size: 11px;
   font-weight: 500;
+  line-height: 1.4;
   background: var(--pg-ui-surface-muted);
   border: 1px solid var(--pg-ui-border);
+  box-shadow: inset 1px 1px 0 var(--pg-bevel-hi);
   color: var(--vscode-foreground);
+}
+
+.pg-pill--accent {
+  color: var(--pg-brand-accent);
+  border-color: color-mix(in srgb, var(--pg-brand-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--pg-brand-accent) 10%, var(--pg-ui-surface-muted));
+}
+
+/* Pulsing "live" dot: place inside .pg-pill. Colour via --pg-live-color. */
+.pg-live-dot {
+  --pg-live-color: var(--pg-mode-read);
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--pg-live-color);
+}
+
+.pg-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--pg-live-color);
+  opacity: 0.55;
+  animation: pg-live-pulse 2s ease-out infinite;
+}
+
+@keyframes pg-live-pulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  70%, 100% { transform: scale(2.8); opacity: 0; }
+}
+
+/* ── Session mode badge: coloured dot + tinted border ── */
+.pg-mode-badge {
+  --pg-mode-color: var(--pg-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: var(--pg-radius-pill);
+  font-family: var(--pg-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vscode-foreground);
+  border: 1px solid color-mix(in srgb, var(--pg-mode-color) 50%, transparent);
+  background: color-mix(in srgb, var(--pg-mode-color) 10%, transparent);
+  white-space: nowrap;
+}
+
+.pg-mode-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--pg-mode-color);
+}
+
+.pg-mode--read { --pg-mode-color: var(--pg-mode-read); }
+.pg-mode--write { --pg-mode-color: var(--pg-mode-write); }
+.pg-mode--admin { --pg-mode-color: var(--pg-mode-admin); }
+
+/* ── Mono uppercase section label ── */
+.pg-mono-label {
+  margin: 0;
+  font-family: var(--pg-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pg-text-muted);
+}
+
+/* ── Ribbon: 3px brand gradient bar ── */
+.pg-ribbon {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: var(--pg-radius-pill);
+  background: var(--pg-ribbon);
+}
+
+/* ── Code block with copy button ──
+   <div class="pg-code"><pre><code>…</code></pre><button class="pg-copy" type="button">Copy</button></div> */
+.pg-code {
+  position: relative;
+  border: 1px solid var(--pg-ui-border);
+  border-radius: var(--pg-radius-md);
+  background: color-mix(in srgb, var(--vscode-textCodeBlock-background, var(--pg-ui-surface-muted)) 70%, var(--vscode-editor-background));
+  box-shadow: inset 1px 1px 3px color-mix(in srgb, #000 14%, transparent), inset -1px -1px 0 var(--pg-bevel-hi);
+}
+
+.pg-code pre {
+  margin: 0;
+  padding: 12px 64px 12px 14px;
+  overflow-x: auto;
+  font-family: var(--pg-font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--vscode-editor-foreground);
+}
+
+.pg-code code {
+  font-family: inherit;
+}
+
+.pg-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  font-family: var(--pg-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pg-text-muted);
+  background: var(--pg-ui-surface-raised);
+  border: 1px solid var(--pg-ui-border);
+  border-radius: var(--pg-radius-sm);
+  box-shadow: var(--pg-elevation-1);
+  cursor: pointer;
+  transition: color var(--pg-transition-fast), border-color var(--pg-transition-fast);
+}
+
+.pg-copy:hover {
+  color: var(--vscode-foreground);
+  border-color: var(--pg-ui-border-strong);
+}
+
+.pg-copy:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.pg-copy.is-copied,
+.pg-copy[data-copied='true'] {
+  color: var(--pg-brand-accent);
+  border-color: color-mix(in srgb, var(--pg-brand-accent) 50%, transparent);
+}
+
+/* ── Route "ticket": numbered steps ──
+   <ol class="pg-route"><li class="pg-route-item"><span class="pg-route-no">1</span>
+   <span class="pg-route-label">…</span><span class="pg-route-meta">…</span></li></ol> */
+.pg-route {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 4px 0;
+  border: 1px solid var(--pg-ui-border);
+  border-radius: var(--pg-radius-lg);
+  background: var(--pg-ui-surface-raised);
+  background-image: var(--pg-surface-gradient);
+  box-shadow: var(--pg-elevation-2);
+}
+
+.pg-route-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.pg-route-item + .pg-route-item {
+  border-top: 1px dashed var(--pg-ui-border-strong);
+}
+
+.pg-route-no {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-family: var(--pg-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pg-brand-accent);
+  border: 1px solid color-mix(in srgb, var(--pg-brand-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--pg-brand-accent) 10%, transparent);
+}
+
+.pg-route-label {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+}
+
+.pg-route-meta {
+  font-family: var(--pg-font-mono);
+  font-size: 11px;
+  color: var(--pg-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Step rail (wizards): vertical progress with numbered nodes ──
+   <div class="pg-rail"><div class="pg-track"><div class="pg-track-fill" style="height:40%"></div></div>
+   <ol><li class="pg-rail-step is-done">…</li><li class="pg-rail-step" aria-current="step">…</li></ol></div> */
+.pg-rail {
+  --pg-rail-node: 24px;
+  position: relative;
+  padding: 0;
+}
+
+.pg-rail ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: pg-rail;
+}
+
+.pg-track {
+  position: absolute;
+  top: calc(var(--pg-rail-node) / 2);
+  bottom: calc(var(--pg-rail-node) / 2);
+  left: calc(var(--pg-rail-node) / 2 - 1px);
+  width: 2px;
+  border-radius: 2px;
+  background: var(--pg-ui-border-strong);
+  overflow: hidden;
+}
+
+.pg-track-fill {
+  width: 100%;
+  height: var(--pg-rail-progress, 0%);
+  background: var(--pg-ribbon-v);
+  transition: height var(--pg-transition-normal);
+}
+
+.pg-rail-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  font-size: 12px;
+  color: var(--pg-text-muted);
+  counter-increment: pg-rail;
+}
+
+.pg-rail-step::before {
+  content: counter(pg-rail);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: var(--pg-rail-node);
+  height: var(--pg-rail-node);
+  border-radius: 50%;
+  font-family: var(--pg-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pg-text-muted);
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--pg-ui-border-strong);
+  z-index: 1;
+}
+
+.pg-rail-step[aria-current='step'] {
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
+.pg-rail-step[aria-current='step']::before {
+  color: var(--pg-brand-accent-ink);
+  background: var(--pg-brand-accent);
+  border-color: var(--pg-brand-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pg-brand-accent) 22%, transparent);
+}
+
+.pg-rail-step.is-done {
+  color: var(--vscode-foreground);
+}
+
+.pg-rail-step.is-done::before {
+  content: '\2713';
+  color: var(--pg-brand-accent);
+  border-color: color-mix(in srgb, var(--pg-brand-accent) 60%, transparent);
+  background: color-mix(in srgb, var(--pg-brand-accent) 12%, var(--vscode-editor-background));
+}
+
+/* ── Stat tiles ── */
+.pg-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pg-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--pg-ui-border);
+  border-radius: var(--pg-radius-md);
+  background: var(--pg-ui-surface-raised);
+  background-image: var(--pg-surface-gradient);
+  box-shadow: var(--pg-elevation-1);
+}
+
+.pg-stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--vscode-foreground);
+}
+
+.pg-stat--accent .pg-stat-value {
+  color: var(--pg-brand-accent);
+}
+
+.pg-stat-label {
+  font-family: var(--pg-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pg-text-muted);
+}
+
+/* ── Insight callout (accent left edge) ── */
+.pg-insight {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-foreground);
+  border: 1px solid var(--pg-ui-border);
+  border-left: 3px solid var(--pg-brand-accent);
+  border-radius: 2px var(--pg-radius-md) var(--pg-radius-md) 2px;
+  background: color-mix(in srgb, var(--pg-brand-accent) 7%, var(--pg-ui-surface-raised));
+}
+
+.pg-insight strong {
+  color: var(--pg-brand-accent);
+  font-weight: 600;
+}
+
+/* ── Tool / step trace list ──
+   <ol class="pg-steps"><li class="pg-step is-ok"><span><span class="pg-step-name">…</span>
+   <span class="pg-step-desc">…</span></span><span class="pg-step-time">12 ms</span></li></ol> */
+.pg-steps {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 1px solid var(--pg-ui-border);
+  border-radius: var(--pg-radius-md);
+  background: var(--pg-ui-surface-raised);
+  overflow: hidden;
+}
+
+.pg-step {
+  --pg-step-color: var(--pg-text-muted);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 14px;
+}
+
+.pg-step + .pg-step {
+  border-top: 1px solid var(--pg-ui-border);
+}
+
+.pg-step::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pg-step-color);
+  align-self: center;
+}
+
+.pg-step.is-ok { --pg-step-color: var(--pg-mode-read); }
+.pg-step.is-error { --pg-step-color: var(--env-prod); }
+.pg-step.is-running { --pg-step-color: var(--pg-brand-accent); }
+
+.pg-step.is-running::before {
+  animation: pg-live-pulse 1.4s ease-out infinite;
+}
+
+.pg-step-name {
+  display: block;
+  font-family: var(--pg-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+}
+
+.pg-step-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--pg-text-muted);
+}
+
+.pg-step-time {
+  font-family: var(--pg-font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--pg-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Brand screens ONLY (welcome, What's New, empty states, upgrade) ──
+   Display fonts and ribbon washes never go on dense panels. */
+.pg-brand-wash {
+  background-image:
+    radial-gradient(60% 80% at 0% 0%, color-mix(in srgb, var(--vscode-nexql-ribbon-magenta, #e0388f) 10%, transparent), transparent 70%),
+    radial-gradient(60% 80% at 100% 0%, color-mix(in srgb, var(--vscode-nexql-ribbon-blue, #3d6fe0) 12%, transparent), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+.pg-display {
+  font-family: var(--pg-font-display);
+  letter-spacing: -0.02em;
+}
+
+.pg-serif {
+  font-family: var(--pg-font-serif);
+  font-weight: 400;
+}
+
+body.vscode-high-contrast .pg-brand-wash,
+body.vscode-high-contrast-light .pg-brand-wash {
+  background-image: none;
+}
+
+/* High contrast: solid borders, mode colour carried by the border, no motion decoration */
+body.vscode-high-contrast .pg-mode-badge,
+body.vscode-high-contrast-light .pg-mode-badge {
+  border-color: var(--pg-mode-color);
+  background: transparent;
+}
+
+body.vscode-high-contrast .pg-card,
+body.vscode-high-contrast-light .pg-card,
+body.vscode-high-contrast .pg-stat,
+body.vscode-high-contrast-light .pg-stat,
+body.vscode-high-contrast .pg-route,
+body.vscode-high-contrast-light .pg-route {
+  border-color: var(--vscode-contrastBorder, currentColor);
+}
+
+body.vscode-high-contrast .pg-hero-card::before,
+body.vscode-high-contrast-light .pg-hero-card::before {
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-live-dot::after,
+  .pg-step.is-running::before {
+    animation: none;
+  }
+  .pg-track-fill {
+    transition: none;
+  }
 }
 
 /* ── Tab strip ── */

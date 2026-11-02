@@ -7,8 +7,43 @@
 
 /* ── Design tokens (theme-native) ── */
 :root {
-  --pg-brand-accent: var(--vscode-textLink-foreground);
-  --pg-brand-accent-muted: color-mix(in srgb, var(--vscode-textLink-foreground) 20%, transparent);
+  /* Brand accent (rose). nexql.accent is contributed by package.json; link colour is the fallback. */
+  --pg-brand-accent: var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
+  --pg-brand-accent-muted: color-mix(in srgb, var(--pg-brand-accent) 20%, transparent);
+  /* Text/icons drawn on a solid accent fill */
+  --pg-brand-accent-ink: var(--vscode-nexql-accentForeground, var(--vscode-button-foreground, #0b0e14));
+  /* "Ribbon" brand gradient: hex fallbacks apply when the contributed colors are unavailable */
+  --pg-ribbon: linear-gradient(105deg,
+    var(--vscode-nexql-ribbon-blue, #3d6fe0),
+    var(--vscode-nexql-ribbon-indigo, #6c4cd6) 30%,
+    var(--vscode-nexql-ribbon-purple, #a23bc9) 52%,
+    var(--vscode-nexql-ribbon-magenta, #e0388f) 72%,
+    var(--vscode-nexql-ribbon-orange, #f26b3a) 90%,
+    var(--vscode-nexql-ribbon-amber, #f5b23a));
+  /* Same stops running top to bottom, for vertical rails */
+  --pg-ribbon-v: linear-gradient(180deg,
+    var(--vscode-nexql-ribbon-blue, #3d6fe0),
+    var(--vscode-nexql-ribbon-indigo, #6c4cd6) 30%,
+    var(--vscode-nexql-ribbon-purple, #a23bc9) 52%,
+    var(--vscode-nexql-ribbon-magenta, #e0388f) 72%,
+    var(--vscode-nexql-ribbon-orange, #f26b3a) 90%,
+    var(--vscode-nexql-ribbon-amber, #f5b23a));
+  /* Low-alpha wash of the same hues (brand screens only) */
+  --pg-ribbon-soft: linear-gradient(110deg,
+    color-mix(in srgb, var(--vscode-nexql-ribbon-blue, #3d6fe0) 14%, transparent),
+    color-mix(in srgb, var(--vscode-nexql-ribbon-indigo, #6c4cd6) 12%, transparent),
+    color-mix(in srgb, var(--vscode-nexql-ribbon-magenta, #e0388f) 12%, transparent),
+    color-mix(in srgb, var(--vscode-nexql-ribbon-orange, #f26b3a) 14%, transparent));
+  /* Session mode indicators */
+  --pg-mode-read: var(--vscode-nexql-mode-read, var(--vscode-testing-iconPassed, #22c55e));
+  --pg-mode-write: var(--vscode-nexql-mode-write, var(--vscode-editorWarning-foreground, #f26b3a));
+  --pg-mode-admin: var(--vscode-nexql-mode-admin, var(--vscode-editorWarning-foreground, #f5b23a));
+  /* Display faces are for brand screens only (welcome, What's New, empty states, upgrade).
+     System fallbacks only: the webview CSP blocks remote fonts. Bundled OFL fonts
+     (Space Grotesk, Instrument Serif) can be added later via @font-face and webview.asWebviewUri. */
+  --pg-font-display: "Space Grotesk", "Avenir Next", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --pg-font-serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --pg-font-mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
   --pg-ui-surface: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
   --pg-ui-surface-raised: color-mix(in srgb, var(--vscode-input-background) 88%, var(--vscode-editor-background) 12%);
   --pg-ui-surface-muted: color-mix(in srgb, var(--vscode-input-background) 90%, var(--vscode-editor-background) 10%);
@@ -38,17 +73,63 @@
   --pg-semantic-warn-border: color-mix(in srgb, #f59e0b 35%, transparent);
   --pg-semantic-error-bg: color-mix(in srgb, #ef4444 10%, transparent);
   --pg-semantic-error-border: color-mix(in srgb, #ef4444 30%, transparent);
-  /* Glass + elevation (floating overlays use blur; cards use raised surface) */
+  /* Glass (floating overlays use blur; cards use raised surface) */
   --pg-glass-bg: color-mix(in srgb, var(--vscode-editor-background) 62%, transparent);
   --pg-glass-blur: blur(12px) saturate(1.15);
-  --pg-elevation-1: 0 1px 2px color-mix(in srgb, #000 18%, transparent);
-  --pg-elevation-2: 0 10px 28px color-mix(in srgb, #000 28%, transparent);
-  --pg-elevation-3: 0 24px 48px color-mix(in srgb, #000 45%, transparent);
+  /* Bevel elevation, lit from the top left: light inset edge top-left, dark inset edge
+     bottom-right, soft drop shadows falling down and right. Built from the editor background
+     so it reads in any theme. These are the light-theme defaults; dark overrides follow. */
+  --pg-bevel-hi: color-mix(in srgb, #fff 75%, var(--vscode-editor-background));
+  --pg-bevel-lo: color-mix(in srgb, #000 13%, var(--vscode-editor-background));
+  --pg-shadow-ink: color-mix(in srgb, #1b1030 16%, transparent);
+  --pg-elevation-1: 1px 2px 3px var(--pg-shadow-ink), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-2: 1px 2px 4px var(--pg-shadow-ink), 8px 16px 30px -12px color-mix(in srgb, #1b1030 28%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-3: 2px 4px 8px var(--pg-shadow-ink), 14px 28px 48px -16px color-mix(in srgb, #1b1030 34%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-4: 3px 8px 16px var(--pg-shadow-ink), 20px 40px 64px -20px color-mix(in srgb, #1b1030 40%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  /* Card face shaded from the lit corner to the shadowed corner */
+  --pg-surface-gradient: linear-gradient(150deg,
+    color-mix(in srgb, #fff 55%, var(--pg-ui-surface-raised)) 0%,
+    var(--pg-ui-surface-raised) 48%,
+    color-mix(in srgb, #000 4%, var(--pg-ui-surface-raised)) 100%);
   --pg-accent-gradient: radial-gradient(ellipse 80% 50% at 100% 0%, color-mix(in srgb, var(--pg-brand-accent) 6%, transparent), transparent 60%);
   /* Environment semantic colors (trees, badges, chips) */
   --env-prod: #ef4444;
   --env-staging: #f59e0b;
   --env-dev: #22c55e;
+}
+
+/* Dark themes: deeper shadows, stronger bevel, and a faint rose/indigo glow on the higher steps.
+   (Glow is dark-only; on light themes it would read as a smudge.) */
+body.vscode-dark {
+  --pg-bevel-hi: color-mix(in srgb, #fff 11%, var(--vscode-editor-background));
+  --pg-bevel-lo: color-mix(in srgb, #000 45%, var(--vscode-editor-background));
+  --pg-shadow-ink: color-mix(in srgb, #000 55%, transparent);
+  --pg-elevation-1: 1px 2px 3px var(--pg-shadow-ink), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-2: 1px 2px 4px var(--pg-shadow-ink), 8px 16px 30px -10px color-mix(in srgb, #000 80%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-3: 2px 4px 8px var(--pg-shadow-ink), 14px 28px 50px -16px color-mix(in srgb, #000 85%, transparent), 0 0 36px -8px color-mix(in srgb, var(--vscode-nexql-ribbon-indigo, #6c4cd6) 28%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-4: 3px 8px 16px var(--pg-shadow-ink), 20px 40px 70px -20px color-mix(in srgb, #000 90%, transparent), 0 0 48px -10px color-mix(in srgb, var(--vscode-nexql-ribbon-magenta, #e0388f) 24%, transparent), 0 0 36px -12px color-mix(in srgb, var(--vscode-nexql-ribbon-blue, #3d6fe0) 22%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-surface-gradient: linear-gradient(150deg,
+    color-mix(in srgb, #fff 6%, var(--pg-ui-surface-raised)) 0%,
+    var(--pg-ui-surface-raised) 48%,
+    color-mix(in srgb, #000 22%, var(--pg-ui-surface-raised)) 100%);
+}
+
+/* High contrast: no gradients, no shadows, no glow. Borders carry the structure. */
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --pg-ribbon: var(--vscode-contrastBorder, currentColor);
+  --pg-ribbon-v: var(--vscode-contrastBorder, currentColor);
+  --pg-ribbon-soft: transparent;
+  --pg-surface-gradient: none;
+  --pg-accent-gradient: none;
+  --pg-elevation-1: none;
+  --pg-elevation-2: none;
+  --pg-elevation-3: none;
+  --pg-elevation-4: none;
+  --pg-ui-border: var(--vscode-contrastBorder, currentColor);
+  --pg-ui-border-strong: var(--vscode-contrastActiveBorder, var(--vscode-contrastBorder, currentColor));
+  --pg-glass-bg: var(--vscode-editor-background);
+  --pg-glass-blur: none;
 }
 
 /* ── Scrollbar (webview) ── */
@@ -73,7 +154,6 @@ select::-webkit-scrollbar {
   font-weight: 400;
   color: var(--pg-text-muted);
 }
-.text-meta,
 .meta,
 .label-hint,
 .label-description {
@@ -98,7 +178,7 @@ select::-webkit-scrollbar {
 }
 .pg-mono,
 .mono {
-  font-family: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-family: var(--pg-font-mono);
 }
 
 /* ── Buttons ── */
@@ -503,24 +583,20 @@ select::-webkit-scrollbar {
 }
 
 /* ── Cross-template utilities ── */
-@keyframes skeleton-pulse {
-  0%   { opacity: 0.45; }
-  50%  { opacity: 0.9; }
-  100% { opacity: 0.45; }
-}
-.pg-skeleton,
-.skeleton {
+/* skeleton-pulse keyframes live in MODERN_WEBVIEW_BASE_CSS (src/common/htmlStyles.ts), injected before this file. */
+/* .skeleton itself is defined in MODERN_WEBVIEW_BASE_CSS; .pg-skeleton is the namespaced alias. */
+.pg-skeleton {
   background: var(--vscode-widget-border);
   border-radius: 3px;
   animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
-.pg-empty-state,
+/* .pg-empty-state base is defined in components.css; .empty-state is the legacy alias. */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-6) var(--sp-4);
+  gap: var(--sp-2, 8px);
+  padding: var(--sp-6, 24px) var(--sp-4, 16px);
   color: var(--pg-text-muted);
   font-size: 12px;
   text-align: center;

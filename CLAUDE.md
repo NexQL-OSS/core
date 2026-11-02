@@ -128,6 +128,18 @@ Self-contained features that don't fit the simple command pattern:
 - `schemaDiff/` — `SchemaDiffEngine` (pure diff + migration SQL generation), diff types
 - `tables/properties/` — Table properties panel
 
+### Design tokens & webview styling
+Full reference: `docs/DESIGN_SYSTEM.md` (live preview: `docs/design-system-demo.html`).
+
+| Layer | Location |
+|-------|----------|
+| Brand colors `nexql.accent`, `nexql.ribbon.*`, `nexql.mode.*` | `package.json` `contributes.colors` (webviews see `--vscode-nexql-*`) |
+| `--pg-*` tokens (accent, ribbon, mode, elevation 1-4, fonts) | `templates/shared/styles.css` |
+| Components (`.pg-ribbon`, `.pg-mode-badge`, `.pg-stat`, `.pg-route`, `.pg-rail`, ...) | `templates/shared/components.css` |
+| Renderer mirrors (`BRAND_ACCENT`, `RIBBON_GRADIENT`, `MODE_COLORS`, `RENDERER_ELEVATION_*`) | `src/ui/renderer/rendererConstants.ts` |
+
+Display fonts, ribbon washes and glows are for brand screens only (welcome, What's New, empty states, upgrade); dense panels stay flat.
+
 ### Shared Lib (`src/lib/`)
 - `SchemaCache` — adaptive-TTL cache (30s/1m/5m based on access frequency); used by tree provider
 - `template-loader.ts` — loads HTML templates for webviews

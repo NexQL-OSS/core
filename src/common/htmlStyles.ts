@@ -154,7 +154,7 @@ body { padding: var(--sp-4); }
 
 .pg-panel {
   border: 1px solid var(--vscode-widget-border);
-  border-top: 2px solid var(--vscode-textLink-foreground);
+  border-top: 2px solid var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
   border-radius: 8px;
   background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
   overflow: hidden;
@@ -189,10 +189,10 @@ body { padding: var(--sp-4); }
 .pg-banner {
   margin: 0 0 var(--sp-4);
   border-radius: 4px;
-  border-left: 3px solid var(--vscode-textLink-foreground);
+  border-left: 3px solid var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
   padding: 8px 12px;
   font-size: 12px;
-  background: color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--vscode-nexql-accent, var(--vscode-textLink-foreground)) 12%, transparent);
 }
 
 .pg-banner.error {
@@ -252,6 +252,7 @@ export const CSS_VARIABLES = {
     menuSelectionBackground: 'var(--vscode-menu-selectionBackground)',
     descriptionForeground: 'var(--vscode-descriptionForeground)',
     textLinkForeground: 'var(--vscode-textLink-foreground)',
+    brandAccent: 'var(--vscode-nexql-accent, var(--vscode-textLink-foreground))',
     focusBorder: 'var(--vscode-focusBorder)',
     
     // Fonts
@@ -270,7 +271,7 @@ export const COMMON_STYLES = {
         fontSize: '13px',
         color: CSS_VARIABLES.editorForeground,
         border: `1px solid ${CSS_VARIABLES.widgetBorder}`,
-        borderTop: `2px solid ${CSS_VARIABLES.textLinkForeground}`,
+        borderTop: `2px solid ${CSS_VARIABLES.brandAccent}`,
         borderRadius: '4px',
         overflow: 'hidden',
         marginBottom: '8px',
