@@ -929,6 +929,12 @@
         "icon": "$(tools)"
       },
       {
+        "command": "postgres-explorer.databaseHealth",
+        "title": "Database Health Report",
+        "category": "NexQL",
+        "icon": "$(pulse)"
+      },
+      {
         "command": "postgres-explorer.queryTool",
         "title": "Query Tool",
         "icon": "$(terminal)"
@@ -3529,6 +3535,11 @@
           "command": "postgres-explorer.maintenanceDatabase",
           "when": "view == postgresExplorer && viewItem == database",
           "group": "1_operations@7"
+        },
+        {
+          "command": "postgres-explorer.databaseHealth",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@8"
         },
         {
           "command": "postgres-explorer.queryTool",

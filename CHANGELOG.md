@@ -9,6 +9,10 @@ Quick links:
 
 ## [Unreleased]
 
+### Added
+
+- **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.
+
 ### Security
 
 - **License overrides no longer unlock paid tiers in shipped builds.** `postgresExplorer.license.enforcement=off` and a custom `postgresExplorer.license.endpoint` are ignored unless the extension is running in the Extension Development Host. Both keys were removed from the contributed settings manifest. Leftover user values are ignored and do not throw. Fail-open-to-free and the 7-day offline grace window are unchanged: a network failure never grants a paid tier and never locks out a cached paid tier inside that window.

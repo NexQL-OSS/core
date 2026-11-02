@@ -12,6 +12,7 @@ import { cmdImportConnectionFromDatabaseUrl } from '../commands/importConnection
 import { cmdSmartPasteConnection } from '../commands/smartPasteConnection';
 import { showIndexProperties, copyIndexName, generateDropIndexScript, generateReindexScript, generateScriptCreate, analyzeIndexUsage, generateAlterIndexScript, addIndexComment, cmdIndexOperations, cmdAddIndex } from '../commands/indexes';
 import { cmdAddObjectInDatabase, cmdCreateDatabase, cmdDatabaseOperations, cmdDeleteDatabase, cmdDisconnectDatabase as cmdDisconnectDatabaseLegacy, cmdGenerateCreateScript, cmdMaintenanceDatabase, cmdPsqlTool, cmdQueryTool, cmdScriptAlterDatabase, cmdShowConfiguration } from '../commands/database';
+import { cmdDatabaseHealth } from '../commands/health';
 import { cmdDropExtension, cmdEnableExtension, cmdExtensionOperations, cmdRefreshExtension } from '../commands/extensions';
 import { cmdCreateForeignTable, cmdDropForeignTable, cmdEditForeignTable, cmdForeignTableOperations, cmdRefreshForeignTable, cmdShowForeignTableProperties, cmdViewForeignTableData } from '../commands/foreignTables';
 import { cmdForeignDataWrapperOperations, cmdShowForeignDataWrapperProperties, cmdCreateForeignServer, cmdForeignServerOperations, cmdShowForeignServerProperties, cmdDropForeignServer, cmdCreateUserMapping, cmdUserMappingOperations, cmdShowUserMappingProperties, cmdDropUserMapping, cmdRefreshForeignDataWrapper, cmdRefreshForeignServer, cmdRefreshUserMapping } from '../commands/foreignDataWrappers';
@@ -732,6 +733,10 @@ export function getCommandSpecs(
     {
       command: 'postgres-explorer.maintenanceDatabase',
       callback: async (item: DatabaseTreeItem) => await cmdMaintenanceDatabase(item, context)
+    },
+    {
+      command: 'postgres-explorer.databaseHealth',
+      callback: async (item: DatabaseTreeItem) => await cmdDatabaseHealth(item, context)
     },
     {
       command: 'postgres-explorer.queryTool',
