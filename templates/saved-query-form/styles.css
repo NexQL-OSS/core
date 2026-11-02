@@ -17,3 +17,11 @@ body {
 .pg-field {
   margin-bottom: 14px;
 }
+
+/* Brand ribbon bar at the top of the card (dense panel: plain bar, no wash) */
+.pg-panel-page > .pg-card::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--pg-ribbon);
+}

@@ -2095,16 +2095,22 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "postgresExplorer",
+        "contents": "Connect to a PostgreSQL database to begin.\n\n1. Add a connection\n2. Open a notebook\n3. Run a query\n\n[Add PostgreSQL Connection](command:postgres-explorer.addConnection)\n[Import from DATABASE_URL (.env)](command:postgres-explorer.importConnectionFromDatabaseUrl)\n[Take the quick route](command:workbench.action.openWalkthrough?%5B%22ric-v.postgres-explorer%23nexqlWelcome%22%2Cfalse%5D)"
+      }
+    ],
     "walkthroughs": [
       {
         "id": "nexqlWelcome",
         "title": "NexQL: PostgreSQL in VS Code",
-        "description": "Connect to a database, explore objects, and run SQL in notebooks.",
+        "description": "Six stops from your first connection to a database health check.",
         "steps": [
           {
             "id": "nexqlWelcome.addConnection",
-            "title": "Add a database connection",
-            "description": "Save your server and credentials securely, then connect.\n[Add PostgreSQL Connection](command:postgres-explorer.addConnection)",
+            "title": "1. Connect a database",
+            "description": "Save your server and credentials, then test the connection. The password goes into VS Code Secret Storage.\n[Add PostgreSQL Connection](command:postgres-explorer.addConnection)",
             "media": {
               "markdown": "walkthroughs/step-connection.md",
               "altText": "Add a PostgreSQL connection"
@@ -2114,21 +2120,9 @@
             ]
           },
           {
-            "id": "nexqlWelcome.openExplorer",
-            "title": "Open the NexQL explorer",
-            "description": "Browse databases, schemas, and objects from the sidebar.\n[Show NexQL](command:workbench.view.extension.postgres-explorer)",
-            "media": {
-              "markdown": "walkthroughs/step-explorer.md",
-              "altText": "Database explorer tree"
-            },
-            "completionEvents": [
-              "onView:postgresExplorer"
-            ]
-          },
-          {
             "id": "nexqlWelcome.newNotebook",
-            "title": "Create a SQL notebook",
-            "description": "Use interactive `.pgsql` notebooks for queries and results.\n[New SQL Notebook](command:postgres-explorer.newNotebook)",
+            "title": "2. Open a notebook",
+            "description": "A `.pgsql` notebook holds SQL cells and their results.\n[New SQL Notebook](command:postgres-explorer.newNotebook)",
             "media": {
               "markdown": "walkthroughs/step-notebook.md",
               "altText": "PostgreSQL SQL notebook"
@@ -2136,6 +2130,51 @@
             "completionEvents": [
               "onCommand:postgres-explorer.newNotebook"
             ]
+          },
+          {
+            "id": "nexqlWelcome.runQuery",
+            "title": "3. Run a query",
+            "description": "Type `select now();` in a cell and run it.\n[Run Cell](command:notebook.cell.execute)",
+            "media": {
+              "markdown": "walkthroughs/step-run-query.md",
+              "altText": "Run a SQL cell"
+            },
+            "completionEvents": [
+              "onCommand:notebook.cell.execute"
+            ]
+          },
+          {
+            "id": "nexqlWelcome.openExplorer",
+            "title": "4. Explore results",
+            "description": "Sort, filter and export the grid. Browse tables and views in the sidebar.\n[Show NexQL](command:workbench.view.extension.postgres-explorer)",
+            "media": {
+              "markdown": "walkthroughs/step-explorer.md",
+              "altText": "Result grid and database explorer"
+            },
+            "completionEvents": [
+              "onView:postgresExplorer"
+            ]
+          },
+          {
+            "id": "nexqlWelcome.connectAiApp",
+            "title": "5. Optional: connect an AI app via nexql-mcp",
+            "description": "nexql-mcp lets Copilot, Claude and other apps query your database, read-only by default.\n[Export connections for nexql-mcp](command:postgres-explorer.exportConnectionsToNexqlConfig)",
+            "media": {
+              "markdown": "walkthroughs/step-mcp.md",
+              "altText": "Connect an AI app with nexql-mcp"
+            },
+            "completionEvents": [
+              "onCommand:postgres-explorer.exportConnectionsToNexqlConfig"
+            ]
+          },
+          {
+            "id": "nexqlWelcome.healthReport",
+            "title": "6. Database Health report",
+            "description": "Right-click a database in the tree and choose Database Health Report. It is a read-only checkup.\n[Show NexQL](command:workbench.view.extension.postgres-explorer)",
+            "media": {
+              "markdown": "walkthroughs/step-health.md",
+              "altText": "Database Health report notebook"
+            }
           }
         ]
       },

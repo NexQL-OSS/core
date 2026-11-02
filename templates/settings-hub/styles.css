@@ -53,15 +53,15 @@ body {
 }
 
 .sentinel-swatch-prod {
-  background: linear-gradient(135deg, #5c1f1f, #8b2f2f);
+  background: color-mix(in srgb, var(--env-prod) 55%, #000);
 }
 
 .sentinel-swatch-staging {
-  background: linear-gradient(135deg, #5c4518, #8b6628);
+  background: color-mix(in srgb, var(--env-staging) 50%, #000);
 }
 
 .sentinel-swatch-dev {
-  background: linear-gradient(135deg, #1a3050, #2a5080);
+  background: color-mix(in srgb, var(--env-dev) 45%, #000);
 }
 
 .th-check,
@@ -202,9 +202,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 28px 32px 56px;
-  background:
-    radial-gradient(ellipse 80% 50% at 100% 0%, color-mix(in srgb, var(--hub-accent) 6%, transparent), transparent 60%),
-    var(--vscode-editor-background);
+  background: var(--vscode-editor-background);
 }
 
 .hub-section {
@@ -354,9 +352,10 @@ body {
   align-items: center;
   padding: 2px 8px;
   border-radius: var(--pg-radius-pill);
-  font-size: 10px;
-  font-weight: 600;
-  background: color-mix(in srgb, var(--hub-accent) 14%, transparent);
+  font-size: 10.5px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--hub-accent) 10%, var(--pg-ui-surface-muted));
+  border: 1px solid color-mix(in srgb, var(--hub-accent) 40%, transparent);
   color: var(--hub-accent);
 }
 
@@ -397,9 +396,21 @@ body {
   align-items: flex-end;
   gap: 16px;
   margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--pg-ui-border);
+  padding-bottom: 16px;
+  position: relative;
   flex-wrap: wrap;
+}
+
+/* Brand ribbon line under every section header */
+.section-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: var(--pg-radius-pill);
+  background: var(--pg-ribbon);
 }
 
 .section-bar h1 {
@@ -834,9 +845,7 @@ body {
   border-radius: var(--pg-radius-md);
   border: 1px solid var(--pg-ui-border-strong);
   background: var(--vscode-editor-background);
-  box-shadow:
-    0 10px 28px color-mix(in srgb, #000 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--vscode-widget-shadow, #000) 12%, transparent);
+  box-shadow: var(--pg-elevation-2);
 }
 
 /* Escapes overflow:hidden on table panels (env column in connections list) */
@@ -1103,9 +1112,7 @@ body {
   /* Opaque surface — raised token uses color-mix and bleeds table content through */
   background: var(--vscode-editor-background);
   padding: 20px 22px 22px;
-  box-shadow:
-    var(--pg-elevation-3),
-    0 0 0 1px color-mix(in srgb, var(--hub-accent) 14%, transparent);
+  box-shadow: var(--pg-elevation-2);
   animation: hub-modal-in 0.18s ease;
   isolation: isolate;
 }
@@ -1322,10 +1329,6 @@ body {
   align-items: center;
 }
 
-.sync-actions {
-  margin-bottom: 12px;
-}
-
 /* ── Hub tab + card design system (AI, Sync, License, …) ── */
 
 /* Tab strip */
@@ -1358,9 +1361,9 @@ body {
 }
 
 .hub-tab-btn.active {
-  color: var(--vscode-textLink-foreground, #4fc3f7);
-  border-bottom-color: var(--vscode-textLink-foreground, #4fc3f7);
-  background: color-mix(in srgb, var(--vscode-textLink-foreground, #4fc3f7) 8%, transparent);
+  color: var(--hub-accent);
+  border-bottom-color: var(--hub-accent);
+  background: color-mix(in srgb, var(--hub-accent) 8%, transparent);
 }
 
 /* Tab panels */
@@ -1391,7 +1394,7 @@ body {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: var(--vscode-textLink-foreground, #4fc3f7);
+  color: var(--hub-accent);
   text-decoration: none;
   opacity: 0.85;
   transition: opacity 0.15s;
@@ -1436,9 +1439,9 @@ body {
 .hub-hero-card {
   background: color-mix(in srgb, var(--pg-ui-surface-raised, #252526) 80%, var(--vscode-editor-background, #1e1e1e));
   border: 1px solid var(--pg-ui-border);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: var(--pg-radius-lg);
+  box-shadow: var(--hub-shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
   overflow: hidden;
   position: relative;
   display: flex;
@@ -1452,21 +1455,12 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #6200ea, #311b92);
-}
-
-#scope-card-Notebook::before {
-  background: linear-gradient(90deg, #e91e63, #9c27b0);
-}
-
-#scope-card-Chat::before {
-  background: linear-gradient(90deg, #00bcd4, #2196f3);
+  background: var(--pg-ribbon);
 }
 
 .hub-hero-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--vscode-focusBorder, #6200ea);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25), 0 0 0 1px color-mix(in srgb, var(--vscode-focusBorder, #6200ea) 20%, transparent);
+  border-color: color-mix(in srgb, var(--hub-accent) 45%, var(--pg-ui-border-strong));
+  box-shadow: var(--pg-elevation-2);
 }
 
 .hub-hero-card-header {
@@ -1489,13 +1483,13 @@ body {
 }
 
 .icon-notebook {
-  background: color-mix(in srgb, #e91e63 15%, transparent);
-  color: #f06292;
+  background: color-mix(in srgb, var(--vscode-nexql-ribbon-magenta, #e0388f) 15%, transparent);
+  color: var(--vscode-nexql-ribbon-magenta, #e0388f);
 }
 
 .icon-chat {
-  background: color-mix(in srgb, #00bcd4 15%, transparent);
-  color: #4dd0e1;
+  background: color-mix(in srgb, var(--vscode-nexql-ribbon-blue, #3d6fe0) 15%, transparent);
+  color: var(--vscode-nexql-ribbon-blue, #3d6fe0);
 }
 
 .hub-hero-icon {
@@ -1633,7 +1627,7 @@ body {
 }
 
 .scope-key-status.warning a {
-  color: var(--vscode-textLink-foreground, #4fc3f7);
+  color: var(--hub-accent);
   text-decoration: none;
   font-weight: 600;
   margin-left: 4px;
@@ -1649,7 +1643,7 @@ body {
 
 @keyframes pulse-border {
   0% { border-color: var(--pg-ui-border); }
-  50% { border-color: var(--vscode-textLink-foreground, #4fc3f7); box-shadow: 0 0 8px color-mix(in srgb, var(--vscode-textLink-foreground, #4fc3f7) 30%, transparent); }
+  50% { border-color: var(--hub-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--hub-accent) 25%, transparent); }
   100% { border-color: var(--pg-ui-border); }
 }
 
@@ -1728,6 +1722,16 @@ body {
 
 .hub-card-status.success { color: var(--success, #4caf50); }
 .hub-card-status.error { color: var(--danger, #f44336); }
+
+/* Non-empty status text reads as a pill (same shape as .pg-pill) */
+.hub-card-status:not(:empty).success,
+.hub-card-status:not(:empty).error {
+  flex: 0 1 auto;
+  padding: 1px 9px;
+  border-radius: var(--pg-radius-pill);
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
 
 /* Info callout inside card (for providers that don't need a key) */
 .hub-card-info {
@@ -1860,10 +1864,11 @@ body {
 
 /* ── Preferences / sync toggles ── */
 .pref-group-title {
+  font-family: var(--pg-font-mono);
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--pg-text-muted);
   margin: 22px 0 8px;
 }
@@ -1947,9 +1952,10 @@ body {
 }
 
 .status-grid dt {
+  font-family: var(--pg-font-mono);
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--pg-text-muted);
   margin: 0 0 4px;
 }
@@ -2238,20 +2244,20 @@ body {
   display: inline-block;
   padding: 3px 12px;
   border-radius: var(--pg-radius-pill);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   background: var(--pg-ui-surface-muted);
   border: 1px solid var(--pg-ui-border-strong);
 }
 
 .tier-badge.tier-sponsor {
-  background: color-mix(in srgb, #8b5cf6 18%, transparent);
-  border-color: color-mix(in srgb, #8b5cf6 45%, transparent);
+  background: color-mix(in srgb, var(--vscode-nexql-ribbon-purple, #a23bc9) 18%, transparent);
+  border-color: color-mix(in srgb, var(--vscode-nexql-ribbon-purple, #a23bc9) 45%, transparent);
 }
 
 .tier-badge.tier-singularity {
-  background: color-mix(in srgb, #f59e0b 18%, transparent);
-  border-color: color-mix(in srgb, #f59e0b 45%, transparent);
+  background: color-mix(in srgb, var(--vscode-nexql-ribbon-amber, #f5b23a) 18%, transparent);
+  border-color: color-mix(in srgb, var(--vscode-nexql-ribbon-amber, #f5b23a) 45%, transparent);
 }
 
 .license-key-input {
@@ -2699,3 +2705,21 @@ body {
 }
 
 
+
+/* ── Access mode badge (connection editor) ── */
+.access-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* High contrast: structure comes from borders, so drop the accent wash on the content area and tabs */
+body.vscode-high-contrast .hub-tab-btn.active,
+body.vscode-high-contrast-light .hub-tab-btn.active {
+  background: transparent;
+}
+body.vscode-high-contrast .section-bar::after,
+body.vscode-high-contrast-light .section-bar::after {
+  height: 1px;
+}

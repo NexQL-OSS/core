@@ -247,21 +247,51 @@ export function getUpgradeHtml(feature: ProFeature): string {
   const label = FEATURE_LABELS[feature];
   const required = minTierFor(feature);
   const plans = required === 'singularity' ? `NexQL ${TIER_DISPLAY.singularity}` : 'NexQL Sponsor or Singularity';
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  // Brand screen: ribbon, display face and a serif emphasis word. Self-contained (no shared CSS),
+  // so every colour is a --vscode-* variable with the brand fallbacks from docs/DESIGN_SYSTEM.md.
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      body { font-family: var(--vscode-font-family); color: var(--vscode-foreground);
-             padding: 32px; text-align: center; }
-      h2 { margin-bottom: 8px; }
-      p { color: var(--vscode-descriptionForeground); }
-      a.btn { display:inline-block; margin-top:16px; padding:10px 18px; border-radius:6px;
-              background: var(--vscode-button-background); color: var(--vscode-button-foreground);
-              text-decoration:none; }
+      :root {
+        --accent: var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
+        --accent-ink: var(--vscode-nexql-accentForeground, var(--vscode-button-foreground, #0b0e14));
+        --border: color-mix(in srgb, var(--vscode-widget-border) 65%, transparent);
+        --ribbon: linear-gradient(105deg, var(--vscode-nexql-ribbon-blue, #3d6fe0), var(--vscode-nexql-ribbon-indigo, #6c4cd6) 30%,
+          var(--vscode-nexql-ribbon-purple, #a23bc9) 52%, var(--vscode-nexql-ribbon-magenta, #e0388f) 72%,
+          var(--vscode-nexql-ribbon-orange, #f26b3a) 90%, var(--vscode-nexql-ribbon-amber, #f5b23a));
+        --wash: radial-gradient(60% 80% at 0% 0%, color-mix(in srgb, var(--vscode-nexql-ribbon-magenta, #e0388f) 10%, transparent), transparent 70%),
+          radial-gradient(60% 80% at 100% 0%, color-mix(in srgb, var(--vscode-nexql-ribbon-blue, #3d6fe0) 12%, transparent), transparent 70%);
+      }
+      body { margin: 0; padding: 40px 20px; font-family: var(--vscode-font-family); font-size: 13px; line-height: 1.55;
+             color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+      .card { max-width: 480px; margin: 0 auto; text-align: center; overflow: hidden; padding: 0 28px 28px;
+              border: 1px solid var(--border); border-radius: 10px; background-image: var(--wash);
+              background-color: color-mix(in srgb, var(--vscode-input-background) 88%, var(--vscode-editor-background));
+              box-shadow: 2px 4px 8px color-mix(in srgb, #000 30%, transparent), inset 1px 1px 0 color-mix(in srgb, #fff 10%, transparent); }
+      .ribbon { height: 3px; margin: 0 -28px 24px; background: var(--ribbon); }
+      .pill { display: inline-block; padding: 2px 11px; border-radius: 999px; font-size: 11px;
+              font-family: var(--vscode-editor-font-family, monospace); letter-spacing: 0.06em; text-transform: uppercase;
+              color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+              background: color-mix(in srgb, var(--accent) 10%, transparent); }
+      h2 { margin: 14px 0 8px; font-family: "Space Grotesk", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+           font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; }
+      h2 em { font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif; font-weight: 400; font-size: 1.1em; color: var(--accent); }
+      p { margin: 0; color: var(--vscode-descriptionForeground); }
+      a.btn { display: inline-block; margin-top: 18px; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-weight: 600;
+              background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); }
+      a.btn:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
+      .hint { margin-top: 20px; font-size: 12px; }
+      .vscode-high-contrast .card, .vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder, currentColor); background-image: none; box-shadow: none; }
+      .vscode-high-contrast .ribbon, .vscode-high-contrast-light .ribbon { background: var(--vscode-contrastBorder, currentColor); height: 1px; }
     </style></head>
     <body>
-      <h2>${label} is a paid feature</h2>
-      <p>Upgrade to ${plans} to unlock ${label}.</p>
-      <a class="btn" href="${PRICING_URL}">View plans</a>
-      <p style="margin-top:20px;font-size:12px">Already subscribed? Run
-        <b>NexQL: Activate License</b> from the command palette.</p>
+      <div class="card">
+        <div class="ribbon"></div>
+        <span class="pill">Paid feature</span>
+        <h2>Unlock <em>${label}</em></h2>
+        <p>Upgrade to ${plans} to use ${label}.</p>
+        <a class="btn" href="${PRICING_URL}">View plans</a>
+        <p class="hint">Already subscribed? Run <b>NexQL: Activate License</b> from the command palette.</p>
+      </div>
     </body></html>`;
 }

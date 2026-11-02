@@ -1,7 +1,7 @@
-# Explore the database
+# Explore results
 
-The **Connections** tree lists databases, schemas, tables, views, and more.
+Stop 4 of 6
 
-Right-click objects for DDL, data, designer tools, and context actions. Use **Refresh** if the tree looks stale.
+Under the cell you get a result grid. Sort, filter, copy, or export to CSV, JSON or Excel from its toolbar.
 
-Open **SQL Assistant** from the activity bar when you want AI help with queries.
+The **NexQL** sidebar lists databases, schemas, tables and views. Right-click an object for its DDL, data and other actions. Use **Refresh** if the tree looks stale.

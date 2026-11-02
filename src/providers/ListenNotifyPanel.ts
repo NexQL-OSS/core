@@ -330,7 +330,7 @@ export class ListenNotifyPanel {
     --header-bg: var(--vscode-sideBarSectionHeader-background, #252526);
     --section-bg: var(--vscode-sideBar-background, #1e1e1e);
     --row-alt: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
-    --accent: var(--vscode-focusBorder, #0078d4);
+    --accent: var(--pg-brand-accent);
     --error-fg: var(--vscode-inputValidation-errorForeground, #f48771);
     --font: var(--vscode-font-family, system-ui, sans-serif);
     --mono: var(--vscode-editor-font-family, monospace);
@@ -359,6 +359,7 @@ export class ListenNotifyPanel {
     justify-content: space-between;
     padding: 10px 16px;
     background: var(--header-bg);
+    border-top: 2px solid var(--pg-brand-accent);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }

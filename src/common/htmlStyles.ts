@@ -132,9 +132,53 @@ export const SHARED_WEBVIEW_CSS = `
 .row-action-btn.danger:hover { background: color-mix(in srgb, var(--vscode-errorForeground) 12%, transparent); }
 `;
 
+/**
+ * Minimal brand tokens for inline-CSS panels that are built synchronously and cannot
+ * load `templates/shared/styles.css`. Same names and values as the shared layer, so when
+ * the shared CSS is also present it simply re-declares them. Keep in sync with
+ * `templates/shared/styles.css` (accent, bevel, elevation 1-2, high contrast).
+ */
+export const PANEL_BRAND_TOKENS_CSS = `
+:root {
+  --pg-brand-accent: var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
+  --pg-brand-accent-ink: var(--vscode-nexql-accentForeground, var(--vscode-button-foreground, #0b0e14));
+  --pg-ui-border: color-mix(in srgb, var(--vscode-widget-border) 65%, transparent);
+  --pg-font-mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  --pg-bevel-hi: color-mix(in srgb, #fff 75%, var(--vscode-editor-background));
+  --pg-bevel-lo: color-mix(in srgb, #000 13%, var(--vscode-editor-background));
+  --pg-shadow-ink: color-mix(in srgb, #1b1030 16%, transparent);
+  --pg-elevation-1: 1px 2px 3px var(--pg-shadow-ink), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-2: 1px 2px 4px var(--pg-shadow-ink), 8px 16px 30px -12px color-mix(in srgb, #1b1030 28%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+}
+body.vscode-dark {
+  --pg-bevel-hi: color-mix(in srgb, #fff 11%, var(--vscode-editor-background));
+  --pg-bevel-lo: color-mix(in srgb, #000 45%, var(--vscode-editor-background));
+  --pg-shadow-ink: color-mix(in srgb, #000 55%, transparent);
+  --pg-elevation-1: 1px 2px 3px var(--pg-shadow-ink), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+  --pg-elevation-2: 1px 2px 4px var(--pg-shadow-ink), 8px 16px 30px -10px color-mix(in srgb, #000 80%, transparent), inset 1px 1px 0 var(--pg-bevel-hi), inset -1px -1px 0 var(--pg-bevel-lo);
+}
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --pg-elevation-1: none;
+  --pg-elevation-2: none;
+  --pg-ui-border: var(--vscode-contrastBorder, currentColor);
+}
+
+/* Section label: 12px mono uppercase (same as the shared .pg-mono-label) */
+.pg-mono-label {
+  font-family: var(--pg-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+}
+`;
+
 /** Core panel shell styles used by non-notebook webviews. */
 export const MODERN_WEBVIEW_BASE_CSS = `
 ${SHARED_WEBVIEW_CSS}
+${PANEL_BRAND_TOKENS_CSS}
 
 *,
 *::before,
@@ -153,10 +197,11 @@ html, body {
 body { padding: var(--sp-4); }
 
 .pg-panel {
-  border: 1px solid var(--vscode-widget-border);
-  border-top: 2px solid var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
+  border: 1px solid var(--pg-ui-border);
+  border-top: 2px solid var(--pg-brand-accent);
   border-radius: 8px;
   background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
+  box-shadow: var(--pg-elevation-1);
   overflow: hidden;
 }
 
@@ -189,10 +234,10 @@ body { padding: var(--sp-4); }
 .pg-banner {
   margin: 0 0 var(--sp-4);
   border-radius: 4px;
-  border-left: 3px solid var(--vscode-nexql-accent, var(--vscode-textLink-foreground));
+  border-left: 3px solid var(--pg-brand-accent);
   padding: 8px 12px;
   font-size: 12px;
-  background: color-mix(in srgb, var(--vscode-nexql-accent, var(--vscode-textLink-foreground)) 12%, transparent);
+  background: color-mix(in srgb, var(--pg-brand-accent) 12%, transparent);
 }
 
 .pg-banner.error {

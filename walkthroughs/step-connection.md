@@ -1,7 +1,11 @@
-# Add a connection
+# Connect a database
 
-NexQL stores host, port, database name, and your password in **VS Code Secret Storage** (encrypted on disk).
+Stop 1 of 6
 
-Use **Add PostgreSQL Connection** from the palette or the PG Studio sidebar. Test the connection before saving.
+1. Run **Add PostgreSQL Connection**.
+2. Enter host, port, user and database.
+3. Select **Test**, then **Save**.
 
-You can also import a `DATABASE_URL` from a `.env` file with the dedicated command.
+Your password is kept in VS Code Secret Storage, not in settings.
+
+Have a `DATABASE_URL` in a `.env` file? Use **Import Connection from DATABASE_URL (.env)** instead.

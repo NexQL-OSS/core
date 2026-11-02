@@ -10,6 +10,17 @@ body {
   padding: 16px 20px 0;
 }
 
+/* Brand ribbon line under the title */
+.pg-properties-header::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  border-radius: var(--pg-radius-pill);
+  background: var(--pg-ribbon);
+}
+
 .pg-properties-title {
   margin: 0;
   font-size: 16px;
@@ -18,10 +29,13 @@ body {
 }
 
 .pg-tab-panel h3 {
-  color: var(--vscode-foreground);
-  font-size: 13px;
+  color: var(--pg-text-muted);
+  font-family: var(--pg-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin: 20px 0 10px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .pg-list-container {

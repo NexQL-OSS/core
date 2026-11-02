@@ -7,6 +7,7 @@
  */
 import * as vscode from 'vscode';
 import { WebviewPool } from '../utils/WebviewPool';
+import { PANEL_BRAND_TOKENS_CSS } from '../common/htmlStyles';
 
 // ─── Data Model ──────────────────────────────────────────────────────────────
 
@@ -318,6 +319,7 @@ export class SnippetsPanel {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SQL Snippets Library</title>
   <style>
+    ${PANEL_BRAND_TOKENS_CSS}
     :root {
       --bg: var(--vscode-editor-background);
       --fg: var(--vscode-editor-foreground);
@@ -373,7 +375,7 @@ export class SnippetsPanel {
       margin-bottom: 14px;
       outline: none;
     }
-    #search-bar:focus { border-color: var(--vscode-focusBorder); }
+    #search-bar:focus { border-color: var(--pg-brand-accent); }
 
     /* ── Toolbar ── */
     .toolbar {
@@ -449,6 +451,7 @@ export class SnippetsPanel {
       border: 1px solid var(--border);
       border-radius: 4px;
       padding: 10px 12px;
+      box-shadow: var(--pg-elevation-1);
     }
     .snippet-card.hidden { display: none; }
 
@@ -511,7 +514,7 @@ export class SnippetsPanel {
     /* ── New Snippet Form ── */
     #new-snippet-form {
       background: var(--card-bg);
-      border: 1px solid var(--vscode-focusBorder, var(--border));
+      border: 1px solid var(--pg-brand-accent);
       border-radius: 5px;
       padding: 14px;
       margin-bottom: 14px;

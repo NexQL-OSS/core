@@ -8,11 +8,11 @@
   <title>NexQL Settings</title>
   <style>{{INLINE_STYLES}}</style>
   <style>
-    .sql-keyword { color: #569CD6; font-weight: bold; }
-    .sql-type { color: #4EC9B0; }
-    .sql-ident { color: #9CDCFE; }
-    .sql-func { color: #DCDCAA; }
-    .sql-comment { color: #6A9955; font-style: italic; }
+    .sql-keyword { color: var(--vscode-symbolIcon-keywordForeground, #569CD6); font-weight: bold; }
+    .sql-type { color: var(--vscode-symbolIcon-classForeground, #4EC9B0); }
+    .sql-ident { color: var(--vscode-symbolIcon-variableForeground, #9CDCFE); }
+    .sql-func { color: var(--vscode-symbolIcon-functionForeground, #DCDCAA); }
+    .sql-comment { color: var(--vscode-descriptionForeground); font-style: italic; }
     pre code {
       background: none !important;
       padding: 0 !important;
@@ -1710,11 +1710,14 @@ npx -y nexql-mcp postgres://dev@localhost:5432/appdb
             <p class="label-hint">Tags this connection for Sentinel safety signals. <button type="button" id="connSentinelLink" class="btn-link">Configure Sentinel</button></p>
           </div>
           <div class="form-group checkbox-cell">
-            <label class="checkbox-label">
-              <input type="checkbox" id="readOnlyMode">
-              <span>Read-only</span>
-            </label>
-            <span class="label-hint">Access mode. Checked = Read-only (writes blocked); unchecked = Read/write. Same wording as the NexQL MCP server.</span>
+            <div class="access-mode-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="readOnlyMode">
+                <span>Read-only</span>
+              </label>
+              <span id="accessModeBadge" class="pg-mode-badge pg-mode--write" aria-live="polite">Read/write</span>
+            </div>
+            <span class="label-hint">Access mode. Checked = Read-only (writes blocked); unchecked = Read/write.</span>
           </div>
         </div>
 

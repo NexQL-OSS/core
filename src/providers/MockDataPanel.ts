@@ -471,7 +471,7 @@ export class MockDataPanel {
     .step-dot.active {
       background: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
-      border-color: var(--vscode-focusBorder);
+      border-color: var(--pg-brand-accent);
     }
     .step-dot.done {
       background: var(--vscode-charts-green, #4caf50);

@@ -1,5 +1,7 @@
-# Run SQL in notebooks
+# Open a notebook
 
-Create a **`.pgsql`** notebook to run cells against a chosen connection, use parameters, view result grids, and export output.
+Stop 2 of 6
 
-Use the connection picker in the notebook toolbar to switch databases without leaving the editor.
+Run **New SQL Notebook**. It creates a `.pgsql` file with a code cell.
+
+Pick a connection from the toolbar at the top of the notebook. You can switch databases there at any time.

@@ -395,6 +395,7 @@ export class ServerLogPanel {
     .header {
       padding: 8px 12px;
       background: var(--vscode-sideBarSectionHeader-background);
+      border-top: 2px solid var(--pg-brand-accent);
       border-bottom: 1px solid var(--vscode-panel-border);
       font-size: 14px;
       font-weight: 600;

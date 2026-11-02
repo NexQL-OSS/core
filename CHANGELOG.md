@@ -9,6 +9,12 @@ Quick links:
 
 ## [Unreleased]
 
+### Changed
+
+- **Brand refresh for core's own panels.** What's New is now a hero with the ribbon, a version pill and release notes as cards (one collapsible block per version). The welcome walkthrough is a six-stop route: connect a database, open a notebook, run a query, explore results, optionally connect an AI app via nexql-mcp, and the Database Health report. The Connections view shows a short welcome with add-connection and walkthrough links when it is empty. The paid-feature screen uses the same look.
+- **Settings Hub, saved-query panels and table properties** use the `--pg-*` tokens and elevation 1 to 2, with a ribbon line under each header, accent active tabs, and mono section labels. The connection editor shows a live Read-only / Read/write badge. Activity Monitor, Column Profile, LISTEN/NOTIFY, Mock Data, Server Log and Snippets pick up the brand accent and elevation through the shared panel base styles.
+- Buttons in high-contrast themes now have a visible border.
+
 ### Added
 
 - **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.

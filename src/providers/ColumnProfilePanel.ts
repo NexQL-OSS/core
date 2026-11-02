@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ConnectionManager } from '../services/ConnectionManager';
 import { SecretStorageService } from '../services/SecretStorageService';
 import { disposePooledOwner, WebviewPool } from '../utils/WebviewPool';
+import { PANEL_BRAND_TOKENS_CSS } from '../common/htmlStyles';
 
 /**
  * Column Profiling Panel (Phase 3.4)
@@ -380,11 +381,12 @@ export class ColumnProfilePanel {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Column Profile: ${column}</title>
 <style>
+  ${PANEL_BRAND_TOKENS_CSS}
   :root {
     --bg: var(--vscode-editor-background);
     --fg: var(--vscode-editor-foreground);
     --border: var(--vscode-widget-border, #444);
-    --accent: var(--vscode-focusBorder, #0078d4);
+    --accent: var(--pg-brand-accent);
     --header-bg: var(--vscode-sideBarSectionHeader-background, #252526);
     --row-alt: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
     --bar-color: var(--vscode-progressBar-background, #0078d4);
@@ -408,6 +410,7 @@ export class ColumnProfilePanel {
 
   .header {
     padding: 16px 20px 12px;
+    border-top: 2px solid var(--pg-brand-accent);
     border-bottom: 1px solid var(--border);
     background: var(--header-bg);
   }

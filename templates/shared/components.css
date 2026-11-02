@@ -603,6 +603,18 @@ body.vscode-high-contrast-light .pg-route {
   border-color: var(--vscode-contrastBorder, currentColor);
 }
 
+/* High contrast: buttons need a visible edge (their fills are the page background) */
+body.vscode-high-contrast .pg-btn,
+body.vscode-high-contrast-light .pg-btn,
+body.vscode-high-contrast .btn,
+body.vscode-high-contrast-light .btn,
+body.vscode-high-contrast .btn-primary,
+body.vscode-high-contrast-light .btn-primary,
+body.vscode-high-contrast .btn-secondary,
+body.vscode-high-contrast-light .btn-secondary {
+  border: 1px solid var(--vscode-contrastBorder, currentColor);
+}
+
 body.vscode-high-contrast .pg-hero-card::before,
 body.vscode-high-contrast-light .pg-hero-card::before {
   height: 1px;

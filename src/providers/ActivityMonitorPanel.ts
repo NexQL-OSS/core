@@ -224,6 +224,7 @@ ORDER BY duration_seconds DESC NULLS LAST
     .header {
       padding: 10px 16px;
       background: var(--vscode-editorGroupHeader-tabsBackground);
+      border-top: 2px solid var(--pg-brand-accent);
       border-bottom: 1px solid var(--vscode-panel-border);
       flex-shrink: 0;
     }
@@ -433,7 +434,7 @@ ORDER BY duration_seconds DESC NULLS LAST
       border-radius: 4px;
       padding: 10px 16px;
       font-size: 0.88em;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: var(--pg-elevation-2);
       opacity: 0;
       transition: opacity 0.2s ease;
       pointer-events: none;

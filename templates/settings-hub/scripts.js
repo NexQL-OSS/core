@@ -687,6 +687,12 @@ function updateProductionWarning() {
   const isProd = $('environment').value === 'production';
   const isReadOnly = $('readOnlyMode').checked;
   $('productionWarning').hidden = !(isProd && !isReadOnly);
+  const badge = $('accessModeBadge');
+  if (badge) {
+    badge.textContent = isReadOnly ? 'Read-only' : 'Read/write';
+    badge.classList.toggle('pg-mode--read', isReadOnly);
+    badge.classList.toggle('pg-mode--write', !isReadOnly);
+  }
 }
 $('environment').addEventListener('change', updateProductionWarning);
 $('readOnlyMode').addEventListener('change', updateProductionWarning);
