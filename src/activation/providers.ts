@@ -264,6 +264,12 @@ export function registerProviders(context: vscode.ExtensionContext, outputChanne
     outputChannel.appendLine('QueryCodeLensProvider registered for EXPLAIN actions.');
   });
 
+  runDeferredProviderTask(outputChannel, 'registerDdlSafety', async () => {
+    const { registerDdlSafety } = await import('../providers/DdlSafetyProvider');
+    registerDdlSafety(context);
+    outputChannel.appendLine('DDL lock-safety diagnostics registered.');
+  });
+
   runDeferredProviderTask(outputChannel, 'registerQueryHistoryProvider', async () => {
     const queryHistoryModule = await import('../providers/QueryHistoryProvider');
     const queryHistoryProvider = new queryHistoryModule.QueryHistoryProvider();

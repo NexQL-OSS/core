@@ -12,6 +12,7 @@ Quick links:
 ### Added
 
 - **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.
+- **DDL lock-safety warnings in SQL notebooks.** Cells containing `CREATE INDEX`/`REINDEX` without `CONCURRENTLY`, `ADD CONSTRAINT ... FOREIGN KEY|CHECK` without `NOT VALID`, `ALTER COLUMN ... TYPE` / `SET NOT NULL`, `ADD COLUMN` with a volatile default, `VACUUM FULL`, `CLUSTER`, `LOCK TABLE`, `DROP TABLE`, `TRUNCATE`, `DROP SCHEMA ... CASCADE`, and `DELETE`/`UPDATE` without `WHERE` now show inline diagnostics. A quick fix applies the safer form where one exists. Detection is token-based, so comments, strings, quoted identifiers and `$$` bodies never trigger it. Toggle with `postgresExplorer.ddlSafety.enabled` (default on).
 
 ### Security
 

@@ -2264,6 +2264,11 @@
             }
           }
         },
+        "postgresExplorer.ddlSafety.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Warn inline in SQL notebook cells about DDL that takes heavy locks or rewrites tables (CREATE INDEX without CONCURRENTLY, ADD CONSTRAINT without NOT VALID, ALTER COLUMN TYPE, VACUUM FULL, DELETE/UPDATE without WHERE, ...) and offer safer rewrites as quick fixes."
+        },
         "postgresExplorer.sentinel.enabled": {
           "type": "boolean",
           "default": true,
