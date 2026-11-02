@@ -35,6 +35,8 @@ import { getSchemaCache } from '../../lib/schema-cache';
 import type { NexqlCellMetadata } from '../../features/notebook/cellMetadata';
 
 import { QueryExecutionService } from '../../services/QueryExecutionService';
+import { consumeDryRunRequest } from '../../services/dryRun/DryRunRequests';
+import { DryRunCellRunner } from './DryRunCellRunner';
 import { executeQueryImpl, cancelInFlightQuery } from './executeQueryImpl';
 import type {
   ExecuteQueryHooks,
@@ -652,6 +654,11 @@ export class SqlExecutor {
   public async executeCell(cell: vscode.NotebookCell) {
     if (!this._controller) {
       throw new Error('Notebook controller required for cell execution');
+    }
+    // Dry run requested via `postgres-explorer.dryRunCell`: execute, snapshot, always roll back.
+    if (consumeDryRunRequest(cell.document.uri.toString())) {
+      await new DryRunCellRunner(this._controller, this._messaging).execute(cell);
+      return;
     }
     debugLog(`SqlExecutor: Starting cell execution. Controller ID: ${this._controller.id}`);
     const execution = this._controller.createNotebookCellExecution(cell);

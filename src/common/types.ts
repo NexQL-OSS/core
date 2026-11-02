@@ -116,7 +116,28 @@ export interface NoticeLogEntry {
   receivedAt: string;
 }
 
+/**
+ * Marks a result output as a dry-run snapshot (the statement was rolled back).
+ * The renderer shows a prominent banner and the result is never editable/re-runnable.
+ */
+export interface DryRunInfo {
+  /** Which image this output holds. `summary` = no rows (DDL, MERGE, nothing returned). */
+  phase: 'before' | 'after' | 'summary';
+  verb: string;
+  /** True number of rows the statement would change, when known. */
+  affectedCount: number | null;
+  shownRows: number;
+  capped: boolean;
+  /** Row cap applied to snapshots. */
+  rowCap: number;
+  mode: 'transaction' | 'savepoint';
+  rollbackConfirmed: boolean;
+  notes: string[];
+}
+
 export interface QueryResults {
+  /** Present only on dry-run outputs. */
+  dryRun?: DryRunInfo;
   rows: any[];
   columns: string[];
   rowCount?: number | null;

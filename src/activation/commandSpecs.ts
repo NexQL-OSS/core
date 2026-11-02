@@ -23,6 +23,7 @@ import { cmdCallProcedure, cmdCreateProcedure, cmdDropProcedure, cmdEditProcedur
 import { cmdCreateMaterializedView, cmdDropMatView, cmdEditMatView, cmdMatViewOperations, cmdRefreshMatView, cmdViewMatViewData, cmdViewMatViewProperties } from '../commands/materializedViews';
 import { cmdNewNotebook, cmdExplainQuery, cmdJumpToSection, cmdSwitchNotebookConnection, cmdQuickOpenNotebook } from '../commands/notebook';
 import { toggleFullDatasetForCell, toggleFullDatasetFromCell } from '../commands/fullDataset';
+import { cmdDryRunCell } from '../commands/dryRun';
 import { cmdExportNotebook } from '../commands/notebookExport';
 import { cmdCreateObjectInSchema, cmdCreateSchema, cmdSchemaOperations, cmdShowSchemaProperties, cmdPasteTable } from '../commands/schema';
 import {
@@ -248,6 +249,12 @@ export function getCommandSpecs(
           return;
         }
         await cmdExplainQuery(target.document.uri, true);
+      },
+    },
+    {
+      command: 'postgres-explorer.dryRunCell',
+      callback: async (target?: unknown) => {
+        await cmdDryRunCell(target);
       },
     },
     {

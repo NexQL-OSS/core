@@ -270,6 +270,11 @@ export function registerProviders(context: vscode.ExtensionContext, outputChanne
     outputChannel.appendLine('DDL lock-safety diagnostics registered.');
   });
 
+  runDeferredProviderTask(outputChannel, 'registerDryRunContext', async () => {
+    const dryRunModule = await import('../commands/dryRun');
+    dryRunModule.registerDryRunContext(context);
+  });
+
   runDeferredProviderTask(outputChannel, 'registerQueryHistoryProvider', async () => {
     const queryHistoryModule = await import('../providers/QueryHistoryProvider');
     const queryHistoryProvider = new queryHistoryModule.QueryHistoryProvider();

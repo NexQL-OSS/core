@@ -25,6 +25,7 @@ import {
 } from '../../../renderer/components/ResultToolbarUi';
 import { createResultIdentityBar } from '../../../renderer/components/ResultIdentityBar';
 import { createInlineBanner } from '../../../renderer/components/InlineBanner';
+import { createDryRunBanner } from '../../../renderer/components/DryRunBanner';
 import {
   createResultFooter,
   formatResultExecutionStats,
@@ -533,6 +534,10 @@ export function renderPostgresNotebookResult(
           }),
       });
       mainContainer.appendChild(identityBar);
+
+      if (json.dryRun) {
+        mainContainer.appendChild(createDryRunBanner(json.dryRun));
+      }
 
       if (autoLimitApplied) {
         const limitMsg =

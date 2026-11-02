@@ -5,6 +5,7 @@ import { SqlParser } from './kernel/SqlParser';
 import { isNexqlManagedSqlDocument, isQueryStudioSqlDocument } from '../lib/nexqlSqlDocument';
 import { isNexqlStudioSqlLanguage } from '../lib/nexqlStudioSqlLanguage';
 import { resolveRunnableSqlFromDocument } from '../lib/resolveRunnableSql';
+import { cellHasDryRunnableWrite } from '../services/dryRun/dryRunAnalyzer';
 
 export interface PillData {
   success: boolean;
@@ -153,6 +154,22 @@ export class QueryCodeLensProvider implements vscode.CodeLensProvider {
             ? 'postgres-explorer.queryStudio.explainAnalyze'
             : 'postgres-explorer.explainQuery',
           arguments: isQueryStudioSqlDocument(document) ? [] : [document.uri, true],
+        }),
+      );
+    }
+
+    // Dry run: only for notebook cells whose content is a single supported DML/DDL statement.
+    if (
+      !isExplainQuery &&
+      document.uri.scheme === 'vscode-notebook-cell' &&
+      cellHasDryRunnableWrite(text)
+    ) {
+      runGroupLenses.push(
+        new vscode.CodeLens(range, {
+          title: '$(debug-reverse-continue) Dry run',
+          tooltip: 'Run this statement, show what it would change, then always roll back. Nothing is saved.',
+          command: 'postgres-explorer.dryRunCell',
+          arguments: [document.uri],
         }),
       );
     }
