@@ -18,6 +18,9 @@ Quick links:
 - **One access-mode signal per connection**, using the same vocabulary as the NexQL MCP server: **Read-only** (`$(lock)`) or **Read/write** (`$(edit)`). Shown in the connection tree description and tooltip next to the environment, and in a new notebook status bar item. Production connections that allow writes get a warning tint.
 - **`NexQL: Toggle Read-only / Read/write Mode`** (`postgres-explorer.toggleReadOnlyMode`) is available from the connection context menu and by clicking the status bar item. Switching a production connection to Read/write asks for confirmation. Open connections and transactions for that connection are closed and reconnect so the new mode takes effect.
 - The connection form and safety dialog now use the same Read-only / Read/write wording.
+### Team config sharing
+
+- **Share connections with nexql-mcp.** New commands **Export Connections to .nexql/config.toml** and **Import Connections from .nexql/config.toml** read and write the same secret-free `[profiles.<name>]` format as the nexql-mcp server. Passwords, SSH keys and tokens are never exported; import prompts for passwords and stores them in SecretStorage. Read-only connections map to `access_mode = "read"`, others to `"write"` (never `"admin"`). Extension-only settings (environment, group, SSH host) go in a `[profiles.<name>.vscode]` sub-table.
 
 ### Security
 

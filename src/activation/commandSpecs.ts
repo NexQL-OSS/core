@@ -9,6 +9,7 @@ import { showColumnProperties, copyColumnName, copyColumnNameQuoted, generateSel
 import { showConstraintProperties, copyConstraintName, generateDropConstraintScript, generateAlterConstraintScript, validateConstraint, generateAddConstraintScript, viewConstraintDependencies, cmdConstraintOperations, cmdAddConstraint } from '../commands/constraints';
 import { TOGGLE_READ_ONLY_COMMAND, cmdToggleReadOnlyMode } from '../commands/accessMode';
 import { cmdConnectDatabase, cmdDisconnectConnection, cmdDisconnectDatabase, cmdReconnectConnection, cmdDuplicateConnection, showConnectionSafety, revealInExplorer, cmdAssignConnectionColor, cmdSetConnectionGroup, cmdPinConnection, cmdUnpinConnection } from '../commands/connection';
+import { cmdExportConnectionsToNexqlConfig, cmdImportConnectionsFromNexqlConfig } from '../commands/nexqlConfigCommands';
 import { cmdImportConnectionFromDatabaseUrl } from '../commands/importConnectionFromDatabaseUrl';
 import { cmdSmartPasteConnection } from '../commands/smartPasteConnection';
 import { showIndexProperties, copyIndexName, generateDropIndexScript, generateReindexScript, generateScriptCreate, analyzeIndexUsage, generateAlterIndexScript, addIndexComment, cmdIndexOperations, cmdAddIndex } from '../commands/indexes';
@@ -123,6 +124,14 @@ export function getCommandSpecs(
     {
       command: 'postgres-explorer.importConnectionFromDatabaseUrl',
       callback: () => cmdImportConnectionFromDatabaseUrl(context, databaseTreeProvider)
+    },
+    {
+      command: 'postgres-explorer.exportConnectionsToNexqlConfig',
+      callback: () => cmdExportConnectionsToNexqlConfig()
+    },
+    {
+      command: 'postgres-explorer.importConnectionsFromNexqlConfig',
+      callback: () => cmdImportConnectionsFromNexqlConfig(context, databaseTreeProvider)
     },
     {
       command: 'postgres-explorer.smartPasteConnection',

@@ -250,6 +250,18 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "postgres-explorer.exportConnectionsToNexqlConfig",
+        "title": "Export Connections to .nexql/config.toml (nexql-mcp)",
+        "category": "NexQL",
+        "icon": "$(export)"
+      },
+      {
+        "command": "postgres-explorer.importConnectionsFromNexqlConfig",
+        "title": "Import Connections from .nexql/config.toml (nexql-mcp)",
+        "category": "NexQL",
+        "icon": "$(import)"
+      },
+      {
         "command": "postgres-explorer.smartPasteConnection",
         "title": "Add Connection from Clipboard URL",
         "icon": "$(clipboard)"
@@ -2846,6 +2858,16 @@
           "group": "3_phase7@2"
         },
         {
+          "command": "postgres-explorer.importConnectionsFromNexqlConfig",
+          "when": "view == postgresExplorer",
+          "group": "3_phase7@5"
+        },
+        {
+          "command": "postgres-explorer.exportConnectionsToNexqlConfig",
+          "when": "view == postgresExplorer",
+          "group": "3_phase7@6"
+        },
+        {
           "command": "postgres-explorer.aiSettings",
           "when": "view == postgresExplorer",
           "group": "3_phase7@3"
@@ -4392,6 +4414,8 @@
     "onCommand:postgres-explorer.newNotebook",
     "onCommand:postgres-explorer.addConnection",
     "onCommand:postgres-explorer.importConnectionFromDatabaseUrl",
+    "onCommand:postgres-explorer.exportConnectionsToNexqlConfig",
+    "onCommand:postgres-explorer.importConnectionsFromNexqlConfig",
     "onCommand:postgres-explorer.switchWorkspaceDefaultConnection",
     "onCommand:postgres-explorer.exportNotebook",
     "onCommand:postgres-explorer.openListenNotify",
@@ -4472,6 +4496,7 @@
     "d3-selection": "^3.0.0",
     "pg": "^8.20.0",
     "pg-cursor": "^2.19.0",
+    "smol-toml": "^1.9.1",
     "sql-formatter": "^15.7.3",
     "ssh2": "^1.17.0"
   },

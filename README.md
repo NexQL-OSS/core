@@ -186,6 +186,18 @@ Then open the **PostgreSQL** activity-bar view, choose **Add Connection**, enter
 
 ---
 
+## 🤝 Share connections with nexql-mcp
+
+Run **NexQL: Export Connections to .nexql/config.toml (nexql-mcp)** to write selected connections to `<workspace>/.nexql/config.toml` (merge or replace if it exists), and **Import Connections from .nexql/config.toml (nexql-mcp)** to load them on another machine. The file uses the same `[profiles.<name>]` format as the nexql-mcp server, so a team can commit one file for both tools. It never contains passwords, SSH keys or tokens; import prompts for each password and stores it in VS Code SecretStorage.
+
+| Extension | nexql-mcp |
+|---|---|
+| host, port, database, username | `host`, `port`, `dbname`, `user` |
+| sslmode, SSL cert/key/CA paths | `sslmode`, `sslcert`, `sslkey`, `sslrootcert` |
+| read-only mode on / off | `access_mode = "read"` / `"write"` (never `"admin"`) |
+| statement timeout | `statement_timeout_ms` |
+| environment, group, SSH host/port/user, connect timeout, application name, options | `[profiles.<name>.vscode]` (ignored by nexql-mcp) |
+
 ## 💾 Saved queries: turn investigations into reusable knowledge
 
 Saved Queries preserves the context that usually gets lost after a database investigation:
