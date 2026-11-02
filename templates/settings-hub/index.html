@@ -1712,9 +1712,9 @@ npx -y nexql-mcp postgres://dev@localhost:5432/appdb
           <div class="form-group checkbox-cell">
             <label class="checkbox-label">
               <input type="checkbox" id="readOnlyMode">
-              <span>Read-Only Mode</span>
+              <span>Read-only</span>
             </label>
-            <span class="label-hint">Force all transactions to be read-only</span>
+            <span class="label-hint">Access mode. Checked = Read-only (writes blocked); unchecked = Read/write. Same wording as the NexQL MCP server.</span>
           </div>
         </div>
 
@@ -1722,8 +1722,8 @@ npx -y nexql-mcp postgres://dev@localhost:5432/appdb
           <span aria-hidden="true">⚠️</span>
           <div>
             <strong>Production Database Connection</strong>
-            <div>Enable <strong>Read-Only Mode</strong> to prevent accidental modifications.
-              <a id="enableReadOnlyLink" class="production-warning-link" href="#">Enable Read-Only Mode</a></div>
+            <div>This connection is <strong>Read/write</strong>. Set it to <strong>Read-only</strong> to prevent accidental modifications.
+              <a id="enableReadOnlyLink" class="production-warning-link" href="#">Switch to Read-only</a></div>
           </div>
         </div>
 

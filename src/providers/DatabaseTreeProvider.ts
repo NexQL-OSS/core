@@ -8,6 +8,7 @@ import { getSchemaCache, SchemaCache } from '../lib/schema-cache';
 import { Debouncer } from '../lib/debounce';
 import { AutoRefreshService } from '../services/AutoRefreshService';
 import { buildTreeItemKey, buildTreeItemKeyFromParts } from './tree/treeItemKey';
+import { ACCESS_MODE_COLOR_IDS, ACCESS_MODE_ICONS, ACCESS_MODE_LABELS, getAccessMode } from '../common/accessMode';
 import { formatConnectionEnvBadge, getDatabaseTreeIcon } from './tree/treeIconTheme';
 import { PlatformConnectionService } from '../services/PlatformConnectionService';
 import { profileDisplayLabel } from '../lib/platform/PlatformProfile';
@@ -716,6 +717,9 @@ export class DatabaseTreeItem extends vscode.TreeItem {
       color,
       label: this.label,
     });
+    if (type === 'connection' && !isDisconnected && environment === 'production' && getAccessMode({ readOnlyMode }) === 'write') {
+      this.iconPath = new vscode.ThemeIcon(ACCESS_MODE_ICONS.write, new vscode.ThemeColor(ACCESS_MODE_COLOR_IDS.write));
+    }
   }
 
   private getTooltip(type: string, comment?: string, roleAttributes?: { [key: string]: boolean }, environment?: string, readOnlyMode?: boolean): string {
@@ -730,8 +734,10 @@ export class DatabaseTreeItem extends vscode.TreeItem {
       if (environment) {
         parts.push(`\nEnvironment: ${environment.charAt(0).toUpperCase() + environment.slice(1)}`);
       }
-      if (readOnlyMode) {
-        parts.push('\nMode: Read-Only');
+      const mode = getAccessMode({ readOnlyMode });
+      parts.push(`\nAccess mode: ${ACCESS_MODE_LABELS[mode]}`);
+      if (environment === 'production' && mode === 'write') {
+        parts.push('\nProduction connection allows writes. Use "Toggle Read-only Mode" to lock it.');
       }
       return parts.join('');
     }

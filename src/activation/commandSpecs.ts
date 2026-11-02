@@ -7,6 +7,7 @@ import { getChatViewProvider } from '../services/chatViewRegistry';
 
 import { showColumnProperties, copyColumnName, copyColumnNameQuoted, generateSelectStatement, generateWhereClause, generateAlterColumnScript, generateDropColumnScript, generateRenameColumnScript, addColumnComment, generateIndexOnColumn, viewColumnStatistics, cmdAddColumn } from '../commands/columns';
 import { showConstraintProperties, copyConstraintName, generateDropConstraintScript, generateAlterConstraintScript, validateConstraint, generateAddConstraintScript, viewConstraintDependencies, cmdConstraintOperations, cmdAddConstraint } from '../commands/constraints';
+import { TOGGLE_READ_ONLY_COMMAND, cmdToggleReadOnlyMode } from '../commands/accessMode';
 import { cmdConnectDatabase, cmdDisconnectConnection, cmdDisconnectDatabase, cmdReconnectConnection, cmdDuplicateConnection, showConnectionSafety, revealInExplorer, cmdAssignConnectionColor, cmdSetConnectionGroup, cmdPinConnection, cmdUnpinConnection } from '../commands/connection';
 import { cmdImportConnectionFromDatabaseUrl } from '../commands/importConnectionFromDatabaseUrl';
 import { cmdSmartPasteConnection } from '../commands/smartPasteConnection';
@@ -509,6 +510,10 @@ export function getCommandSpecs(
     {
       command: 'postgres-explorer.connect',
       callback: async (item: any) => await cmdConnectDatabase(item, context, databaseTreeProvider)
+    },
+    {
+      command: TOGGLE_READ_ONLY_COMMAND,
+      callback: async (arg?: unknown) => await cmdToggleReadOnlyMode(arg)
     },
     {
       command: 'postgres-explorer.assignConnectionColor',

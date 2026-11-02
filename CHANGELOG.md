@@ -13,6 +13,11 @@ Quick links:
 
 - **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.
 - **DDL lock-safety warnings in SQL notebooks.** Cells containing `CREATE INDEX`/`REINDEX` without `CONCURRENTLY`, `ADD CONSTRAINT ... FOREIGN KEY|CHECK` without `NOT VALID`, `ALTER COLUMN ... TYPE` / `SET NOT NULL`, `ADD COLUMN` with a volatile default, `VACUUM FULL`, `CLUSTER`, `LOCK TABLE`, `DROP TABLE`, `TRUNCATE`, `DROP SCHEMA ... CASCADE`, and `DELETE`/`UPDATE` without `WHERE` now show inline diagnostics. A quick fix applies the safer form where one exists. Detection is token-based, so comments, strings, quoted identifiers and `$$` bodies never trigger it. Toggle with `postgresExplorer.ddlSafety.enabled` (default on).
+### Access mode indicator
+
+- **One access-mode signal per connection**, using the same vocabulary as the NexQL MCP server: **Read-only** (`$(lock)`) or **Read/write** (`$(edit)`). Shown in the connection tree description and tooltip next to the environment, and in a new notebook status bar item. Production connections that allow writes get a warning tint.
+- **`NexQL: Toggle Read-only / Read/write Mode`** (`postgres-explorer.toggleReadOnlyMode`) is available from the connection context menu and by clicking the status bar item. Switching a production connection to Read/write asks for confirmation. Open connections and transactions for that connection are closed and reconnect so the new mode takes effect.
+- The connection form and safety dialog now use the same Read-only / Read/write wording.
 
 ### Security
 

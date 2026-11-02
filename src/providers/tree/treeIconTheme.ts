@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ACCESS_MODE_LABELS, getAccessMode } from '../../common/accessMode';
 
 
 /** Centralized tree icon + color palette for database and notebook trees. */
@@ -940,10 +941,8 @@ export function formatConnectionEnvBadge(
   } else if (environment === 'development') {
     badges.push('🟢 DEV');
   }
-  if (readOnlyMode) {
-    badges.push('🔒');
-  }
-  return badges.length > 0 ? badges.join(' ') : undefined;
+  badges.push(ACCESS_MODE_LABELS[getAccessMode({ readOnlyMode })]);
+  return badges.join(' · ');
 }
 
 /** ThemeColor ids for environment (for future programmatic use). */

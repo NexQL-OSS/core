@@ -9,6 +9,7 @@ import { isProBuild } from '../common/buildTier';
 import { environmentLabel } from '../features/sentinel/constants';
 import type { SentinelEnvironment } from '../features/sentinel/types';
 import type { SentinelContext, SentinelSettings } from '../features/sentinel/types';
+import { accessModeText, getAccessMode, isProductionWrite } from '../common/accessMode';
 import { PlatformConnectionService } from '../services/PlatformConnectionService';
 import { profileDisplayLabel } from '../lib/platform/PlatformProfile';
 import { getStudioSession } from '../services/execution/ExecutionSurface';
@@ -26,6 +27,8 @@ export class NotebookStatusBar implements vscode.Disposable {
   private readonly transactionItem: vscode.StatusBarItem;
   /** Always-visible license tier indicator (independent of notebook focus). */
   private readonly tierItem: vscode.StatusBarItem;
+  /** Access mode (Read-only / Read/write); click toggles. */
+  private readonly accessModeItem: vscode.StatusBarItem;
   private readonly disposables: vscode.Disposable[] = [];
 
   private currentEnvironment: string | undefined;
@@ -63,7 +66,10 @@ export class NotebookStatusBar implements vscode.Disposable {
     this.updateTier('free');
     this.tierItem.show();
 
+    this.accessModeItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 93);
+
     this.disposables.push(
+      this.accessModeItem,
       this.connectionItem,
       this.databaseItem,
       this.userItem,
@@ -160,6 +166,7 @@ export class NotebookStatusBar implements vscode.Disposable {
     this.environmentItem.hide();
     this.profileItem.hide();
     this.transactionItem.hide();
+    this.accessModeItem.hide();
 
     if (!this.sentinelActive) {
       this.currentEnvironment = undefined;
@@ -177,6 +184,7 @@ export class NotebookStatusBar implements vscode.Disposable {
     this.environmentItem.hide();
     this.profileItem.hide();
     this.transactionItem.hide();
+    this.accessModeItem.hide();
 
     this.currentEnvironment = undefined;
     this.currentReadOnlyMode = false;
@@ -258,6 +266,8 @@ export class NotebookStatusBar implements vscode.Disposable {
       this.environmentItem.hide();
     }
 
+    this.renderAccessModeItem(connection, connName, metadata.connectionId);
+
     if (!this.sentinelActive) {
       this.currentEnvironment = connection.environment;
       this.currentReadOnlyMode = !!connection.readOnlyMode;
@@ -268,6 +278,22 @@ export class NotebookStatusBar implements vscode.Disposable {
 
     vscode.commands.executeCommand('setContext', 'nexql.connectionName', connName);
     vscode.commands.executeCommand('setContext', 'nexql.databaseName', dbName);
+  }
+
+  private renderAccessModeItem(connection: any, connName: string, connectionId?: string): void {
+    this.accessModeItem.command = {
+      command: 'postgres-explorer.toggleReadOnlyMode',
+      title: 'Toggle access mode',
+      arguments: connectionId ? [connectionId] : [],
+    };
+    const mode = getAccessMode(connection);
+    this.accessModeItem.text = accessModeText(mode);
+    this.accessModeItem.tooltip = `Access mode for ${connName}: ${mode === 'read' ? 'Read-only' : 'Read/write'}\nClick to switch`;
+    this.accessModeItem.backgroundColor = isProductionWrite(connection)
+      ? new vscode.ThemeColor('statusBarItem.warningBackground')
+      : undefined;
+    this.accessModeItem.color = new vscode.ThemeColor(`nexql.mode.${mode}`);
+    this.accessModeItem.show();
   }
 
   private buildConnectionTooltip(

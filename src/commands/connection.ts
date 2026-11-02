@@ -1,4 +1,5 @@
 import { Client } from 'pg';
+import { accessModeLabel, getAccessMode } from '../common/accessMode';
 import * as vscode from 'vscode';
 import { PostgresMetadata } from '../common/types';
 import { DatabaseTreeItem, DatabaseTreeProvider } from '../providers/DatabaseTreeProvider';
@@ -289,7 +290,7 @@ export async function showConnectionSafety(): Promise<void> {
         }
 
         const environment = connection.environment || 'Not set';
-        const readOnlyMode = connection.readOnlyMode ? 'Enabled' : 'Disabled';
+        const readOnlyMode = accessModeLabel(getAccessMode(connection));
         const environmentIcon = 
             environment === 'production' ? '🔴' :
             environment === 'staging' ? '🟡' :
@@ -298,7 +299,7 @@ export async function showConnectionSafety(): Promise<void> {
         const title = `${environmentIcon} ${connection.name || connection.host}`;
         const message = [
             `Environment: ${environment.charAt(0).toUpperCase() + environment.slice(1)}`,
-            `Read-Only Mode: ${readOnlyMode}`,
+            `Access mode: ${readOnlyMode}`,
             `Host: ${connection.host}:${connection.port}`,
             `Database: ${metadata.databaseName || connection.database || 'default'}`,
         ].join('\n');

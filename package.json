@@ -1690,6 +1690,12 @@
         "category": "NexQL"
       },
       {
+        "command": "postgres-explorer.toggleReadOnlyMode",
+        "title": "Toggle Read-only / Read/write Mode",
+        "icon": "$(lock)",
+        "category": "NexQL"
+      },
+      {
         "command": "postgres-explorer.assignConnectionColor",
         "title": "Assign Color",
         "icon": "$(paintcan)",
@@ -3047,6 +3053,11 @@
           "command": "postgres-explorer.createDatabase",
           "when": "view == postgresExplorer && (viewItem == connection || viewItem == connection-pinned)",
           "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.toggleReadOnlyMode",
+          "when": "view == postgresExplorer && viewItem =~ /^(connection|connection-pinned|connection-disconnected|connection-pinned-disconnected)$/",
+          "group": "1_actions@1"
         },
         {
           "command": "postgres-explorer.assignConnectionColor",
