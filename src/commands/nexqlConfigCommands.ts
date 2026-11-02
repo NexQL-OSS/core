@@ -63,7 +63,18 @@ export async function cmdExportConnectionsToNexqlConfig(): Promise<void> {
       mode = choice.mode;
     }
 
-    const text = exportToToml(picks.map((p) => p.conn), { existingText, mode });
+    const access = await vscode.window.showQuickPick(
+      [
+        { label: 'Read-only for AI assistants', description: 'Recommended. access_mode = "read"', allowAgentWrites: false },
+        { label: 'Allow AI assistants to write', description: 'access_mode = "write" for connections that are not read-only', allowAgentWrites: true },
+      ],
+      { title: 'What may AI assistants do with these connections in nexql-mcp?' },
+    );
+    if (!access) {
+      return;
+    }
+
+    const text = exportToToml(picks.map((p) => p.conn), { existingText, mode, allowAgentWrites: access.allowAgentWrites });
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(target, '..'));
     await vscode.workspace.fs.writeFile(target, Buffer.from(text, 'utf8'));
     const open = await vscode.window.showInformationMessage(

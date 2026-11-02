@@ -215,3 +215,24 @@ describe('registerMcpServerProvider', () => {
     expect(provider.provideMcpServerDefinitions()).to.have.length(1);
   });
 });
+
+describe('McpDefinitionProvider pro-ready timeout', () => {
+  it('falls back to the default launch when pro never settles', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { McpDefinitionProvider } = require('../../../features/mcp/McpDefinitionProvider');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const vscode = require('vscode');
+    const provider = new McpDefinitionProvider({
+      extensionPath: '/nonexistent',
+      isEnabled: () => true,
+      whenReady: new Promise<void>(() => undefined),
+      readyTimeoutMs: 20,
+    });
+    const def = new vscode.McpStdioServerDefinition('NexQL', 'placeholder', []);
+    const resolved = await provider.resolveMcpServerDefinition(def);
+    if (resolved.command === 'placeholder') {
+      throw new Error('resolve did not apply a launch');
+    }
+    provider.dispose();
+  });
+});

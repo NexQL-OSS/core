@@ -35,10 +35,13 @@ const full: ConnectionInfo = {
 const strip = ({ id, password, ...rest }: ConnectionInfo) => rest;
 
 describe('nexqlConfig', () => {
-  it('maps readOnlyMode to access_mode and never emits admin', () => {
+  it('exports agent access, defaulting to read and never emitting admin', () => {
     expect(connectionToProfile(full).access_mode).to.equal('read');
-    expect(connectionToProfile({ ...full, readOnlyMode: false, agentAccessMode: 'admin' } as any).access_mode).to.equal('write');
-    expect(connectionToProfile({ id: 'x', name: 'x', host: 'h', port: 1 }).access_mode).to.equal('write');
+    // A writable connection must not grant the AI writes unless the exporter opts in.
+    expect(connectionToProfile({ ...full, readOnlyMode: false }).access_mode).to.equal('read');
+    expect(connectionToProfile({ ...full, readOnlyMode: false }, { allowAgentWrites: true }).access_mode).to.equal('write');
+    expect(connectionToProfile({ ...full, readOnlyMode: true }, { allowAgentWrites: true }).access_mode).to.equal('read');
+    expect(connectionToProfile({ id: 'x', name: 'x', host: 'h', port: 1 }).access_mode).to.equal('read');
   });
 
   it('round-trips connections minus secrets and ssh key path', () => {

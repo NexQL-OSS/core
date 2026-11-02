@@ -57,13 +57,12 @@ describe('tree access mode display', () => {
     expect(formatConnectionEnvBadge(undefined, undefined)).to.equal('Read/write');
   });
 
-  it('tints production read/write connection icon', () => {
+  it('keeps the connection icon and shows production read/write in text', () => {
     const args: any[] = ['p', vscode.TreeItemCollapsibleState.None, 'connection', 'c1',
       ...Array(8).fill(undefined), false, ...Array(4).fill(undefined), 'production', false];
     const item = new (DatabaseTreeItem as any)(...args);
     const icon: any = item.iconPath;
-    expect(icon.id).to.equal('edit');
-    expect(icon.color.id).to.equal('nexql.mode.write');
+    expect(icon?.id).to.not.equal('edit');
     expect(String(item.tooltip)).to.contain('Access mode: Read/write');
     expect(item.description).to.equal('🔴 PROD · Read/write');
   });

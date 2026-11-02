@@ -58,8 +58,17 @@ function compact<T extends TomlTable>(obj: T): T {
   return obj;
 }
 
+/**
+ * Agent access written to the shared file. nexql-mcp applies `access_mode` to
+ * the AI assistant, not to the person, so a writable connection is still
+ * exported as "read" unless the exporter opts in. Never emits "admin".
+ */
+export function exportedAccessMode(conn: Pick<ConnectionInfo, 'readOnlyMode'>, allowAgentWrites = false): 'read' | 'write' {
+  return !conn.readOnlyMode && allowAgentWrites ? 'write' : 'read';
+}
+
 /** Map one connection to a nexql-mcp profile table. Never includes secrets. */
-export function connectionToProfile(conn: ConnectionInfo): TomlTable {
+export function connectionToProfile(conn: ConnectionInfo, opts: { allowAgentWrites?: boolean } = {}): TomlTable {
   const profile: TomlTable = compact({
     host: conn.host,
     port: conn.port,
@@ -69,12 +78,12 @@ export function connectionToProfile(conn: ConnectionInfo): TomlTable {
     sslcert: conn.sslCertPath,
     sslkey: conn.sslKeyPath,
     sslrootcert: conn.sslRootCertPath,
-    // Never "admin": sharing a file must not grant elevated agent access.
-    access_mode: conn.readOnlyMode ? 'read' : 'write',
+    access_mode: exportedAccessMode(conn, opts.allowAgentWrites),
     statement_timeout_ms: conn.statementTimeout,
   });
 
   const ns: TomlTable = compact({
+    read_only: conn.readOnlyMode,
     environment: conn.environment,
     group: conn.group,
     connect_timeout: conn.connectTimeout,
@@ -146,7 +155,7 @@ export function profileToConnection(name: string, raw: unknown): ImportedProfile
     sslKeyPath: str(p.sslkey),
     sslRootCertPath: str(p.sslrootcert),
     statementTimeout: num(p.statement_timeout_ms),
-    readOnlyMode: p.access_mode === 'read',
+    readOnlyMode: typeof ns.read_only === 'boolean' ? ns.read_only : p.access_mode === 'read',
     environment: oneOf(ENVIRONMENTS, ns.environment),
     group: str(ns.group),
     connectTimeout: num(ns.connect_timeout),
@@ -164,7 +173,7 @@ export function profileToConnection(name: string, raw: unknown): ImportedProfile
   }) as Omit<ConnectionInfo, 'id' | 'password'>;
 
   if (p.access_mode === 'admin') {
-    warnings.push('access_mode "admin" imported as a writable connection.');
+    warnings.push('access_mode "admin" has no extension equivalent; imported as a writable connection.');
   }
   return { name, connection, warnings };
 }
@@ -209,13 +218,13 @@ export type ExportMode = 'replace' | 'merge';
  */
 export function exportToToml(
   conns: ConnectionInfo[],
-  opts: { existingText?: string; mode?: ExportMode } = {},
+  opts: { existingText?: string; mode?: ExportMode; allowAgentWrites?: boolean } = {},
 ): string {
   const existing = opts.existingText?.trim() ? parseNexqlConfig(opts.existingText) : undefined;
   const profiles: TomlTable = opts.mode === 'merge' && existing ? { ...existing.profiles } : {};
   const names = uniqueNames(conns);
   conns.forEach((c, i) => {
-    profiles[names[i]] = connectionToProfile(c);
+    profiles[names[i]] = connectionToProfile(c, { allowAgentWrites: opts.allowAgentWrites });
   });
   const doc: TomlTable = { ...(existing?.topLevel ?? {}), profiles };
   const header =

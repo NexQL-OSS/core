@@ -17,7 +17,12 @@ export interface McpDefinitionProviderOptions {
    * that starts early never gets the free default in a pro build.
    */
   whenReady?: Promise<void>;
+  /** Upper bound on the `whenReady` wait. Defaults to {@link PRO_READY_TIMEOUT_MS}. */
+  readyTimeoutMs?: number;
 }
+
+/** How long a resolve waits for pro activation before using the free launch. */
+export const PRO_READY_TIMEOUT_MS = 15_000;
 
 /**
  * The single `NexQL` MCP server provider registered with VS Code, in both free
@@ -69,7 +74,16 @@ export class McpDefinitionProvider
     definition: vscode.McpStdioServerDefinition,
   ): Promise<vscode.McpStdioServerDefinition> {
     if (this.options.whenReady) {
-      await Promise.race([this.options.whenReady, this._resolverSet]);
+      // Bounded: if pro activation never settles, fall back rather than hang the client.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, this.options.readyTimeoutMs ?? PRO_READY_TIMEOUT_MS);
+      });
+      try {
+        await Promise.race([this.options.whenReady, this._resolverSet, timeout]);
+      } finally {
+        clearTimeout(timer);
+      }
     }
     const launch: McpLaunchDescriptor = this._resolver
       ? await this._resolver()
