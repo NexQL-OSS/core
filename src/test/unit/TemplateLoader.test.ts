@@ -7,7 +7,10 @@ import {
   getNonce,
   getWebviewUri,
   getWebviewOptions,
-  buildCsp
+  buildCsp,
+  loadPanelTemplate,
+  readSharedDbIndexJs,
+  readSharedChatActionsJs
 } from '../../lib/template-loader';
 
 describe('TemplateLoader', () => {
@@ -149,6 +152,42 @@ describe('TemplateLoader', () => {
       expect(result).to.contain('<script>');
       expect(result).to.contain('body{}');
       expect(result).to.contain(':root{}');
+    });
+  });
+
+  describe('pro-owned shared templates (absent in free builds)', () => {
+    const extensionUri = { fsPath: '/ext' } as vscode.Uri;
+    const enoent = () => Object.assign(new Error('ENOENT'), { code: 'FileNotFound' });
+
+    it('readSharedDbIndexJs returns empty string when the file is missing', async () => {
+      readFileStub.rejects(enoent());
+      expect(await readSharedDbIndexJs(extensionUri)).to.equal('');
+    });
+
+    it('readSharedDbIndexJs returns file contents when present (pro build)', async () => {
+      readFileStub.withArgs(sinon.match.has('fsPath', '/ext/templates/shared/dbindex-shared.js'))
+        .resolves(new TextEncoder().encode('window.renderDbIndexesShared = 1;'));
+      expect(await readSharedDbIndexJs(extensionUri)).to.equal('window.renderDbIndexesShared = 1;');
+    });
+
+    it('readSharedChatActionsJs returns empty string when the file is missing', async () => {
+      readFileStub.rejects(enoent());
+      expect(await readSharedChatActionsJs(extensionUri)).to.equal('');
+    });
+
+    it('loadPanelTemplate renders settings-hub without dbindex-shared.js', async () => {
+      readFileStub.rejects(enoent());
+      readFileStub.withArgs(sinon.match.has('fsPath', '/ext/templates/settings-hub/index.html'))
+        .resolves(new TextEncoder().encode('<html><script>{{INLINE_SCRIPTS}}</script></html>'));
+      readFileStub.withArgs(sinon.match.has('fsPath', '/ext/templates/settings-hub/styles.css'))
+        .resolves(new TextEncoder().encode('body{}'));
+      readFileStub.withArgs(sinon.match.has('fsPath', '/ext/templates/settings-hub/scripts.js'))
+        .resolves(new TextEncoder().encode('initHub();'));
+      const webview = { cspSource: 'vscode-resource:' } as unknown as vscode.Webview;
+
+      const html = await loadPanelTemplate(webview, extensionUri, 'settings-hub');
+
+      expect(html).to.equal('<html><script>initHub();</script></html>');
     });
   });
 

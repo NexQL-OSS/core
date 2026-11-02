@@ -5,6 +5,8 @@
  * Fails with exit code 1 if any of the following are found:
  *   1. Premium implementation symbols in src/ (excluding the seam files)
  *   2. packages/ directory tracked in git (premium source must not be committed here)
+ *   3. package.json carrying a merged pro manifest
+ *   4. Pro-owned webview templates under templates/ (tracked or on disk)
  *
  * Run: node scripts/check-no-pro.js
  * CI:  Triggered on every PR to main via .github/workflows/check-no-pro.yml
@@ -165,6 +167,64 @@ if (mergedMarkers.length > 0) {
   console.error('\n  ❌ package.json contains merged pro manifest entries:');
   console.error('  ' + mergedMarkers.join('\n  '));
   console.error("  → run 'make dev-free' (or restore package.json) before committing.\n");
+  violations++;
+}
+
+// ---------------------------------------------------------------------------
+// Check 4: pro-owned webview templates must not exist under templates/
+// (make dev-pro / package-pro copy packages/pro/templates/. into templates/;
+// make dev-free removes them again). Keep this list in sync with the
+// "Pro-owned webview templates" block in .gitignore.
+// ---------------------------------------------------------------------------
+const PRO_TEMPLATE_DIRS = ['backup-restore', 'chat', 'dashboard', 'dbindex', 'plan-studio'];
+const PRO_TEMPLATE_FILES = ['shared/chat-actions.js', 'shared/dbindex-shared.js'];
+
+function isProOwnedTemplate(rel, proTemplateFiles) {
+  if (PRO_TEMPLATE_DIRS.some((dir) => rel === dir || rel.startsWith(`${dir}/`))) return true;
+  if (PRO_TEMPLATE_FILES.includes(rel)) return true;
+  return proTemplateFiles.has(rel);
+}
+
+function walkFiles(dir, base = dir, results = []) {
+  if (!fs.existsSync(dir)) return results;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walkFiles(full, base, results);
+    else if (entry.isFile()) results.push(path.relative(base, full).split(path.sep).join('/'));
+  }
+  return results;
+}
+
+const TEMPLATES = path.join(ROOT, 'templates');
+// When the private pro package is linked in, anything it ships under templates/
+// is pro-owned too — this catches new pro templates not yet in the lists above.
+const proTemplateFiles = new Set(walkFiles(path.join(ROOT, 'packages', 'pro', 'templates')));
+
+let trackedTemplates = [];
+try {
+  trackedTemplates = execSync('git ls-files -- templates/', { cwd: ROOT, encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean)
+    .map((f) => f.replace(/^templates\//, ''));
+} catch {
+  // git not available — fall back to the working-tree scan below
+}
+
+const leakedTracked = trackedTemplates.filter((rel) => isProOwnedTemplate(rel, proTemplateFiles));
+const leakedOnDisk = walkFiles(TEMPLATES).filter(
+  (rel) => isProOwnedTemplate(rel, proTemplateFiles) && !leakedTracked.includes(rel),
+);
+
+if (leakedTracked.length > 0) {
+  console.error('\n  ❌ Pro-owned webview templates are tracked in git:');
+  console.error('  ' + leakedTracked.map((rel) => `templates/${rel}`).join('\n  '));
+  console.error('  → these live in the private pro repo (packages/pro/templates); `git rm --cached` them.\n');
+  violations++;
+}
+if (leakedOnDisk.length > 0) {
+  console.error('\n  ❌ Pro-owned webview templates are present under templates/:');
+  console.error('  ' + leakedOnDisk.map((rel) => `templates/${rel}`).join('\n  '));
+  console.error("  → run 'make dev-free' (or delete them) before committing or building the free VSIX.\n");
   violations++;
 }
 
