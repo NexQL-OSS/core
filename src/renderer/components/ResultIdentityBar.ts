@@ -1,3 +1,5 @@
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
 /**
  * ResultIdentityBar — statement badge + SQL preview (left), execution stats + actions (right).
  */
@@ -272,22 +274,10 @@ export function createResultIdentityBar(options: ResultIdentityBarOptions): HTML
   const kw = commandKeywordLabel(command);
   const colors = commandColors(kw);
 
+  ensureRendererBrandStyles();
+
   const bar = document.createElement('div');
-  bar.style.cssText = `
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 5px 6px 5px 10px;
-    border-bottom: 1px solid var(--vscode-widget-border);
-    user-select: none;
-    background: color-mix(in srgb, var(--vscode-editor-background) 72%, transparent);
-    backdrop-filter: blur(8px) saturate(1.1);
-    -webkit-backdrop-filter: blur(8px) saturate(1.1);
-    font-family: var(--vscode-font-family);
-    font-size: 12px;
-    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--vscode-textLink-foreground) 10%, transparent);
-  `;
+  bar.className = 'nx-identity';
 
   const leftCluster = document.createElement('div');
   leftCluster.style.cssText =
@@ -297,14 +287,8 @@ export function createResultIdentityBar(options: ResultIdentityBarOptions): HTML
   const badge = document.createElement('span');
   badge.textContent = `● ${kw}`;
   badge.title = kw;
+  badge.className = 'nx-cmd';
   badge.style.cssText = `
-    flex-shrink: 0;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    font-family: var(--vscode-font-family), system-ui, sans-serif;
     background: ${colors.bg};
     color: ${colors.fg};
     border: 1px solid ${colors.border};
@@ -340,17 +324,9 @@ export function createResultIdentityBar(options: ResultIdentityBarOptions): HTML
   const statsEl = document.createElement('span');
   statsEl.dataset.resultStats = 'true';
   statsEl.textContent = statsLine ?? '';
-  statsEl.style.cssText = `
-    display: ${statsLine?.trim() ? 'inline-block' : 'none'};
-    font-size: 12px;
-    font-weight: 650;
-    letter-spacing: 0.03em;
-    color: var(--vscode-editor-foreground);
-    opacity: 0.95;
-    padding: 0 6px 0 4px;
-    white-space: nowrap;
-    cursor: default;
-  `;
+  statsEl.className = 'nx-identity__stats nx-mono-label';
+  // The renderer toggles `display` when the text changes (updateIdentityStats).
+  statsEl.style.display = statsLine?.trim() ? 'inline-block' : 'none';
   statsEl.onclick = (e) => e.stopPropagation();
 
   const chevron = document.createElement('span');

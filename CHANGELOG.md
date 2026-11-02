@@ -19,6 +19,14 @@ Quick links:
 
 - **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.
 - **DDL lock-safety warnings in SQL notebooks.** Cells containing `CREATE INDEX`/`REINDEX` without `CONCURRENTLY`, `ADD CONSTRAINT ... FOREIGN KEY|CHECK` without `NOT VALID`, `ALTER COLUMN ... TYPE` / `SET NOT NULL`, `ADD COLUMN` with a volatile default, `VACUUM FULL`, `CLUSTER`, `LOCK TABLE`, `DROP TABLE`, `TRUNCATE`, `DROP SCHEMA ... CASCADE`, and `DELETE`/`UPDATE` without `WHERE` now show inline diagnostics. A quick fix applies the safer form where one exists. Detection is token-based, so comments, strings, quoted identifiers and `$$` bodies never trigger it. Toggle with `postgresExplorer.ddlSafety.enabled` (default on).
+### Notebook result styling
+
+- **Query results use the NexQL brand tokens.** A 2px ribbon line tops each result, meta labels (row count, duration, connection) are mono uppercase, and the notebook header shows pill chips with a mode-colored dot for read-only and read/write sessions. Active result tabs get an accent underline, and banners (info, warning, error, success, dry run, open transaction, query error) share one left-edge accent style.
+- **Table polish.** Mono uppercase headers, subtle zebra striping, an accent-tinted selected row, and a sticky header that lifts once you scroll. Column statistics and the footer actions use stat-tile styling.
+- **EXPLAIN heat.** Plan nodes, cost bars and hotspot badges run from blue through amber and orange to magenta as cost rises, and performance recommendations render as severity callouts.
+- **Chart palette.** Charts lead with the ribbon hues (blue, indigo, magenta, orange, amber, purple) and fall back to the `--vscode-charts-*` colors when the NexQL colors are unavailable.
+- High-contrast themes drop gradients and shadows in favor of `--vscode-contrastBorder`, and `prefers-reduced-motion` stops the transaction pulse and connection blink.
+
 ### Access mode indicator
 
 - **One access-mode signal per connection**, using the same vocabulary as the NexQL MCP server: **Read-only** (`$(lock)`) or **Read/write** (`$(edit)`). Shown in the connection tree description and tooltip next to the environment, and in a new notebook status bar item. Production connections that allow writes get a warning tint.

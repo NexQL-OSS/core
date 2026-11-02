@@ -4,7 +4,7 @@
  */
 
 import type { SentinelEnvironment } from '../../features/sentinel/types';
-import { RENDERER_GLASS_BG, RENDERER_GLASS_BLUR } from '../../ui/renderer/rendererConstants';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
 
 export interface TopBarOptions {
   connectionName: string;
@@ -24,25 +24,10 @@ export interface TopBarOptions {
   onCancel?: () => void;
 }
 
-const ENV_CHIP_STYLES: Record<SentinelEnvironment, { bg: string; border: string; text: string; label: string }> = {
-  production: {
-    bg: 'color-mix(in srgb, var(--vscode-inputValidation-errorBackground) 55%, transparent)',
-    border: 'var(--vscode-inputValidation-errorBorder)',
-    text: 'var(--vscode-inputValidation-errorForeground)',
-    label: 'PROD',
-  },
-  staging: {
-    bg: 'color-mix(in srgb, var(--vscode-inputValidation-warningBackground) 55%, transparent)',
-    border: 'var(--vscode-inputValidation-warningBorder)',
-    text: 'var(--vscode-inputValidation-warningForeground)',
-    label: 'STAGING',
-  },
-  development: {
-    bg: 'color-mix(in srgb, var(--vscode-charts-blue) 22%, var(--vscode-editor-background))',
-    border: 'var(--vscode-charts-blue)',
-    text: 'var(--vscode-charts-blue)',
-    label: 'DEV',
-  },
+const ENV_CHIP_STYLES: Record<SentinelEnvironment, { cls: string; label: string }> = {
+  production: { cls: 'nx-chip--prod', label: 'PROD' },
+  staging: { cls: 'nx-chip--staging', label: 'STAGING' },
+  development: { cls: 'nx-chip--dev', label: 'DEV' },
 };
 
 /**
@@ -50,22 +35,10 @@ const ENV_CHIP_STYLES: Record<SentinelEnvironment, { bg: string; border: string;
  */
 export function createTopBar(options: TopBarOptions, postMessage: (msg: any) => void): HTMLElement {
   ensureTopBarStyle();
+  ensureRendererBrandStyles();
 
   const bar = document.createElement('div');
-  bar.className = 'nexql-topbar';
-  bar.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: ${RENDERER_GLASS_BG};
-    backdrop-filter: ${RENDERER_GLASS_BLUR};
-    -webkit-backdrop-filter: ${RENDERER_GLASS_BLUR};
-    border-bottom: 1px solid var(--vscode-widget-border);
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--vscode-textLink-foreground) 12%, transparent);
-    font-family: var(--vscode-font-family);
-    font-size: 12px;
-  `;
+  bar.className = 'nx-topbar';
 
   if (options.showContextStrip !== false && options.isConnected) {
     bar.appendChild(createContextStrip(options));
@@ -73,8 +46,7 @@ export function createTopBar(options: TopBarOptions, postMessage: (msg: any) => 
 
   if (options.isExecuting && options.onCancel) {
     const cancelBtn = createTopBarButton('■ Cancel Query', options.onCancel);
-    cancelBtn.style.background = 'color-mix(in srgb, var(--vscode-inputValidation-errorBackground) 40%, transparent)';
-    cancelBtn.style.color = 'var(--vscode-inputValidation-errorForeground)';
+    cancelBtn.classList.add('nx-btn--danger');
     bar.appendChild(cancelBtn);
     bar.appendChild(createSeparator());
   }
@@ -93,24 +65,12 @@ export function createTopBar(options: TopBarOptions, postMessage: (msg: any) => 
 
 function createContextStrip(options: TopBarOptions): HTMLElement {
   const strip = document.createElement('div');
-  strip.className = 'nexql-sentinel-strip';
-  strip.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-right: 8px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--vscode-sideBar-background) 70%, transparent);
-    border: 1px solid var(--vscode-widget-border);
-    font-size: 11px;
-    white-space: nowrap;
-  `;
+  strip.className = 'nexql-sentinel-strip nx-strip';
 
   if (options.environment) {
-    const chip = createEnvChip(options.environment, !!options.readOnlyMode);
-    strip.appendChild(chip);
+    strip.appendChild(createEnvChip(options.environment));
   }
+  strip.appendChild(createModeChip(!!options.readOnlyMode));
 
   const context = document.createElement('span');
   const userHost = options.username
@@ -118,62 +78,39 @@ function createContextStrip(options: TopBarOptions): HTMLElement {
     : options.host;
   const portSuffix = options.port ? `:${options.port}` : '';
   context.textContent = `${options.connectionName} · ${options.database} · ${userHost}${portSuffix}`;
-  context.style.color = 'var(--vscode-descriptionForeground)';
+  context.className = 'nx-strip__context nx-mono-label';
+  context.title = context.textContent;
   strip.appendChild(context);
 
   return strip;
 }
 
-function createEnvChip(environment: SentinelEnvironment, readOnly: boolean): HTMLElement {
+function createEnvChip(environment: SentinelEnvironment): HTMLElement {
   const style = ENV_CHIP_STYLES[environment];
   const chip = document.createElement('span');
-  chip.textContent = `${style.label}${readOnly ? ' RO' : ''}`;
-  chip.style.cssText = `
-    padding: 1px 7px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    background: ${style.bg};
-    border: 1px solid ${style.border};
-    color: ${style.text};
-  `;
+  chip.className = `nx-chip ${style.cls}`;
+  chip.textContent = style.label;
+  return chip;
+}
+
+/** Session mode: green dot for read-only, write-mode dot for read/write. */
+function createModeChip(readOnly: boolean): HTMLElement {
+  const chip = document.createElement('span');
+  chip.className = `nx-chip ${readOnly ? 'nx-chip--read' : 'nx-chip--write'}`;
+  chip.dataset.sessionMode = readOnly ? 'read' : 'write';
+  chip.textContent = readOnly ? 'Read-only' : 'Read/write';
   return chip;
 }
 
 function createConnectionPill(options: TopBarOptions, postMessage: (msg: any) => void): HTMLElement {
   const pill = document.createElement('button');
   pill.type = 'button';
-  pill.style.cssText = `
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-family: var(--vscode-font-family);
-    border-radius: 10px;
-    cursor: pointer;
-    border: 1px solid ${options.isConnected ? 'var(--vscode-testing-iconPassed)' : 'var(--vscode-editorError-foreground)'};
-    background: ${options.isConnected
-      ? 'color-mix(in srgb, var(--vscode-testing-iconPassed) 12%, var(--vscode-editor-background))'
-      : 'color-mix(in srgb, var(--vscode-editorError-foreground) 12%, var(--vscode-editor-background))'};
-    color: var(--vscode-editor-foreground);
-    transition: opacity 0.15s;
-    white-space: nowrap;
-  `;
+  pill.className = `nx-conn-pill ${options.isConnected ? 'nx-chip--ok' : 'nx-chip--bad'}`;
 
   const dot = document.createElement('span');
-  dot.style.cssText = `
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    display: inline-block;
-    background: ${options.isConnected ? 'var(--vscode-testing-iconPassed)' : 'var(--vscode-editorError-foreground)'};
-    flex-shrink: 0;
-  `;
+  dot.className = 'nx-conn-pill__dot';
   if (!options.isConnected) {
-    dot.className = 'topbar-dot-disconnected';
+    dot.classList.add('topbar-dot-disconnected');
   }
 
   const label = document.createElement('span');
@@ -195,8 +132,6 @@ function createConnectionPill(options: TopBarOptions, postMessage: (msg: any) =>
   pill.appendChild(dot);
   pill.appendChild(label);
 
-  pill.onmouseover = () => { pill.style.opacity = '0.8'; };
-  pill.onmouseout = () => { pill.style.opacity = '1'; };
   pill.onclick = () => {
     postMessage({ type: 'showConnectionInfo' });
   };
@@ -208,31 +143,14 @@ function createTopBarButton(label: string, onClick: () => void): HTMLElement {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.textContent = label;
-  btn.style.cssText = `
-    padding: 3px 8px;
-    font-size: 11px;
-    font-family: var(--vscode-font-family);
-    color: var(--vscode-button-secondaryForeground);
-    background: var(--vscode-button-secondaryBackground);
-    border: 1px solid var(--vscode-button-border, transparent);
-    border-radius: 3px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-  `;
-  btn.onmouseover = () => { btn.style.background = 'var(--vscode-button-secondaryHoverBackground)'; };
-  btn.onmouseout = () => { btn.style.background = 'var(--vscode-button-secondaryBackground)'; };
+  btn.className = 'nx-btn';
   btn.onclick = () => onClick();
   return btn;
 }
 
 function createSeparator(): HTMLElement {
   const sep = document.createElement('div');
-  sep.style.cssText = `
-    border-left: 1px solid var(--vscode-panel-border);
-    align-self: stretch;
-    margin: 2px 2px;
-  `;
+  sep.className = 'nx-sep';
   return sep;
 }
 

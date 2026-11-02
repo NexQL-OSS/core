@@ -1,3 +1,20 @@
+import { COST_HEAT, MODE_COLORS, BRAND_ACCENT, RENDERER_FONT_MONO } from '../../ui/renderer/rendererConstants';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
+/**
+ * Heat color for a node from its share of total plan cost (0-100): cool blue when cheap,
+ * then amber -> orange -> magenta toward the hot end of the ribbon.
+ */
+export function costHeatColor(percent: number): string {
+  if (!Number.isFinite(percent) || percent < 15) {
+    return COST_HEAT.cool;
+  }
+  const t = Math.min(1, (percent - 15) / 60) * 100;
+  return t <= 50
+    ? `color-mix(in srgb, ${COST_HEAT.orange} ${Math.round(t * 2)}%, ${COST_HEAT.amber})`
+    : `color-mix(in srgb, ${COST_HEAT.magenta} ${Math.round((t - 50) * 2)}%, ${COST_HEAT.orange})`;
+}
+
 export interface ExplainNode {
   'Node Type': string;
   'Total Cost'?: number;
@@ -353,6 +370,7 @@ export class ExplainVisualizer {
   }
 
   public render(): void {
+    ensureRendererBrandStyles();
     this.container.innerHTML = '';
     this.container.appendChild(this.buildStyles());
 
@@ -378,6 +396,7 @@ export class ExplainVisualizer {
     const style = document.createElement('style');
     style.textContent = `
       .explain-tree {
+        --nx-mono: ${RENDERER_FONT_MONO};
         font-family: var(--vscode-editor-font-family);
         font-size: 12px;
         padding: 12px 16px 16px;
@@ -393,25 +412,33 @@ export class ExplainVisualizer {
       }
       .explain-toolbar button {
         padding: 3px 10px;
-        font-size: 11px;
+        font-size: 10.5px;
+        font-family: var(--nx-mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
         cursor: pointer;
         border: 1px solid var(--vscode-widget-border);
         border-radius: 3px;
         background: var(--vscode-button-secondaryBackground);
         color: var(--vscode-button-secondaryForeground);
       }
+      .explain-toolbar button:hover {
+        border-color: ${BRAND_ACCENT};
+      }
       .explain-summary-card {
         margin: 10px 16px 10px;
         padding: 12px;
         border: 1px solid var(--vscode-widget-border);
-        border-radius: 6px;
-        background: color-mix(in srgb, var(--vscode-editor-background) 86%, var(--vscode-badge-background) 14%);
+        border-left: 3px solid ${BRAND_ACCENT};
+        border-radius: 2px 6px 6px 2px;
+        background: color-mix(in srgb, ${BRAND_ACCENT} 5%, var(--vscode-editor-background));
         font-family: var(--vscode-editor-font-family);
       }
       .explain-summary-title {
+        font-family: var(--nx-mono);
         font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         opacity: 0.75;
         margin-bottom: 8px;
       }
@@ -429,16 +456,18 @@ export class ExplainVisualizer {
         border: 1px solid var(--vscode-widget-border);
         border-radius: 4px;
         padding: 6px 8px;
-        background: var(--vscode-editor-background);
+        background: color-mix(in srgb, var(--vscode-editor-background) 94%, var(--vscode-editor-foreground));
       }
       .explain-metric-label {
         display: block;
-        font-size: 10px;
+        font-family: var(--nx-mono);
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         opacity: 0.7;
       }
       .explain-metric-value {
-        font-size: 13px;
+        font-size: 16px;
         font-variant-numeric: tabular-nums;
         font-weight: 600;
       }
@@ -448,8 +477,13 @@ export class ExplainVisualizer {
         margin: 8px 0;
         background: var(--vscode-editor-background);
       }
+      .explain-node {
+        --nx-heat: ${COST_HEAT.cool};
+        border-left: 3px solid var(--nx-heat);
+      }
       .explain-node.hottest {
-        border-color: var(--vscode-focusBorder);
+        border-color: ${BRAND_ACCENT};
+        border-left-color: var(--nx-heat);
       }
       .explain-node-header {
         display: flex;
@@ -489,13 +523,18 @@ export class ExplainVisualizer {
         border: 1px solid var(--vscode-widget-border);
         font-variant-numeric: tabular-nums;
       }
-      .time-green { background: rgba(64, 170, 68, 0.16); }
-      .time-amber { background: rgba(218, 160, 48, 0.16); }
-      .time-red { background: rgba(220, 70, 70, 0.16); }
+      .pill {
+        font-family: var(--nx-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+      }
+      .time-green { background: color-mix(in srgb, ${MODE_COLORS.read} 16%, transparent); }
+      .time-amber { background: color-mix(in srgb, ${COST_HEAT.amber} 22%, transparent); }
+      .time-red { background: color-mix(in srgb, ${COST_HEAT.magenta} 22%, transparent); }
       .cost-bar {
-        height: 4px;
-        background: var(--vscode-progressBar-background);
-        opacity: 0.55;
+        height: 3px;
+        background: var(--nx-heat);
+        opacity: 0.9;
       }
       .explain-details {
         padding: 8px 10px 10px;
@@ -537,45 +576,36 @@ export class ExplainVisualizer {
         transform: rotate(-90deg);
       }
       .hotspot-badge {
+        --nx-hot: ${COST_HEAT.magenta};
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        padding: 1px 6px;
-        border-radius: 3px;
+        gap: 5px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-family: var(--nx-mono);
         font-size: 10px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.06em;
+        color: var(--vscode-editor-foreground);
+        border: 1px solid color-mix(in srgb, var(--nx-hot) 55%, transparent);
+        background: color-mix(in srgb, var(--nx-hot) 14%, transparent);
       }
-      .hotspot-critical {
-        background: rgba(220, 70, 70, 0.25);
-        color: #ff6b6b;
-        border: 1px solid #ff6b6b;
+      .hotspot-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--nx-hot);
       }
-      .hotspot-high {
-        background: rgba(255, 159, 64, 0.25);
-        color: #ff9f40;
-        border: 1px solid #ff9f40;
-      }
-      .hotspot-medium {
-        background: rgba(255, 206, 86, 0.25);
-        color: #ffd700;
-        border: 1px solid #ffd700;
-      }
-      .hotspot-low {
-        background: rgba(100, 200, 255, 0.15);
-        color: #64c8ff;
-        border: 1px solid #64c8ff;
-      }
+      .hotspot-critical { --nx-hot: ${COST_HEAT.magenta}; }
+      .hotspot-high { --nx-hot: ${COST_HEAT.orange}; }
+      .hotspot-medium { --nx-hot: ${COST_HEAT.amber}; }
+      .hotspot-low { --nx-hot: ${COST_HEAT.cool}; }
       .explain-node.is-hotspot {
-        border-color: var(--vscode-focusBorder);
-        background: color-mix(in srgb, var(--vscode-editor-background) 95%, var(--vscode-errorForeground) 5%);
-      }
-      .explain-node.is-hotspot.hotspot-high {
-        background: color-mix(in srgb, var(--vscode-editor-background) 96%, rgb(255, 159, 64) 4%);
-      }
-      .explain-node.is-hotspot.hotspot-medium {
-        background: color-mix(in srgb, var(--vscode-editor-background) 97%, rgb(255, 206, 86) 3%);
+        border-color: color-mix(in srgb, var(--nx-hot, var(--nx-heat)) 55%, var(--vscode-widget-border));
+        border-left-color: var(--nx-heat);
+        background: color-mix(in srgb, var(--nx-hot, var(--nx-heat)) 5%, var(--vscode-editor-background));
       }
       .hotspot-tooltip {
         display: none;
@@ -666,10 +696,8 @@ export class ExplainVisualizer {
 
     if (hottestNode['Node Type'] === 'Seq Scan') {
       const hint = document.createElement('div');
+      hint.className = 'nx-insight nx-insight--medium';
       hint.style.marginTop = '10px';
-      hint.style.padding = '8px';
-      hint.style.borderLeft = '3px solid #d7a000';
-      hint.style.background = 'rgba(215, 160, 0, 0.12)';
       const relationName = String(hottestNode['Relation Name'] ?? 'table_name');
       hint.textContent = `Hint: consider an index for relation \"${relationName}\" if this path is frequently used.`;
       card.appendChild(hint);
@@ -746,7 +774,7 @@ export class ExplainVisualizer {
       const badge = document.createElement('span');
       badge.className = `hotspot-badge ${this.getSeverityClass(hotspotMetrics.severity)}`;
       badge.title = hotspotMetrics.reason;
-      badge.textContent = `🔴 ${hotspotMetrics.severity}`;
+      badge.textContent = hotspotMetrics.severity;
       left.appendChild(badge);
     }
 
@@ -795,6 +823,7 @@ export class ExplainVisualizer {
     const costBar = document.createElement('div');
     costBar.className = 'cost-bar';
     const barRatio = this.maxCost > 0 && cost !== null ? (cost / this.maxCost) * 100 : 0;
+    el.style.setProperty('--nx-heat', costHeatColor(barRatio));
     costBar.style.width = `${Math.max(2, Math.min(100, barRatio))}%`;
     el.appendChild(costBar);
 

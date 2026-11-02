@@ -5,12 +5,13 @@
  */
 import { createInlineBanner } from './InlineBanner';
 import type { DryRunInfo } from '../../common/types';
+import { MODE_COLORS } from '../../ui/renderer/rendererConstants';
 
 /**
  * Accent for "this would write" states. `--vscode-nexql-mode-write` is contributed by the
  * theming work; the fallback keeps the banner correct before/without it.
  */
-export const DRY_RUN_ACCENT = 'var(--vscode-nexql-mode-write, var(--vscode-editorWarning-foreground))';
+export const DRY_RUN_ACCENT = MODE_COLORS.write;
 
 function plural(n: number, one: string, many: string): string {
   return `${n.toLocaleString()} ${n === 1 ? one : many}`;
@@ -49,10 +50,9 @@ export function createDryRunBanner(info: DryRunInfo): HTMLElement {
   });
   banner.dataset.dryRunBanner = 'true';
   banner.setAttribute('role', 'status');
+  banner.classList.add('nx-banner--dry-run');
+  // Slightly heavier edge than a plain warning banner: this one means "would write".
   banner.style.borderLeft = `4px solid ${DRY_RUN_ACCENT}`;
-  banner.style.padding = '8px 12px';
-  banner.style.fontSize = '12px';
-  banner.style.fontWeight = '600';
 
   if (info.notes.length > 0) {
     const details = document.createElement('div');

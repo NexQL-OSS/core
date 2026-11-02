@@ -5,29 +5,24 @@
  */
 
 import { ColumnStatsData } from '../../common/types';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
+function esc(text: unknown): string {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 export class ColumnStatsTooltip {
   private tooltip: HTMLElement;
   private currentAnchor: HTMLElement | null = null;
 
   constructor() {
+    ensureRendererBrandStyles();
     this.tooltip = document.createElement('div');
-    this.tooltip.style.cssText = `
-      position:fixed;
-      background:var(--vscode-editorHoverWidget-background, #252526);
-      border:1px solid var(--vscode-editorHoverWidget-border, #454545);
-      border-radius:4px;
-      padding:10px 12px;
-      font-size:11px;
-      color:var(--vscode-editor-foreground);
-      z-index:9999;
-      pointer-events:none;
-      min-width:180px;
-      max-width:280px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.4);
-      display:none;
-      line-height:1.6;
-    `;
+    this.tooltip.className = 'nx-tooltip';
     document.body.appendChild(this.tooltip);
   }
 
@@ -92,37 +87,24 @@ export class ColumnStatsTooltip {
     const nullBar = Math.round(stats.nullPct);
     const nonNullBar = 100 - nullBar;
 
+    const tile = (label: string, value: string, extra = '', title = '', accent = false) => `
+      <div class="nx-stat${accent ? ' nx-stat--accent' : ''}">
+        <span class="nx-stat__value"${title ? ` title="${esc(title)}"` : ''}>${esc(value)}</span>
+        <span class="nx-stat__label">${esc(label)}</span>
+        ${extra}
+      </div>`;
+    const bar = (pct: number, color: string) =>
+      `<div class="nx-stat__bar"><span style="width:${pct}%;background:${color};"></span></div>`;
+
     this.tooltip.innerHTML = `
-      <div style="font-weight:600;margin-bottom:6px;color:var(--vscode-editor-foreground);">${stats.column}</div>
-      <div style="display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;">
-        <span style="color:var(--vscode-descriptionForeground);">Rows</span>
-        <div></div>
-        <span style="font-variant-numeric:tabular-nums;">${stats.totalRows.toLocaleString()}</span>
-
-        <span style="color:var(--vscode-descriptionForeground);">Nulls</span>
-        <div style="height:6px;background:var(--vscode-widget-border);border-radius:3px;overflow:hidden;">
-          <div style="height:100%;width:${nullBar}%;background:var(--vscode-errorForeground);opacity:0.7;transition:width 0.2s;"></div>
-        </div>
-        <span style="font-variant-numeric:tabular-nums;">${stats.nullCount.toLocaleString()} (${stats.nullPct.toFixed(1)}%)</span>
-
-        <span style="color:var(--vscode-descriptionForeground);">Distinct</span>
-        <div style="height:6px;background:var(--vscode-widget-border);border-radius:3px;overflow:hidden;">
-          <div style="height:100%;width:${nonNullBar}%;background:var(--vscode-textLink-foreground);opacity:0.7;transition:width 0.2s;"></div>
-        </div>
-        <span style="font-variant-numeric:tabular-nums;">${stats.distinctCount.toLocaleString()}</span>
-
-        <span style="color:var(--vscode-descriptionForeground);">Min</span>
-        <div></div>
-        <span style="font-variant-numeric:tabular-nums;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${stats.min}">${this.formatValue(stats.min)}</span>
-
-        <span style="color:var(--vscode-descriptionForeground);">Max</span>
-        <div></div>
-        <span style="font-variant-numeric:tabular-nums;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${stats.max}">${this.formatValue(stats.max)}</span>
-        ${stats.avgLength !== undefined ? `
-        <span style="color:var(--vscode-descriptionForeground);">Avg len</span>
-        <div></div>
-        <span style="font-variant-numeric:tabular-nums;">${stats.avgLength.toFixed(1)}</span>
-        ` : ''}
+      <div class="nx-tooltip__title">${esc(stats.column)}</div>
+      <div class="nx-stat-grid">
+        ${tile('Rows', stats.totalRows.toLocaleString())}
+        ${tile('Nulls', `${stats.nullCount.toLocaleString()} (${stats.nullPct.toFixed(1)}%)`, bar(nullBar, 'var(--vscode-errorForeground)'))}
+        ${tile('Distinct', stats.distinctCount.toLocaleString(), bar(nonNullBar, 'var(--vscode-nexql-accent, var(--vscode-textLink-foreground))'), '', true)}
+        ${tile('Min', this.formatValue(stats.min), '', String(stats.min))}
+        ${tile('Max', this.formatValue(stats.max), '', String(stats.max))}
+        ${stats.avgLength !== undefined ? tile('Avg len', stats.avgLength.toFixed(1)) : ''}
       </div>
     `;
 

@@ -40,9 +40,50 @@ export const RENDERER_ELEVATION_2 =
 export const RENDERER_ELEVATION_3 =
   `2px 4px 8px color-mix(in srgb, #000 26%, transparent), 14px 28px 50px -16px color-mix(in srgb, #000 48%, transparent), inset 1px 1px 0 ${BEVEL_LIGHT}, inset -1px -1px 0 ${BEVEL_DARK}`;
 
+/** Monospace stack for meta labels (mirrors `--pg-font-mono`). */
+export const RENDERER_FONT_MONO = 'var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace)';
+
+/** Border used in high-contrast themes in place of gradients and shadows. */
+export const HC_BORDER = 'var(--vscode-contrastBorder, currentColor)';
+
+/** Banner/insight severities, mirroring the `.pg-insight` left-edge accent. */
+export const SEVERITY_COLORS = {
+  info: BRAND_ACCENT,
+  warn: MODE_COLORS.write,
+  error: 'var(--vscode-errorForeground)',
+  success: MODE_COLORS.read,
+} as const;
+
+/**
+ * Cost-heat ramp for EXPLAIN nodes, cool to hot, taken from the ribbon hues:
+ * blue (cool), then amber -> orange -> magenta for hot nodes. Hex fallbacks apply if the nexql colors are missing.
+ */
+export const COST_HEAT = {
+  cool: 'var(--vscode-nexql-ribbon-blue, #3D6FE0)',
+  amber: 'var(--vscode-nexql-ribbon-amber, #F5B23A)',
+  orange: 'var(--vscode-nexql-ribbon-orange, #F26B3A)',
+  magenta: 'var(--vscode-nexql-ribbon-magenta, #E0388F)',
+} as const;
+
 export const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
-/** VS Code chart color CSS variables for theme-aware Chart.js palettes. */
+/**
+ * Chart series order: the ribbon hues first (blue, indigo, magenta, orange, amber, purple),
+ * then green and red so up to eight series stay distinguishable. `source` is the CSS variable
+ * to read; `fallback` is the `--vscode-charts-*` variable used only when `source` is not set.
+ */
+export const CHART_PALETTE_SOURCES: ReadonlyArray<{ source: string; fallback: string }> = [
+  { source: '--vscode-nexql-ribbon-blue', fallback: 'var(--vscode-charts-blue)' },
+  { source: '--vscode-nexql-ribbon-indigo', fallback: 'var(--vscode-charts-purple)' },
+  { source: '--vscode-nexql-ribbon-magenta', fallback: 'var(--vscode-charts-red)' },
+  { source: '--vscode-nexql-ribbon-orange', fallback: 'var(--vscode-charts-orange)' },
+  { source: '--vscode-nexql-ribbon-amber', fallback: 'var(--vscode-charts-yellow)' },
+  { source: '--vscode-nexql-ribbon-purple', fallback: 'var(--vscode-charts-purple)' },
+  { source: '--vscode-nexql-mode-read', fallback: 'var(--vscode-charts-green)' },
+  { source: '--vscode-charts-red', fallback: 'var(--vscode-charts-foreground)' },
+];
+
+/** VS Code chart color CSS variables, kept for consumers that want the stock palette. */
 export const CHART_COLOR_VARS = [
   'var(--vscode-charts-blue)',
   'var(--vscode-charts-red)',
@@ -68,6 +109,23 @@ function resolveCssColor(cssValue: string): string {
   return resolved;
 }
 
+/** Raw value of a CSS custom property on <html> or <body>, or '' if it is not defined. */
+function readCssVar(name: string): string {
+  if (typeof document === 'undefined' || typeof getComputedStyle === 'undefined') {
+    return '';
+  }
+  for (const el of [document.documentElement, document.body]) {
+    if (!el) {
+      continue;
+    }
+    const value = getComputedStyle(el).getPropertyValue(name).trim();
+    if (value) {
+      return value;
+    }
+  }
+  return '';
+}
+
 function withAlpha(rgb: string, alpha: number): string {
   const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (!match) {
@@ -76,12 +134,18 @@ function withAlpha(rgb: string, alpha: number): string {
   return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${alpha})`;
 }
 
-/** Resolve theme chart palette once per renderer session (Chart.js needs concrete colors). */
+/**
+ * Resolve the theme chart palette once per renderer session (Chart.js needs concrete colors).
+ * Leads with the NexQL ribbon hues and falls back per color to `--vscode-charts-*`.
+ */
 export function getThemeChartPalette(): { fills: string[]; borders: string[] } {
   if (chartPaletteCache) {
     return chartPaletteCache;
   }
-  const borders = CHART_COLOR_VARS.map((v) => resolveCssColor(v));
+  const borders = CHART_PALETTE_SOURCES.map(({ source, fallback }) => {
+    const raw = readCssVar(source);
+    return resolveCssColor(raw || fallback);
+  });
   const fills = borders.map((c) => withAlpha(c, 0.6));
   chartPaletteCache = { fills, borders };
   return chartPaletteCache;

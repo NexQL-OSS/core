@@ -5,6 +5,7 @@
  */
 
 import { ResultHistoryEntry } from '../../common/types';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
 
 const MAX_HISTORY = 5;
 
@@ -34,17 +35,11 @@ export function renderTabStrip(
 ): HTMLElement | null {
   if (history.length <= 1) { return null; }
 
+  ensureRendererBrandStyles();
+
   const strip = document.createElement('div');
-  strip.style.cssText = `
-    display:flex;
-    align-items:center;
-    gap:0;
-    background:var(--vscode-tab-inactiveBackground, #2d2d2d);
-    border-bottom:1px solid var(--vscode-widget-border);
-    overflow-x:auto;
-    scrollbar-width:thin;
-    flex-shrink:0;
-  `;
+  strip.className = 'nx-histstrip';
+  strip.setAttribute('role', 'tablist');
 
   history.forEach((entry, i) => {
     const tab = document.createElement('div');
@@ -56,38 +51,21 @@ export function renderTabStrip(
       ? `${entry.command} · ${rowCount.toLocaleString()} rows`
       : `${rowCount.toLocaleString()} rows`;
 
-    tab.style.cssText = `
-      padding:5px 12px;
-      font-size:11px;
-      cursor:pointer;
-      white-space:nowrap;
-      border-right:1px solid var(--vscode-widget-border);
-      color:${isActive ? 'var(--vscode-tab-activeForeground)' : 'var(--vscode-tab-inactiveForeground)'};
-      background:${isActive ? 'var(--vscode-tab-activeBackground)' : 'transparent'};
-      border-bottom:${isActive ? '2px solid var(--vscode-focusBorder)' : '2px solid transparent'};
-      user-select:none;
-      display:flex;flex-direction:column;gap:1px;
-    `;
+    tab.className = 'nx-histtab';
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
 
     const labelDiv = document.createElement('div');
     labelDiv.textContent = i === 0 ? `▶ ${label}` : label;
-    labelDiv.style.fontWeight = isActive ? '500' : '400';
 
     const metaDiv = document.createElement('div');
+    metaDiv.className = 'nx-histtab__meta';
     metaDiv.textContent = `${timeAgo}${entry.executionTime ? ` · ${entry.executionTime}ms` : ''}`;
-    metaDiv.style.cssText = 'font-size:9px;color:var(--vscode-descriptionForeground);';
 
     tab.appendChild(labelDiv);
     tab.appendChild(metaDiv);
 
     tab.addEventListener('click', () => onSelect(i));
-    tab.addEventListener('mouseenter', () => {
-      if (!isActive) { tab.style.background = 'var(--vscode-list-hoverBackground)'; }
-    });
-    tab.addEventListener('mouseleave', () => {
-      if (!isActive) { tab.style.background = 'transparent'; }
-    });
-
     strip.appendChild(tab);
   });
 

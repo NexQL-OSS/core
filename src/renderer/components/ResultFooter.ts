@@ -5,6 +5,7 @@
 
 import type { RowToolsOptions } from './ActionBar';
 import { createRowTools } from './ActionBar';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
 
 export interface ResultFooterOptions {
   onAddRow?: () => void;
@@ -48,20 +49,11 @@ export function createResultFooter(options: ResultFooterOptions): HTMLElement {
     rowTools,
   } = options;
 
+  ensureRendererBrandStyles();
+
   const footer = document.createElement('div');
   footer.dataset.resultFooter = 'true';
-  footer.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 12px;
-    border-top: 1px solid var(--vscode-widget-border);
-    background: var(--vscode-editor-background);
-    font-family: var(--vscode-font-family);
-    font-size: 11px;
-    color: var(--vscode-descriptionForeground);
-    flex-shrink: 0;
-  `;
+  footer.className = 'nx-footer';
 
   if (rowTools) {
     footer.appendChild(createRowTools(rowTools));
@@ -75,61 +67,23 @@ export function createResultFooter(options: ResultFooterOptions): HTMLElement {
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.textContent = '+ Add Row';
-    addBtn.style.cssText = `
-      padding: 2px 10px;
-      font-size: 11px;
-      font-family: var(--vscode-font-family);
-      background: none;
-      color: var(--vscode-button-secondaryForeground);
-      border: 1px solid var(--vscode-button-border, var(--vscode-widget-border));
-      border-radius: 3px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.1s;
-    `;
-    addBtn.onmouseover = () => {
-      addBtn.style.background = 'var(--vscode-button-secondaryHoverBackground)';
-    };
-    addBtn.onmouseout = () => {
-      addBtn.style.background = 'none';
-    };
+    addBtn.className = 'nx-footer__btn nx-footer__btn--add';
     addBtn.onclick = onAddRow;
     footer.appendChild(addBtn);
   }
-
-  /** Lighter tomato — stage rows for deletion */
-  const TOMATO = '#ff8066';
 
   if (deleteSelectionCount > 0 && onDeleteSelected) {
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.setAttribute('data-pg-result-delete', 'true');
     deleteBtn.textContent = `Delete Row (${deleteSelectionCount})`;
-    deleteBtn.style.cssText = `
-      padding: 2px 10px;
-      font-size: 11px;
-      font-family: var(--vscode-font-family);
-      background: color-mix(in srgb, ${TOMATO} 11%, transparent);
-      color: ${TOMATO};
-      border: 1px solid color-mix(in srgb, ${TOMATO} 32%, transparent);
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background 0.1s;
-    `;
+    deleteBtn.className = 'nx-footer__btn nx-footer__btn--delete';
     if (deleteUnavailableReason) {
       deleteBtn.style.opacity = '0.72';
       deleteBtn.title = deleteUnavailableReason;
     } else {
       deleteBtn.title = 'Stage selected rows for deletion (commit with Commit)';
     }
-    deleteBtn.onmouseover = () => {
-      deleteBtn.style.background = `color-mix(in srgb, ${TOMATO} 18%, transparent)`;
-    };
-    deleteBtn.onmouseout = () => {
-      deleteBtn.style.background = `color-mix(in srgb, ${TOMATO} 11%, transparent)`;
-    };
     deleteBtn.onclick = onDeleteSelected;
     footer.appendChild(deleteBtn);
   }
@@ -139,25 +93,7 @@ export function createResultFooter(options: ResultFooterOptions): HTMLElement {
     commitBtn.type = 'button';
     commitBtn.setAttribute('data-pg-result-commit', 'true');
     commitBtn.textContent = `Commit (${dirtyCount})`;
-    commitBtn.style.cssText = `
-      padding: 2px 10px;
-      font-size: 11px;
-      font-family: var(--vscode-font-family);
-      background: color-mix(in srgb, #f59e0b 15%, transparent);
-      color: #f59e0b;
-      border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent);
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background 0.1s;
-    `;
-    commitBtn.onmouseover = () => {
-      commitBtn.style.background = 'color-mix(in srgb, #f59e0b 25%, transparent)';
-    };
-    commitBtn.onmouseout = () => {
-      commitBtn.style.background = 'color-mix(in srgb, #f59e0b 15%, transparent)';
-    };
+    commitBtn.className = 'nx-footer__btn nx-footer__btn--commit';
     commitBtn.onclick = onCommit;
     footer.appendChild(commitBtn);
   }
@@ -167,25 +103,7 @@ export function createResultFooter(options: ResultFooterOptions): HTMLElement {
     revertBtn.type = 'button';
     revertBtn.textContent = 'Revert';
     revertBtn.title = 'Discard all unstaged cell edits and staged row deletions';
-    revertBtn.style.cssText = `
-      padding: 2px 10px;
-      font-size: 11px;
-      font-family: var(--vscode-font-family);
-      background: color-mix(in srgb, #22c55e 14%, transparent);
-      color: #22c55e;
-      border: 1px solid color-mix(in srgb, #22c55e 38%, transparent);
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: background 0.1s;
-    `;
-    revertBtn.onmouseover = () => {
-      revertBtn.style.background = 'color-mix(in srgb, #22c55e 22%, transparent)';
-    };
-    revertBtn.onmouseout = () => {
-      revertBtn.style.background = 'color-mix(in srgb, #22c55e 14%, transparent)';
-    };
+    revertBtn.className = 'nx-footer__btn nx-footer__btn--revert';
     revertBtn.onclick = onRevert;
     footer.appendChild(revertBtn);
   }

@@ -1,3 +1,5 @@
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
 /**
  * ErrorPanel component for displaying query execution errors.
  * Shows the raw PostgreSQL error, an optional plain-English explanation,
@@ -18,15 +20,10 @@ export interface ErrorPanelOptions {
  * Creates an error panel element for displaying query execution failures.
  */
 export function createErrorPanel(options: ErrorPanelOptions): HTMLElement {
+  ensureRendererBrandStyles();
+
   const container = document.createElement('div');
-  container.style.cssText = `
-    border-left: 3px solid var(--vscode-errorForeground);
-    padding: 12px 16px;
-    margin: 8px 0;
-    background: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.05));
-    font-family: var(--vscode-font-family);
-    color: var(--vscode-foreground);
-  `;
+  container.className = 'nx-banner nx-banner--error nx-banner--panel';
 
   // Raw error in monospace
   const errorLine = document.createElement('div');
@@ -40,7 +37,7 @@ export function createErrorPanel(options: ErrorPanelOptions): HTMLElement {
     color: var(--vscode-errorForeground);
     white-space: pre-wrap;
     word-break: break-word;
-    margin-bottom: 8px;
+    margin: 0;
   `;
   container.appendChild(errorLine);
 
@@ -49,7 +46,7 @@ export function createErrorPanel(options: ErrorPanelOptions): HTMLElement {
     const explanationEl = document.createElement('p');
     explanationEl.textContent = options.explanation;
     explanationEl.style.cssText = `
-      margin: 0 0 12px 0;
+      margin: 0;
       font-size: 12px;
       color: var(--vscode-descriptionForeground);
       line-height: 1.5;
@@ -76,24 +73,9 @@ export function createErrorPanel(options: ErrorPanelOptions): HTMLElement {
 
 function createButton(label: string, onClick: () => void): HTMLElement {
   const btn = document.createElement('button');
+  btn.type = 'button';
   btn.textContent = label;
-  btn.style.cssText = `
-    padding: 4px 10px;
-    font-size: 11px;
-    font-family: var(--vscode-font-family);
-    color: var(--vscode-button-secondaryForeground);
-    background: var(--vscode-button-secondaryBackground);
-    border: 1px solid var(--vscode-button-border, transparent);
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background 0.15s;
-  `;
-  btn.onmouseover = () => {
-    btn.style.background = 'var(--vscode-button-secondaryHoverBackground)';
-  };
-  btn.onmouseout = () => {
-    btn.style.background = 'var(--vscode-button-secondaryBackground)';
-  };
+  btn.className = 'nx-btn';
   btn.onclick = () => onClick();
   return btn;
 }

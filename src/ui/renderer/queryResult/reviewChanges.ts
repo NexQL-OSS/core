@@ -5,6 +5,7 @@ import {
   resultToolbarSvg,
 } from '../../../renderer/components/ResultToolbarUi';
 import type { TableRenderer } from '../../../renderer/components/table/TableRenderer';
+import { MODE_COLORS } from '../rendererConstants';
 import type { TableRenderOptions } from '../../../common/types';
 import {
   buildDeletionReviewRows,
@@ -294,7 +295,7 @@ export function syncReviewTabButtonUi(
     currentMode: string;
   },
 ): void {
-  const REVIEW_AMBER = '#f59e0b';
+  const REVIEW_AMBER = MODE_COLORS.write;
   if (!reviewTabBtn) return;
   const pending = deps.modifiedCells.size + deps.rowsMarkedForDeletion.size;
   const isActive = deps.currentMode === 'review';
@@ -333,12 +334,7 @@ export function syncReviewTabButtonUi(
 
   applyResultViewTabStyle(reviewTabBtn, isActive);
   if (pending > 0) {
-    reviewTabBtn.style.background = isActive
-      ? `color-mix(in srgb, ${REVIEW_AMBER} 18%, color-mix(in srgb, var(--vscode-list-activeSelectionBackground) 88%, transparent))`
-      : `color-mix(in srgb, ${REVIEW_AMBER} 14%, transparent)`;
-    reviewTabBtn.style.borderColor = `color-mix(in srgb, ${REVIEW_AMBER} 42%, var(--vscode-widget-border))`;
-  }
-  if (!isActive) {
-    reviewTabBtn.style.color = 'var(--vscode-editor-foreground)';
+    // Pending edits tint the tab in the write-mode color; the active underline stays accent.
+    reviewTabBtn.style.background = `color-mix(in srgb, ${REVIEW_AMBER} ${isActive ? 16 : 11}%, transparent)`;
   }
 }

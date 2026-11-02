@@ -1,3 +1,5 @@
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
 /**
  * ViewSelector.ts
  * Dropdown for Table / Chart / Analyst primary views.
@@ -30,25 +32,15 @@ const DEFAULT_VIEWS: ViewSelectorOption[] = [
 
 export function createViewSelector(options: ViewSelectorOptions): ViewSelectorHandle {
   const { current, available = DEFAULT_VIEWS, onChange } = options;
+  ensureRendererBrandStyles();
 
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;flex-shrink:0;';
 
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.style.cssText = `
-    display: flex; align-items: center; gap: 5px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-family: var(--vscode-font-family);
-    background: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-    border: 1px solid var(--vscode-button-border, transparent);
-    border-radius: 3px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.1s;
-  `;
+  btn.className = 'nx-viewsel';
+  btn.setAttribute('aria-haspopup', 'listbox');
 
   let currentId: PrimaryView = current;
 
@@ -70,13 +62,6 @@ export function createViewSelector(options: ViewSelectorOptions): ViewSelectorHa
 
   renderBtnLabel(current);
 
-  btn.onmouseover = () => {
-    btn.style.background = 'var(--vscode-button-secondaryHoverBackground)';
-  };
-  btn.onmouseout = () => {
-    btn.style.background = 'var(--vscode-button-secondaryBackground)';
-  };
-
   let popover: HTMLElement | null = null;
 
   const closePopover = () => {
@@ -97,31 +82,14 @@ export function createViewSelector(options: ViewSelectorOptions): ViewSelectorHa
     }
 
     popover = document.createElement('div');
-    popover.style.cssText = `
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 2px;
-      min-width: 130px;
-      background: var(--vscode-menu-background);
-      border: 1px solid var(--vscode-menu-border);
-      border-radius: 4px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 500;
-      padding: 3px 0;
-    `;
+    popover.className = 'nx-viewsel__menu';
+    popover.setAttribute('role', 'listbox');
 
     available.forEach((opt) => {
       const item = document.createElement('div');
-      item.style.cssText = `
-        display: flex; align-items: center; gap: 8px;
-        padding: 5px 12px;
-        cursor: pointer;
-        font-size: 12px;
-        font-family: var(--vscode-font-family);
-        color: var(--vscode-menu-foreground);
-        ${opt.id === currentId ? 'font-weight:600;' : ''}
-      `;
+      item.className = 'nx-viewsel__item';
+      item.setAttribute('role', 'option');
+      item.setAttribute('aria-selected', opt.id === currentId ? 'true' : 'false');
       const iconSpan = document.createElement('span');
       iconSpan.textContent = opt.icon;
       const labelSpan = document.createElement('span');
@@ -134,14 +102,6 @@ export function createViewSelector(options: ViewSelectorOptions): ViewSelectorHa
         check.style.cssText = 'margin-left:auto;font-size:11px;opacity:0.7;';
         item.appendChild(check);
       }
-      item.onmouseenter = () => {
-        item.style.background = 'var(--vscode-menu-selectionBackground)';
-        item.style.color = 'var(--vscode-menu-selectionForeground)';
-      };
-      item.onmouseleave = () => {
-        item.style.background = 'transparent';
-        item.style.color = 'var(--vscode-menu-foreground)';
-      };
       item.onclick = (ev) => {
         ev.stopPropagation();
         renderBtnLabel(opt.id);

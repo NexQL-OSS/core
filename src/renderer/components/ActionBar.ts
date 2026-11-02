@@ -1,5 +1,6 @@
 import { prefersReducedMotion } from '../../ui/theme/motion';
 import { isProBuild } from '../../common/buildTier';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
 import { EXPORT_MENU_Z_INDEX, positionExportDropdown } from '../features/export';
 import {
   RESULT_TOOLBAR_ICON_CLASS,
@@ -46,53 +47,14 @@ const AI_MENU_STYLE_ID = 'pg-ai-menu-btn-styles';
 const ROW_TOOL_COPY_FEEDBACK_MS = 2500;
 
 function ensureAiMenuButtonStyles(): void {
+  // The AI / Actions pill is styled by the shared renderer stylesheet (static accent border,
+  // no animated ring); the legacy style id stays so repeated calls remain idempotent.
+  ensureRendererBrandStyles();
   if (typeof document === 'undefined') return;
   if (document.getElementById(AI_MENU_STYLE_ID)) return;
   const style = document.createElement('style');
   style.id = AI_MENU_STYLE_ID;
-  style.textContent = `
-    @keyframes pg-ai-ring-shift {
-      0%, 100% {
-        box-shadow:
-          0 0 0 1.5px color-mix(in srgb, var(--vscode-terminal-ansiCyan, #3b82f6) 55%, transparent),
-          0 1px 0 color-mix(in srgb, var(--vscode-editor-background) 80%, transparent);
-      }
-      33% {
-        box-shadow:
-          0 0 0 1.5px color-mix(in srgb, var(--vscode-terminal-ansiYellow, #f59e0b) 60%, transparent),
-          0 2px 10px color-mix(in srgb, var(--vscode-terminal-ansiMagenta, #ef4444) 22%, transparent);
-      }
-      66% {
-        box-shadow:
-          0 0 0 1.5px color-mix(in srgb, var(--vscode-textLink-foreground, #6366f1) 50%, transparent),
-          0 1px 0 color-mix(in srgb, var(--vscode-editor-background) 80%, transparent);
-      }
-    }
-    .pg-ai-menu-btn-wrap {
-      display: inline-flex;
-      align-items: center;
-      position: relative;
-      border: 1px solid color-mix(in srgb, var(--vscode-widget-border, var(--vscode-editor-foreground, #ccc)) 65%, transparent);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--vscode-editor-background, #1e1e1e) 88%, transparent);
-      transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
-      box-sizing: border-box;
-      padding: 1px;
-    }
-    .pg-ai-menu-btn-wrap:hover {
-      background: color-mix(in srgb, var(--vscode-toolbar-hoverBackground, rgba(127,127,127,0.15)) 60%, transparent) !important;
-      border-color: var(--vscode-focusBorder, var(--vscode-textLink-foreground, #007fd4)) !important;
-    }
-    .pg-ai-menu-btn--animated button {
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      background: transparent !important;
-      box-shadow: none !important;
-    }
-    .pg-ai-menu-btn--animated {
-      animation: pg-ai-ring-shift 14s ease-in-out infinite;
-    }
-  `;
+  style.textContent = '/* pg-ai-menu-btn styles: see rendererStyles.ts */';
   document.head.appendChild(style);
 }
 
@@ -107,9 +69,6 @@ function flashCopyRowToolSuccess(btn: HTMLButtonElement): void {
   if (b._pgCopyFlashT) clearTimeout(b._pgCopyFlashT);
   btn.dataset.pgRowToolFlash = 'copy';
   fillToolbarButtonContent(btn, 'copySuccess', 'Copied');
-  btn.style.color = 'var(--vscode-testing-iconPassed, #3fb950)';
-  btn.style.borderColor =
-    'color-mix(in srgb, var(--vscode-testing-iconPassed, #3fb950) 45%, var(--vscode-widget-border))';
   b._pgCopyFlashT = setTimeout(() => {
     delete btn.dataset.pgRowToolFlash;
     b._pgCopyFlashT = undefined;
@@ -397,17 +356,9 @@ export function createActionsMenuButton(options: ActionsMenuOptions): HTMLElemen
  * Row tools + AI only (tests / legacy). Table secondary band uses createAiMenuButton + footer row tools.
  */
 export function createActionBar(options: ActionBarOptions): ActionBarParts {
+  ensureRendererBrandStyles();
   const container = document.createElement('div');
-  container.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-bottom: 1px solid var(--vscode-widget-border);
-    font-family: var(--vscode-font-family);
-    min-height: 32px;
-    flex-wrap: wrap;
-  `;
+  container.className = 'nx-actionbar';
 
   const primaryTools = createRowTools(options);
 

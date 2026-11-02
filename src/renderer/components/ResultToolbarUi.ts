@@ -1,3 +1,5 @@
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
+
 /**
  * Shared SVG icons + ghost toolbar styles for notebook result chrome (tabs, row tools, filter).
  * Icons: 24×24 viewBox, stroke currentColor — scale via width/height on <svg>.
@@ -165,90 +167,35 @@ export function fillToolbarButtonContent(
   btn.appendChild(tx);
 }
 
-/** Ghost tab / tool — no heavy grey fill when inactive. */
+/**
+ * Result view tab (Table / Chart / Notices ...): flat text tab with an accent underline when
+ * active. Look and hover live in the shared stylesheet (`.nx-tab`).
+ */
 export function applyResultViewTabStyle(btn: HTMLButtonElement, active: boolean): void {
+  ensureRendererBrandStyles();
+  btn.classList.add('nx-tab');
   btn.dataset.pgTabActive = active ? '1' : '0';
-  const fg = active
-    ? 'var(--vscode-list-activeSelectionForeground)'
-    : 'var(--vscode-descriptionForeground)';
-  const bg = active
-    ? 'color-mix(in srgb, var(--vscode-list-activeSelectionBackground) 88%, transparent)'
-    : 'transparent';
-  const border = active
-    ? 'color-mix(in srgb, var(--vscode-focusBorder) 45%, var(--vscode-widget-border))'
-    : 'color-mix(in srgb, var(--vscode-widget-border) 55%, transparent)';
-
-  btn.style.cssText = `
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:5px 10px;
-    font-size:11px;
-    font-family:var(--vscode-font-family);
-    font-weight:500;
-    letter-spacing:0.02em;
-    line-height:1;
-    cursor:pointer;
-    border-radius:6px;
-    border:1px solid ${border};
-    background:${bg};
-    color:${fg};
-    transition:background 0.14s ease,border-color 0.14s ease,color 0.14s ease,box-shadow 0.14s ease;
-    box-shadow:none;
-  `;
-  btn.style.setProperty('-webkit-font-smoothing', 'antialiased');
+  btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  // Drop any inline override left by a previous state (hover tint, pending-change tint).
+  btn.removeAttribute('style');
 }
 
+/** Hover is handled by `.nx-tab:hover`; kept so callers can opt a button into the tab look. */
 export function attachResultViewTabHover(btn: HTMLButtonElement): void {
-  const refresh = () => {
-    applyResultViewTabStyle(btn, btn.dataset.pgTabActive === '1');
-  };
-  btn.addEventListener('mouseenter', () => {
-    if (btn.dataset.pgTabActive !== '1') {
-      btn.style.background =
-        'color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 55%, transparent)';
-    }
-  });
-  btn.addEventListener('mouseleave', refresh);
-  btn.addEventListener('blur', refresh);
+  ensureRendererBrandStyles();
+  btn.classList.add('nx-tab');
 }
 
-/** Row tools + compact actions — same visual language (layout only; pair with `attachResultRowToolInteractions`). */
+/** Row tools + compact actions: ghost button (layout only; pair with `attachResultRowToolInteractions`). */
 export function applyResultRowToolStyle(btn: HTMLButtonElement): void {
-  btn.style.cssText = `
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:7px 14px;
-    font-size:11px;
-    font-family:var(--vscode-font-family);
-    font-weight:500;
-    letter-spacing:0.02em;
-    cursor:pointer;
-    border-radius:6px;
-    border:1px solid color-mix(in srgb, var(--vscode-widget-border) 55%, transparent);
-    background:transparent;
-    color:var(--vscode-descriptionForeground);
-    transition:background 0.14s ease,border-color 0.14s ease,color 0.14s ease;
-  `;
+  ensureRendererBrandStyles();
+  btn.classList.add('nx-tool');
+  btn.removeAttribute('style');
 }
 
-/** Style only (no innerHTML); use after `fillToolbarButtonContent`. */
+/** Hover and the copy-success flash are CSS (`.nx-tool:hover`, `[data-pg-row-tool-flash]`). */
 export function attachResultRowToolInteractions(btn: HTMLButtonElement): void {
-  btn.addEventListener('mouseenter', () => {
-    if (btn.dataset.pgRowToolFlash === 'copy') return;
-    btn.style.background =
-      'color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 50%, transparent)';
-    btn.style.borderColor =
-      'color-mix(in srgb, var(--vscode-focusBorder) 28%, var(--vscode-widget-border))';
-    btn.style.color = 'var(--vscode-editor-foreground)';
-  });
-  btn.addEventListener('mouseleave', () => {
-    if (btn.dataset.pgRowToolFlash === 'copy') return;
-    btn.style.background = 'transparent';
-    btn.style.borderColor = 'color-mix(in srgb, var(--vscode-widget-border) 55%, transparent)';
-    btn.style.color = 'var(--vscode-descriptionForeground)';
-  });
+  btn.classList.add('nx-tool');
 }
 
 export function fillRowToolButton(btn: HTMLButtonElement, glyph: ResultToolbarGlyph, label: string): void {
@@ -260,69 +207,15 @@ export function fillRowToolButton(btn: HTMLButtonElement, glyph: ResultToolbarGl
 /** Compact chip for output hover toolbar (fades in on result card hover). */
 export function fillOutputHoverToolButton(btn: HTMLButtonElement, glyph: ResultToolbarGlyph, label: string): void {
   fillToolbarButtonContent(btn, glyph, label);
-  btn.style.cssText = `
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-    padding:4px 10px;
-    font-size:10px;
-    font-family:var(--vscode-font-family);
-    font-weight:500;
-    letter-spacing:0.02em;
-    cursor:pointer;
-    white-space:nowrap;
-    border-radius:6px;
-    border:1px solid color-mix(in srgb, var(--vscode-widget-border) 50%, transparent);
-    background:color-mix(in srgb, var(--vscode-editor-background) 88%, transparent);
-    color:var(--vscode-descriptionForeground);
-    transition:background 0.14s ease,border-color 0.14s ease,color 0.14s ease;
-    box-shadow:0 1px 2px rgba(0,0,0,0.06);
-  `;
-  btn.addEventListener('mouseenter', () => {
-    if ((btn as HTMLButtonElement).disabled) return;
-    btn.style.background =
-      'color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 48%, transparent)';
-    btn.style.borderColor =
-      'color-mix(in srgb, var(--vscode-focusBorder) 26%, var(--vscode-widget-border))';
-    btn.style.color = 'var(--vscode-editor-foreground)';
-  });
-  btn.addEventListener('mouseleave', () => {
-    if ((btn as HTMLButtonElement).disabled) return;
-    btn.style.background = 'color-mix(in srgb, var(--vscode-editor-background) 88%, transparent)';
-    btn.style.borderColor = 'color-mix(in srgb, var(--vscode-widget-border) 50%, transparent)';
-    btn.style.color = 'var(--vscode-descriptionForeground)';
-  });
+  ensureRendererBrandStyles();
+  btn.classList.add('nx-tool', 'nx-tool--compact');
+  btn.removeAttribute('style');
 }
 
 /** Filter bar “Add filter” — matches toolbar ghost style. */
 export function applyAddFilterButtonStyle(btn: HTMLButtonElement): void {
   fillToolbarButtonContent(btn, 'plus', 'Add filter');
-  btn.style.cssText = `
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:5px 12px;
-    font-size:12px;
-    font-family:var(--vscode-font-family);
-    font-weight:500;
-    cursor:pointer;
-    white-space:nowrap;
-    border-radius:6px;
-    border:1px solid color-mix(in srgb, var(--vscode-widget-border) 55%, transparent);
-    background:transparent;
-    color:var(--vscode-descriptionForeground);
-    transition:background 0.14s ease,border-color 0.14s ease,color 0.14s ease;
-  `;
-  btn.addEventListener('mouseenter', () => {
-    btn.style.background =
-      'color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 50%, transparent)';
-    btn.style.borderColor =
-      'color-mix(in srgb, var(--vscode-focusBorder) 28%, var(--vscode-widget-border))';
-    btn.style.color = 'var(--vscode-editor-foreground)';
-  });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.background = 'transparent';
-    btn.style.borderColor = 'color-mix(in srgb, var(--vscode-widget-border) 55%, transparent)';
-    btn.style.color = 'var(--vscode-descriptionForeground)';
-  });
+  ensureRendererBrandStyles();
+  btn.classList.add('nx-tool', 'nx-tool--filter');
+  btn.removeAttribute('style');
 }

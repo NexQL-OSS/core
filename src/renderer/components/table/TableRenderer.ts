@@ -1,4 +1,5 @@
 import { createButton } from '../ui';
+import { ensureRendererBrandStyles } from '../../../ui/renderer/rendererStyles';
 import { columnTypeSupportsPrettyPreview, formatValue } from '../../utils/formatting';
 import { RESULT_TOOLBAR_ICON_CLASS, resultToolbarSvg } from '../ResultToolbarUi';
 import {
@@ -113,7 +114,9 @@ export class TableRenderer {
     this.mainContainer = container;
     this.events = events;
 
+    ensureRendererBrandStyles();
     this.tableContainer = document.createElement('div');
+    this.tableContainer.className = 'nx-table';
     this.tableContainer.style.overflow = 'auto';
     this.tableContainer.style.flex = '1';
     this.tableContainer.style.width = '100%';
@@ -121,6 +124,15 @@ export class TableRenderer {
     this.tableContainer.style.minHeight = '0';
 
     this.mainContainer.appendChild(this.tableContainer);
+
+    // Sticky header gets elevation 1 once the body has scrolled underneath it.
+    this.tableContainer.addEventListener(
+      'scroll',
+      () => {
+        this.tableContainer.classList.toggle('nx-table--scrolled', this.tableContainer.scrollTop > 0);
+      },
+      { passive: true },
+    );
   }
 
   public render(options: TableRenderOptions) {
@@ -455,10 +467,9 @@ export class TableRenderer {
     selectTh.setAttribute('aria-label', 'Row number');
     selectTh.style.cssText = `
       width:32px;min-width:32px;position:sticky;top:0;left:0;
-      background:var(--vscode-editor-background);
       border-bottom:1px solid var(--vscode-widget-border);
       border-right:1px solid var(--vscode-widget-border);
-      z-index:20;font-family:monospace;color:var(--vscode-descriptionForeground);
+      z-index:20;font-family:var(--vscode-editor-font-family),monospace;color:var(--vscode-descriptionForeground);
       text-align:right;padding:8px 6px;font-weight:400;user-select:none;
     `;
     headerRow.appendChild(selectTh);
@@ -485,7 +496,7 @@ export class TableRenderer {
       text-align:left;padding:0;
       border-bottom:1px solid var(--vscode-widget-border);
       border-right:1px solid var(--vscode-widget-border);
-      position:sticky;top:0;background:var(--vscode-editor-background);
+      position:sticky;top:0;
       z-index:10;user-select:none;max-width:400px;cursor:pointer;
       ${isNumeric ? 'text-align:right;' : ''}
     `;
@@ -503,7 +514,7 @@ export class TableRenderer {
       pkIcon.textContent = '⚿';
       pkIcon.title = 'Primary Key';
       pkIcon.setAttribute('aria-label', 'Primary Key');
-      pkIcon.style.cssText = 'color:var(--vscode-textLink-foreground);font-size:11px;flex-shrink:0;';
+      pkIcon.style.cssText = 'color:var(--nx-accent, var(--vscode-textLink-foreground));font-size:11px;flex-shrink:0;';
       nameRow.appendChild(pkIcon);
     }
 
@@ -518,7 +529,8 @@ export class TableRenderer {
 
     const colName = document.createElement('span');
     colName.textContent = col;
-    colName.style.cssText = 'overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:12px;color:var(--vscode-editor-foreground);';
+    colName.className = 'nx-th-label';
+    colName.style.cssText = 'overflow:hidden;text-overflow:ellipsis;color:var(--vscode-editor-foreground);';
     nameRow.appendChild(colName);
 
     // Sort indicator (pushed to end)
@@ -528,7 +540,7 @@ export class TableRenderer {
     if (this.sortColumn === col) {
       sortIcon.textContent = this.sortDirection === 'asc' ? '▲' : '▼';
       sortIcon.style.opacity = '1';
-      sortIcon.style.color = 'var(--vscode-textLink-foreground)';
+      sortIcon.className = 'nx-th-sorted';
     } else {
       sortIcon.textContent = '⇅';
     }
@@ -594,7 +606,7 @@ export class TableRenderer {
         const on = this.columnPrettyPreview.has(col);
         previewBtn!.setAttribute('aria-pressed', on ? 'true' : 'false');
         previewBtn!.style.opacity = on ? '1' : '0.55';
-        previewBtn!.style.color = on ? 'var(--vscode-textLink-foreground)' : 'var(--vscode-descriptionForeground)';
+        previewBtn!.style.color = on ? 'var(--nx-accent, var(--vscode-textLink-foreground))' : 'var(--vscode-descriptionForeground)';
       };
       syncPreviewBtn();
 
@@ -746,16 +758,17 @@ export class TableRenderer {
     }
 
     if (this.selectedIndices.has(sourceIndex)) {
+      // Accent-tinted selection; the row-number cell also carries a 2px accent edge.
       return cellKind === 'row-number'
-        ? 'background:var(--vscode-list-activeSelectionBackground);color:var(--vscode-list-activeSelectionForeground);'
-        : 'background:var(--vscode-list-activeSelectionBackground);color:var(--vscode-list-activeSelectionForeground);';
+        ? 'background:var(--nx-select-bg);color:var(--nx-select-fg);box-shadow:var(--nx-select-edge);'
+        : 'background:var(--nx-select-bg);color:var(--nx-select-fg);';
     }
 
     if (cellKind === 'row-number') {
       return 'background:var(--vscode-editor-background);color:var(--vscode-descriptionForeground);';
     }
 
-    const base = displayIndex % 2 === 0 ? 'transparent' : 'var(--vscode-keybindingTable-rowsBackground)';
+    const base = displayIndex % 2 === 0 ? 'transparent' : 'var(--nx-zebra)';
     return `background:${base};color:var(--vscode-editor-foreground);`;
   }
 
@@ -1065,10 +1078,10 @@ export class TableRenderer {
     if (this.rowsMarkedForDeletion.has(sourceIndex)) {
       tr.style.cssText = `text-decoration:line-through;opacity:0.7;${gutterStyle};cursor:pointer;`;
     } else if (this.selectedIndices.has(sourceIndex)) {
-      tr.style.cssText = `color:var(--vscode-list-activeSelectionForeground);${gutterStyle};cursor:pointer;`;
+      tr.style.cssText = `color:var(--nx-select-fg);${gutterStyle};cursor:pointer;`;
     } else {
       const base =
-        displayIndex % 2 === 0 ? 'transparent' : 'var(--vscode-keybindingTable-rowsBackground)';
+        displayIndex % 2 === 0 ? 'transparent' : 'var(--nx-zebra)';
       tr.style.cssText = `background:${base};color:var(--vscode-editor-foreground);${gutterStyle};cursor:pointer;`;
     }
   }

@@ -1,3 +1,4 @@
+import { BRAND_ACCENT } from '../../ui/renderer/rendererConstants';
 
 export type ButtonVariant = 'neutral' | 'success' | 'destructive' | 'ai';
 
@@ -105,7 +106,7 @@ export function createTab(text: string, id: string, isActive: boolean, onClick: 
       cursor: pointer;
       font-size: 13px;
       user-select: none;
-      border-bottom: 2px solid ${isActive ? 'var(--vscode-focusBorder)' : 'transparent'};
+      border-bottom: 2px solid ${isActive ? BRAND_ACCENT : 'transparent'};
       opacity: ${isActive ? '1' : '0.6'};
       transition: opacity 0.2s;
     `;

@@ -1,4 +1,5 @@
 import { PerformanceRecommendation } from '../../services/queryPerformance/QueryPerformanceAnalyzer';
+import { ensureRendererBrandStyles } from '../../ui/renderer/rendererStyles';
 
 /**
  * UI panel for displaying performance recommendations
@@ -17,6 +18,7 @@ export class ExplainRecommendationsPanel {
     query?: string,
     options?: { onSendToAssistant?: () => void },
   ): void {
+    ensureRendererBrandStyles();
     this.recommendations = recommendations;
     this.container.innerHTML = '';
 
@@ -54,11 +56,8 @@ export class ExplainRecommendationsPanel {
    */
   private renderHeader(count: number, options?: { onSendToAssistant?: () => void }): HTMLElement {
     const header = document.createElement('div');
+    header.className = 'nx-insight';
     header.style.cssText = `
-      padding: 12px 16px;
-      border: 1px solid var(--vscode-widget-border);
-      border-radius: 10px;
-      background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -68,12 +67,14 @@ export class ExplainRecommendationsPanel {
     const left = document.createElement('div');
 
     const title = document.createElement('h2');
-    title.textContent = `🔧 Performance Recommendations (${count})`;
+    title.textContent = `Performance Recommendations (${count})`;
     title.style.cssText = `
       margin: 0;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--vscode-editor-font-family, monospace);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     `;
     left.appendChild(title);
     header.appendChild(left);
@@ -82,22 +83,7 @@ export class ExplainRecommendationsPanel {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = 'Send to NexQL Bot';
-      button.style.cssText = `
-        padding: 6px 10px;
-        border-radius: 8px;
-        border: 1px solid color-mix(in srgb, var(--vscode-focusBorder) 35%, var(--vscode-widget-border));
-        background: color-mix(in srgb, var(--vscode-button-background) 30%, transparent);
-        color: var(--vscode-button-foreground);
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-      `;
-      button.onmouseover = () => {
-        button.style.background = 'color-mix(in srgb, var(--vscode-button-hoverBackground) 55%, transparent)';
-      };
-      button.onmouseout = () => {
-        button.style.background = 'color-mix(in srgb, var(--vscode-button-background) 30%, transparent)';
-      };
+      button.className = 'nx-btn';
       button.onclick = options.onSendToAssistant;
       header.appendChild(button);
     }
@@ -110,13 +96,7 @@ export class ExplainRecommendationsPanel {
    */
   private renderQueryInfo(query: string): HTMLElement {
     const infoBox = document.createElement('div');
-    infoBox.style.cssText = `
-      padding: 12px 16px;
-      border: 1px solid var(--vscode-widget-border);
-      border-radius: 10px;
-      background: color-mix(in srgb, var(--vscode-editor-background) 96%, transparent);
-      font-size: 12px;
-    `;
+    infoBox.className = 'nx-insight';
 
     const label = document.createElement('div');
     label.textContent = 'Query:';
@@ -125,15 +105,7 @@ export class ExplainRecommendationsPanel {
 
     const code = document.createElement('code');
     code.textContent = query.substring(0, 200) + (query.length > 200 ? '...' : '');
-    code.style.cssText = `
-      display: block;
-      background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid var(--vscode-widget-border);
-      overflow-x: auto;
-      font-family: var(--vscode-editor-font-family);
-    `;
+    code.className = 'nx-insight__code';
     infoBox.appendChild(code);
 
     return infoBox;
@@ -179,63 +151,24 @@ export class ExplainRecommendationsPanel {
   private renderRecommendationCard(rec: PerformanceRecommendation): HTMLElement {
     const card = document.createElement('div');
     
-    const severityColors: Record<string, string> = {
-      critical: '#ff6b6b',
-      high: '#ff9f40',
-      medium: '#ffd700',
-      low: '#64c8ff'
-    };
-
-    const severityIcons: Record<string, string> = {
-      critical: '🔴',
-      high: '🟠',
-      medium: '🟡',
-      low: '🔵'
-    };
-
-    const borderColor = severityColors[rec.severity] || '#999';
-    const icon = severityIcons[rec.severity] || '•';
-
-    card.style.cssText = `
-      padding: 12px 14px;
-      border: 1px solid var(--vscode-widget-border);
-      border-left: 4px solid ${borderColor};
-      background: color-mix(in srgb, var(--vscode-editor-background) 96%, transparent);
-      border-radius: 10px;
-    `;
+    const severity = ['critical', 'high', 'medium', 'low'].includes(rec.severity) ? rec.severity : 'low';
+    card.className = `nx-insight nx-insight--${severity}`;
 
     // Title
     const title = document.createElement('div');
-    title.style.cssText = `
-      font-weight: 600;
-      font-size: 13px;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    `;
-    title.innerHTML = `${icon} ${this.escapeHtml(rec.title)}`;
+    title.className = 'nx-insight__title';
+    title.innerHTML = `<span class="nx-insight__dot" aria-hidden="true"></span>${this.escapeHtml(rec.title)}`;
     card.appendChild(title);
 
     // Category badge
     const categoryBadge = document.createElement('span');
     categoryBadge.textContent = rec.category.toUpperCase();
-    categoryBadge.style.cssText = `
-      display: inline-block;
-      background: color-mix(in srgb, ${borderColor} 22%, transparent);
-      color: ${borderColor};
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      margin-right: 8px;
-    `;
+    categoryBadge.className = 'nx-insight__tag';
     card.appendChild(categoryBadge);
 
     // Improvement badge
     const improvementBadge = document.createElement('span');
-    improvementBadge.textContent = `📈 ${rec.estimatedImprovement}`;
+    improvementBadge.textContent = rec.estimatedImprovement;
     improvementBadge.style.cssText = `
       display: inline-block;
       font-size: 11px;
@@ -270,43 +203,17 @@ export class ExplainRecommendationsPanel {
 
     const suggestionCode = document.createElement('code');
     suggestionCode.textContent = rec.suggestion;
-    suggestionCode.style.cssText = `
-      display: block;
-      background: color-mix(in srgb, var(--vscode-editor-background) 92%, transparent);
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid var(--vscode-widget-border);
-      font-family: var(--vscode-editor-font-family);
-      font-size: 11px;
-      overflow-x: auto;
-      word-break: break-word;
-    `;
+    suggestionCode.className = 'nx-insight__code';
     suggestionContainer.appendChild(suggestionCode);
 
     // Copy button
     const copyButton = document.createElement('button');
-    copyButton.textContent = '📋 Copy';
-    copyButton.style.cssText = `
-      margin-top: 4px;
-      padding: 4px 10px;
-      background: transparent;
-      border: 1px solid var(--vscode-widget-border);
-      border-radius: 8px;
-      font-size: 11px;
-      color: var(--vscode-descriptionForeground);
-      cursor: pointer;
-      transition: background 0.2s;
-    `;
-    copyButton.onmouseover = () => {
-      copyButton.style.background = 'color-mix(in srgb, var(--vscode-toolbar-hoverBackground) 65%, transparent)';
-    };
-    copyButton.onmouseout = () => {
-      copyButton.style.background = 'transparent';
-    };
+    copyButton.textContent = 'Copy';
+    copyButton.className = 'nx-insight__copy';
     copyButton.onclick = () => {
       navigator.clipboard.writeText(rec.suggestion).then(() => {
         const originalText = copyButton.textContent;
-        copyButton.textContent = '✓ Copied!';
+        copyButton.textContent = 'Copied';
         setTimeout(() => {
           copyButton.textContent = originalText;
         }, 2000);
@@ -330,12 +237,13 @@ export class ExplainRecommendationsPanel {
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      color: #999;
+      gap: 4px;
+      padding: 24px 0;
+      color: var(--vscode-descriptionForeground);
     `;
     empty.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 12px;">✨</div>
-      <div style="font-size: 14px; font-weight: 600;">No recommendations</div>
-      <div style="font-size: 12px; margin-top: 4px;">Your query plan looks optimal!</div>
+      <div style="font-size: 14px; font-weight: 600; color: var(--vscode-editor-foreground);">No recommendations</div>
+      <div style="font-size: 12px;">Your query plan looks optimal!</div>
     `;
     return empty;
   }

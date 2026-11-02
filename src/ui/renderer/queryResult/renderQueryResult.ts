@@ -51,7 +51,8 @@ import {
   normalizeNoticesPayload,
   renderNoticesPanel,
 } from '../../../renderer/components/notices/NoticesPanel';
-import { BRAND_ACCENT, RENDERER_ELEVATION_1, RENDERER_GLASS_BG, RENDERER_GLASS_BLUR } from '../rendererConstants';
+import { MODE_COLORS } from '../rendererConstants';
+import { ensureRendererBrandStyles } from '../rendererStyles';
 import {
   buildChatResultsSampleJson,
   buildPivotOptimizeUserMessage,
@@ -433,20 +434,9 @@ export function renderPostgresNotebookResult(
       const resultHistory = addResultToHistory(element, historyEntry);
 
       // Main Container
+      ensureRendererBrandStyles();
       const mainContainer = document.createElement('div');
-      mainContainer.style.cssText = `
-        font-family: var(--vscode-font-family), "Segoe UI", "Helvetica Neue", sans-serif;
-        font-size: 13px;
-        color: var(--vscode-editor-foreground);
-        border: 1px solid var(--vscode-widget-border);
-        border-top: 2px solid ${BRAND_ACCENT};
-        border-radius: 6px;
-        overflow: hidden;
-        margin-bottom: 8px;
-        box-shadow: ${RENDERER_ELEVATION_1};
-        background: color-mix(in srgb, var(--vscode-editor-background) 88%, var(--vscode-sideBar-background));
-        background-image: radial-gradient(ellipse 80% 50% at 100% 0%, color-mix(in srgb, ${BRAND_ACCENT} 6%, transparent), transparent 60%);
-      `;
+      mainContainer.className = 'nx-result';
 
       const contentContainer = document.createElement('div');
       contentContainer.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
@@ -1021,16 +1011,13 @@ export function renderPostgresNotebookResult(
 
       // Secondary band: left = Table / Chart / … + optional View Plan; right = Export chart + AI (after chart init)
       const secondaryTabsOuter = document.createElement('div');
-      secondaryTabsOuter.style.cssText =
-        'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border-bottom:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);';
+      secondaryTabsOuter.className = 'nx-tabband';
 
       const secondaryTabsLeft = document.createElement('div');
-      secondaryTabsLeft.style.cssText =
-        'display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1;min-width:0;';
+      secondaryTabsLeft.className = 'nx-tabband__left';
 
       const secondaryTabsRight = document.createElement('div');
-      secondaryTabsRight.style.cssText =
-        'display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto;';
+      secondaryTabsRight.className = 'nx-tabband__right';
 
       const isExplainQuery =
         json.explainPlan ||
@@ -1138,7 +1125,7 @@ export function renderPostgresNotebookResult(
         attachResultViewTabHover(explainTabBtn);
       }
 
-      const REVIEW_AMBER = '#f59e0b';
+      const REVIEW_AMBER = MODE_COLORS.write;
       syncReviewTabButton = () => {
         syncReviewTabButtonUi(reviewTabBtn, {
           modifiedCells,
