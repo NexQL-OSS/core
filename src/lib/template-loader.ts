@@ -101,7 +101,25 @@ export async function readSharedTemplateCss(extensionUri: vscode.Uri): Promise<s
   return parts.join('\n');
 }
 
-/** Optional shared chat-actions.js for chat + dashboard pill rendering. */
+/**
+ * Optional shared dbindex-shared.js (DB-index card renderer). The file is
+ * pro-owned and only present in pro builds (`make dev-pro` / `package-pro`
+ * copy it in); free builds get '' and callers must not depend on it.
+ */
+export async function readSharedDbIndexJs(extensionUri: vscode.Uri): Promise<string> {
+  const uri = vscode.Uri.joinPath(extensionUri, 'templates', 'shared', 'dbindex-shared.js');
+  try {
+    const buf = await vscode.workspace.fs.readFile(uri);
+    return new TextDecoder().decode(buf);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Optional shared chat-actions.js for chat + dashboard pill rendering.
+ * Pro-owned like dbindex-shared.js — returns '' in free builds.
+ */
 export async function readSharedChatActionsJs(extensionUri: vscode.Uri): Promise<string> {
   const uri = vscode.Uri.joinPath(extensionUri, 'templates', 'shared', 'chat-actions.js');
   try {
@@ -139,13 +157,9 @@ export async function loadPanelTemplate(
     let js = new TextDecoder().decode(jsBuf);
 
     if (folder === 'dbindex' || folder === 'settings-hub') {
-      try {
-        const sharedJsUri = vscode.Uri.joinPath(extensionUri, 'templates', 'shared', 'dbindex-shared.js');
-        const sharedJsBuf = await vscode.workspace.fs.readFile(sharedJsUri);
-        const sharedJs = new TextDecoder().decode(sharedJsBuf);
+      const sharedJs = await readSharedDbIndexJs(extensionUri);
+      if (sharedJs) {
         js = `${sharedJs}\n${js}`;
-      } catch (err) {
-        console.warn('Shared dbindex script not found:', err);
       }
     }
 

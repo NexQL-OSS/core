@@ -53,3 +53,14 @@ bin/nexql-mcp/**/nexql-mcp
 bin/nexql-mcp/**/nexql-mcp.exe
 !bin/nexql-mcp/**/.gitkeep
 !bin/nexql-mcp/README.md
+
+# Pro-owned webview templates — copied in by `make dev-pro` / `make package-pro`
+# from packages/pro/templates and removed by `make dev-free`. Never commit them.
+# Keep in sync with PRO_TEMPLATE_DIRS / PRO_TEMPLATE_FILES in scripts/check-no-pro.js.
+/templates/backup-restore/
+/templates/chat/
+/templates/dashboard/
+/templates/dbindex/
+/templates/plan-studio/
+/templates/shared/chat-actions.js
+/templates/shared/dbindex-shared.js

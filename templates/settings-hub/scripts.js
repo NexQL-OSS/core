@@ -4528,6 +4528,8 @@ function handleDbIndexMessage(message) {
 }
 
 function renderDbIndexes(indexes) {
+  // renderDbIndexesShared comes from the pro-only templates/shared/dbindex-shared.js.
+  if (typeof renderDbIndexesShared !== 'function') return;
   renderDbIndexesShared(indexes, $('dbindexCards'), (action, connId, db) => {
     if (action === 'buildNew') {
       openDbindexWizard();
