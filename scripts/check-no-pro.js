@@ -150,9 +150,8 @@ if (trackedPackages.length > 0) {
 // ---------------------------------------------------------------------------
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 const mergedMarkers = [];
-if (pkg.contributes && pkg.contributes.mcpServerDefinitionProviders) {
-  mergedMarkers.push('contributes.mcpServerDefinitionProviders');
-}
+// NOTE: contributes.mcpServerDefinitionProviders is intentionally core-owned
+// (free MCP registration in src/features/mcp); it is no longer a merge marker.
 const views = (pkg.contributes && pkg.contributes.views) || {};
 for (const container of Object.keys(views)) {
   if (views[container].some((v) => v.id === 'postgresExplorer.chatView')) {

@@ -105,7 +105,9 @@ function main() {
     }
   }
 
-  // 6. Merge mcpServerDefinitionProviders
+  // 6. Merge mcpServerDefinitionProviders. Core owns id `postgresExplorer.mcpServerProvider`
+  // (single provider, pro plugs in via coreApi.mcp); the id-dedupe below keeps it from doubling
+  // if a pro fragment still lists it.
   if (pro.mcpServerDefinitionProviders && Array.isArray(pro.mcpServerDefinitionProviders)) {
     if (!pkg.contributes.mcpServerDefinitionProviders) {
       pkg.contributes.mcpServerDefinitionProviders = [];

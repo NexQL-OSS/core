@@ -21,6 +21,10 @@ Quick links:
 ### Team config sharing
 
 - **Share connections with nexql-mcp.** New commands **Export Connections to .nexql/config.toml** and **Import Connections from .nexql/config.toml** read and write the same secret-free `[profiles.<name>]` format as the nexql-mcp server. Passwords, SSH keys and tokens are never exported; import prompts for passwords and stores them in SecretStorage. Read-only connections map to `access_mode = "read"`, others to `"write"` (never `"admin"`). Extension-only settings (environment, group, SSH host) go in a `[profiles.<name>.vscode]` sub-table.
+### MCP
+
+- **NexQL MCP server for free users.** The free build now registers a `NexQL` stdio MCP server with VS Code, so Copilot, agent mode and other MCP clients can use `nexql-mcp` without Pro. It launches a vendored `bin/nexql-mcp/<platform>-<arch>` binary when present, otherwise `npx -y nexql-mcp@latest --stdio`, and reads your own nexql-mcp profiles from `~/.config/nexql-mcp/`. Controlled by `postgresExplorer.mcp.enabled` (default on). Hosts without `vscode.lm.registerMcpServerDefinitionProvider` (older VS Code, Cursor) are skipped silently.
+- **One provider in every build.** Core owns the single `postgresExplorer.mcpServerProvider` contribution. Pro plugs its managed host (ephemeral profile, write approval) in through `coreApi.mcp.setLaunchResolver` instead of registering a second server.
 
 ### Security
 

@@ -72,6 +72,24 @@ export interface McpLaunchDescriptor {
 }
 
 /**
+ * Pro-supplied launch resolver. Called each time a client starts the `NexQL`
+ * MCP server; replaces core's default (vendored binary / `npx`).
+ */
+export type McpLaunchResolver = () => Promise<McpLaunchDescriptor> | McpLaunchDescriptor;
+
+/**
+ * Handle to the single `NexQL` MCP server provider that core registers with
+ * VS Code (`src/features/mcp`). Pro never registers its own provider; it
+ * customises this one.
+ */
+export interface IMcpRegistration {
+  /** Replace the default launch (managed host, ephemeral profile, ...). Dispose to restore the default. */
+  setLaunchResolver(resolver: McpLaunchResolver | undefined): vscode.Disposable;
+  /** Ask VS Code to re-query the server definition (e.g. after the managed profile changed). */
+  refresh(): void;
+}
+
+/**
  * Minimal interface for the MCP host that core settings UI may call.
  * Concrete impl: `NexqlMcpStdioHost` in packages/pro (stdio spawn of nexql-mcp).
  */
@@ -136,6 +154,12 @@ export interface NexqlCoreApi {
   // Decoupled chat view provider accessors
   setChatViewProvider(provider: IChatViewProvider | undefined): void;
   getChatViewProvider(): IChatViewProvider | undefined;
+
+  /**
+   * Core-owned MCP server registration. Undefined when the host lacks
+   * `vscode.lm.registerMcpServerDefinitionProvider` (older VS Code, Cursor).
+   */
+  mcp?: IMcpRegistration;
 
   // Optional: MCP server accessor (set by pro during activatePro)
   setMcpServer?(server: IMcpServer): void;

@@ -2629,13 +2629,13 @@
           "type": "boolean",
           "default": true,
           "scope": "window",
-          "markdownDescription": "Expose NexQL's read-only database tools as an MCP server by spawning `nexql-mcp` via `npx -y nexql-mcp@latest` (stdio). VS Code Copilot and other MCP clients discover it via the extension registry. On by default."
+          "markdownDescription": "Register NexQL's `nexql-mcp` server with VS Code so Copilot, agent mode and other MCP clients can use it. Launches a bundled binary when present, otherwise `npx -y nexql-mcp@latest --stdio`. Free builds use your own `nexql-mcp` profiles (`~/.config/nexql-mcp/`); Pro builds use a managed profile built from your NexQL connections. On by default."
         },
         "postgresExplorer.mcp.binaryPath": {
           "type": "string",
           "default": "",
           "scope": "window",
-          "markdownDescription": "Absolute path to a standalone `nexql-mcp` binary. Used as a fallback when Node.js/npx is not available. When empty, NexQL tries `NEXQL_MCP_BIN`, then PATH."
+          "markdownDescription": "Absolute path to a standalone `nexql-mcp` binary. Pro managed host only: used as a fallback when Node.js/npx is not available. When empty, NexQL tries `NEXQL_MCP_BIN`, then PATH."
         },
         "postgresExplorer.mcp.maxRows": {
           "type": "number",
@@ -4346,6 +4346,12 @@
         }
       ]
     },
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "postgresExplorer.mcpServerProvider",
+        "label": "NexQL"
+      }
+    ],
     "keybindings": [
       {
         "command": "editor.action.selectAll",

@@ -5,6 +5,7 @@ import { SecretStorageService } from './services/SecretStorageService';
 import { LicenseService } from './services/LicenseService';
 import { requirePro, ProFeature } from './services/featureGates';
 import { isProBuild } from './common/buildTier';
+import { registerMcpServerProvider } from './features/mcp/registerMcp';
 import { bindLicenseExtensionMode } from './services/licensePolicy';
 import { ProfileManager } from './features/connections/ProfileManager';
 import { SavedQueriesService } from './features/savedQueries/SavedQueriesService';
@@ -472,7 +473,16 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   }
 
-  runDeferredStartupTask('activatePro', async () => {
+  // The one NexQL MCP server provider, registered synchronously in free and
+  // pro builds so VS Code never races the deferred activatePro. Pro supplies a
+  // launch resolver through coreApi.mcp instead of registering its own.
+  let markProSettled: () => void = () => undefined;
+  const proSettled = isProBuild()
+    ? new Promise<void>((resolve) => { markProSettled = resolve; })
+    : undefined;
+  const mcpRegistration = registerMcpServerProvider(context, { whenReady: proSettled });
+
+  async function activateProWithCoreApi(): Promise<void> {
     const { activatePro } = await import('@nexql/pro');
     const { getChatViewProvider, setChatViewProvider, getAiService, setAiService } = await import('./services/chatViewRegistry');
     let _mcpServer: any;
@@ -486,6 +496,7 @@ export async function activate(context: vscode.ExtensionContext) {
       telemetryService: TelemetryService.getInstance(),
       messageHandlerRegistry: registry,
       notebookBuilder: NotebookBuilder,
+      mcp: mcpRegistration,
       getChatViewProvider,
       setChatViewProvider,
       setMcpServer(server: any) { _mcpServer = server; },
@@ -495,6 +506,14 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     _coreApi = coreApi;
     await activatePro(coreApi as any, context);
+  }
+
+  runDeferredStartupTask('activatePro', async () => {
+    try {
+      await activateProWithCoreApi();
+    } finally {
+      markProSettled();
+    }
   }, isProBuild());
 
   outputChannel.appendLine(`NexQL activation completed in ${Date.now() - activationStart}ms`);
