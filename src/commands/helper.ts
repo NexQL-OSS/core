@@ -206,7 +206,21 @@ export class NotebookBuilder {
    * resolves credentials from the connection id) so cells still execute.
    */
   async showTemp(): Promise<void> {
-    await createAndShowNotebook(this.cells, stripNotebookPassword(this.metadata));
+    // Open an empty untitled notebook, then insert the cells with a notebook edit, the same
+    // way show() fills a saved notebook. Passing the cells in NotebookData up front left
+    // markdown cells showing as raw source instead of rendering.
+    const notebookData = new vscode.NotebookData([]);
+    notebookData.metadata = stripNotebookPassword(this.metadata);
+    const notebook = await vscode.workspace.openNotebookDocument('postgres-notebook', notebookData);
+    if (this.cells.length > 0) {
+      const edit = new vscode.WorkspaceEdit();
+      edit.set(notebook.uri, [vscode.NotebookEdit.insertCells(0, this.cells)]);
+      await vscode.workspace.applyEdit(edit);
+    }
+    const editor = await vscode.window.showNotebookDocument(notebook, { preserveFocus: false });
+    if (this.cells.length > 0) {
+      editor.revealRange(new vscode.NotebookRange(0, 1), vscode.NotebookEditorRevealType.AtTop);
+    }
   }
 
   async show(): Promise<void> {
