@@ -8,6 +8,7 @@ import { ProfilesTreeProvider, SavedQueriesTreeProvider, SavedQueriesDragAndDrop
 import { NotebooksTreeProvider, NotebooksDragAndDropController } from '../providers/NotebooksTreeProvider';
 import { AutoRefreshService } from '../services/AutoRefreshService';
 import { DdlViewerService } from '../services/DdlViewerService';
+import { CellEditorFileSystem } from '../services/CellEditorFileSystem';
 import { LicenseService } from '../services/LicenseService';
 import { NotebookIndexService } from '../services/NotebookIndexService';
 import { NEXQL_STUDIO_SQL_LANGUAGE_SELECTOR } from '../lib/nexqlSqlDocument';
@@ -151,6 +152,8 @@ export function registerProviders(context: vscode.ExtensionContext, outputChanne
   context.subscriptions.push(treeView);
   const ddlViewerService = new DdlViewerService(context, treeView);
   context.subscriptions.push(ddlViewerService);
+  // Writable virtual documents for editing long grid cells in an editor tab.
+  context.subscriptions.push(CellEditorFileSystem.register());
 
   // Update context key when selection changes to enable Add/Remove favorites menu switching
   treeView.onDidChangeSelection(e => {

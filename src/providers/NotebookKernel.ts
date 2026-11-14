@@ -25,6 +25,7 @@ import {
 } from '../services/handlers/CoreHandlers';
 
 import { FkLookupHandler } from '../services/handlers/FkLookupHandler';
+import { OpenCellEditorHandler } from '../services/handlers/OpenCellEditorHandler';
 import { CursorWindowHandler } from '../services/handlers/CursorWindowHandler';
 import { InsertRowHandler } from '../services/handlers/InsertRowHandler';
 import { TelemetryService } from '../services/TelemetryService';
@@ -118,6 +119,7 @@ export class PostgresKernel implements vscode.Disposable {
     registry.register(WEBVIEW_MESSAGE_TYPES.SHOW_ERROR_MESSAGE, new ShowErrorMessageHandler());
     registry.register(WEBVIEW_MESSAGE_TYPES.RUN_DERIVED_QUERY, new RunDerivedQueryHandler());
     registry.register('fkLookup', new FkLookupHandler());
+    registry.register('openCellEditor', new OpenCellEditorHandler());
     registry.register('resultCursorFetch', new CursorWindowHandler());
     registry.register('insertRow', new InsertRowHandler());
     registry.register(

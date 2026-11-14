@@ -81,7 +81,19 @@ export class EventEmitter<T = any> {
   dispose() { this.listeners = []; }
 }
 
-export class Disposable { dispose() { } }
+export class Disposable {
+  constructor(private readonly callOnDispose?: () => void) { }
+  dispose() { this.callOnDispose?.(); }
+  static from(...disposables: { dispose(): any }[]) { return new Disposable(() => disposables.forEach(d => d.dispose())); }
+}
+export const FileType = { Unknown: 0, File: 1, Directory: 2, SymbolicLink: 64 } as const;
+export const FileChangeType = { Changed: 1, Created: 2, Deleted: 3 } as const;
+export class FileSystemError extends Error {
+  constructor(message?: string | any, public code: string = 'Unknown') { super(typeof message === 'string' ? message : String(message)); }
+  static FileNotFound(m?: any) { return new FileSystemError(m, 'FileNotFound'); }
+  static NoPermissions(m?: any) { return new FileSystemError(m, 'NoPermissions'); }
+  static Unavailable(m?: any) { return new FileSystemError(m, 'Unavailable'); }
+}
 
 export const env = {
   clipboard: { writeText: async (_s: string) => { } },
@@ -258,6 +270,7 @@ export class Uri {
   constructor(public fsPath: string, public scheme: string = 'file') { this.path = fsPath; }
   toString() { return this.fsPath; }
   static file(path: string) { return new Uri(path); }
+  static from(c: { scheme: string; path: string }) { return new Uri(c.path, c.scheme); }
   static parse(s: string) { const scheme = s.includes(':') ? s.split(':')[0] : 'file'; return new Uri(s, scheme); }
   static joinPath(base: Uri, ...segments: string[]) { return new Uri([base.fsPath, ...segments].join('/'), base.scheme); }
 }
@@ -384,6 +397,9 @@ const vscode = {
   languages,
   EventEmitter,
   Disposable,
+  FileType,
+  FileChangeType,
+  FileSystemError,
   TreeItem,
   TreeItemCollapsibleState,
   NotebookCellKind,

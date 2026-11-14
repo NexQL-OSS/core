@@ -7,6 +7,15 @@ Quick links:
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Editing text and JSON cells in result grids.** Short single-line text is now edited in the cell itself, like numbers (Enter saves, Esc cancels, the expand button or Shift+Enter opens the larger editor). Longer or multi-line text and `json`/`jsonb` open in a popover anchored to the cell instead of a panel that pushed the grid up. The popover flips above the cell when there is no room below, shows a live valid/invalid JSON badge and size, and has Format and Minify for JSON.
+- **Open in editor.** The popover has an *Open in editor* action, and values over about 10 KB open there directly. The value opens as a virtual `nexql-cell:` document in a normal VS Code editor tab (full find, JSON validation and language features). Ctrl+S stages the change in *Review Changes* for the cell; nothing is written to the database until you save changes in the grid. Invalid JSON is rejected on save with the reason.
+
+---
+
 ## [2.6.0] - 2026-11-13
 
 > Stable release. On the Marketplace and Open VSX this is the Pro build, published as one VSIX per platform (Linux x64/arm64, macOS x64/arm64, Windows x64).

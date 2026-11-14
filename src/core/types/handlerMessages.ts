@@ -15,7 +15,8 @@ export type HandlerMessageType =
   | 'gridCommitPreference'
   | 'saveChanges'
   | 'insertRow'
-  | 'fkLookup';
+  | 'fkLookup'
+  | 'openCellEditor';
 
 export interface HandlerMessageBase {
   type: HandlerMessageType | string;

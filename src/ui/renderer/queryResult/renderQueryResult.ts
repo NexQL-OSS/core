@@ -267,6 +267,8 @@ export function renderPostgresNotebookResult(
 
       // FK lookup pending callbacks — keyed by requestId
       const fkCallbacks = new Map<string, (rows: any[], cols: string[]) => void>();
+      // Editor-tab cell edits: requestId -> stage the saved text on the grid (kept for repeated saves).
+      const cellEditorCallbacks = new Map<string, (content: string) => void>();
 
       const buildTableRenderOptions = (): TableRenderOptions => ({
         columns,
@@ -927,6 +929,15 @@ export function renderPostgresNotebookResult(
           return;
         }
 
+        // Saved from an editor tab: stage the cell edit (Review Changes)
+        if (message.type === 'cellEditorResult') {
+          const apply = cellEditorCallbacks.get(message.requestId);
+          if (apply && typeof message.content === 'string') {
+            apply(message.content);
+          }
+          return;
+        }
+
         // FK lookup response — resolve the waiting dropdown callback
         if (message.type === 'fkLookupResponse') {
           const cb = fkCallbacks.get(message.requestId);
@@ -1197,6 +1208,20 @@ export function renderPostgresNotebookResult(
             fkColumn,
             searchText,
             limit: 50,
+          });
+        },
+        onOpenCellInEditor: (req) => {
+          cellEditorCallbacks.set(req.requestId, req.apply);
+          context.postMessage?.({
+            type: 'openCellEditor',
+            requestId: req.requestId,
+            schema: tableInfo?.schema,
+            table: tableInfo?.table,
+            rowLabel: req.rowLabel,
+            columnName: req.columnName,
+            columnType: req.columnType,
+            format: req.format,
+            content: req.content,
           });
         },
         onSortChange: (column, direction) => {
