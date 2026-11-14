@@ -27,6 +27,32 @@ function schemaPredicate(column: string, schema?: string): string {
 }
 
 export const HealthSQL = {
+  /**
+   * One row of typed numbers for the Health dashboard: size, connections, cache hit ratio,
+   * transaction ID age and the longest open transaction. Unlike overview(), nothing is pre-formatted.
+   */
+  summary(): string {
+    return `SELECT current_database()::text AS db_name,
+       pg_database_size(current_database())::bigint AS db_size_bytes,
+       (SELECT count(*) FROM pg_stat_activity WHERE datname = current_database())::int AS connections_total,
+       (SELECT count(*) FROM pg_stat_activity
+         WHERE datname = current_database() AND state = 'active' AND pid <> pg_backend_pid())::int AS connections_active,
+       (SELECT count(*) FROM pg_stat_activity
+         WHERE datname = current_database() AND state LIKE 'idle in transaction%')::int AS idle_in_transaction,
+       current_setting('max_connections')::int AS max_connections,
+       (SELECT round(100.0 * blks_hit / nullif(blks_hit + blks_read, 0), 2)
+          FROM pg_stat_database WHERE datname = current_database()) AS cache_hit_pct,
+       (SELECT age(datfrozenxid) FROM pg_database WHERE datname = current_database())::bigint AS xid_age,
+       (SELECT round(100.0 * age(datfrozenxid) / 2147483647, 2)
+          FROM pg_database WHERE datname = current_database()) AS xid_pct,
+       (SELECT extract(epoch FROM now() - min(xact_start))
+          FROM pg_stat_activity
+         WHERE datname = current_database() AND xact_start IS NOT NULL AND pid <> pg_backend_pid()) AS longest_xact_seconds,
+       (SELECT pid FROM pg_stat_activity
+         WHERE datname = current_database() AND xact_start IS NOT NULL AND pid <> pg_backend_pid()
+         ORDER BY xact_start LIMIT 1)::int AS longest_pid;`;
+  },
+
   /** One row per metric: database size, connections by state, cache hit ratio, XID age, longest transaction. */
   overview(): string {
     return `SELECT metric, value, detail
@@ -92,7 +118,8 @@ LIMIT 25;`;
        s.indexrelname AS index_name,
        s.idx_scan AS scans,
        pg_size_pretty(pg_relation_size(s.indexrelid)) AS index_size,
-       pg_get_indexdef(s.indexrelid) AS definition
+       pg_get_indexdef(s.indexrelid) AS definition,
+       pg_relation_size(s.indexrelid)::bigint AS index_bytes
 FROM pg_stat_user_indexes s
 JOIN pg_index i ON i.indexrelid = s.indexrelid
 WHERE s.idx_scan = 0

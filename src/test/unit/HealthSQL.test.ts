@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { HealthSQL, quoteLiteral, PG_VERSION_13 } from '../../commands/sql/health';
 
 const allTemplates: Array<[string, string]> = [
+  ['summary', HealthSQL.summary()],
   ['overview', HealthSQL.overview()],
   ['tableBloat', HealthSQL.tableBloat()],
   ['unusedIndexes', HealthSQL.unusedIndexes()],
