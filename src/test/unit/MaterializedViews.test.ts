@@ -60,17 +60,17 @@ async function assertSingleNotebookCommand(
 describe('MaterializedViewSQL', () => {
   it('builds the materialized view template variants', () => {
     expect(MaterializedViewSQL.select('public', 'sales_mv')).to.equal(`SELECT *
-FROM public.sales_mv
+FROM "public"."sales_mv"
 LIMIT 100;`);
-    expect(MaterializedViewSQL.refresh('public', 'sales_mv')).to.include('REFRESH MATERIALIZED VIEW public.sales_mv;');
-    expect(MaterializedViewSQL.create('public', 'sales_mv')).to.include('CREATE MATERIALIZED VIEW public.sales_mv AS');
-    expect(MaterializedViewSQL.drop('public', 'sales_mv')).to.equal(`DROP MATERIALIZED VIEW public.sales_mv;
+    expect(MaterializedViewSQL.refresh('public', 'sales_mv')).to.include('REFRESH MATERIALIZED VIEW "public"."sales_mv";');
+    expect(MaterializedViewSQL.create('public', 'sales_mv')).to.include('CREATE MATERIALIZED VIEW "public"."sales_mv" AS');
+    expect(MaterializedViewSQL.drop('public', 'sales_mv')).to.equal(`DROP MATERIALIZED VIEW "public"."sales_mv";
 
 -- Use CASCADE to also drop dependent objects
--- DROP MATERIALIZED VIEW public.sales_mv CASCADE;`);
-    expect(MaterializedViewSQL.analyze('public', 'sales_mv')).to.equal('ANALYZE public.sales_mv;');
+-- DROP MATERIALIZED VIEW "public"."sales_mv" CASCADE;`);
+    expect(MaterializedViewSQL.analyze('public', 'sales_mv')).to.equal('ANALYZE "public"."sales_mv";');
     expect(MaterializedViewSQL.createIndex('public', 'sales_mv')).to.equal(`CREATE UNIQUE INDEX sales_mv_unique_idx
-    ON public.sales_mv (id);`);
+    ON "public"."sales_mv" (id);`);
   });
 });
 
@@ -161,8 +161,8 @@ describe('materialized view commands', () => {
     expect(queryStub.calledOnceWithExactly(QueryBuilder.matViewDefinition('public', 'sales_mv'))).to.be.true;
     expect(builder.addMarkdown.firstCall.args[0]).to.include('Edit Materialized View: `public.sales_mv`');
     expect(builder.addSql.calledOnce).to.be.true;
-    expect(builder.addSql.firstCall.args[0]).to.include('DROP MATERIALIZED VIEW IF EXISTS public.sales_mv;');
-    expect(builder.addSql.firstCall.args[0]).to.include('CREATE MATERIALIZED VIEW public.sales_mv AS');
+    expect(builder.addSql.firstCall.args[0]).to.include('DROP MATERIALIZED VIEW IF EXISTS "public"."sales_mv";');
+    expect(builder.addSql.firstCall.args[0]).to.include('CREATE MATERIALIZED VIEW "public"."sales_mv" AS');
     expect(builder.addSql.firstCall.args[0]).to.include('SELECT id, total FROM source_sales WHERE active = true');
     expect(builder.addSql.firstCall.args[0]).to.include('WITH DATA;');
     expect(builder.show.calledOnce).to.be.true;
@@ -285,9 +285,9 @@ describe('materialized view commands', () => {
     expect(builder.addMarkdown.firstCall.args[0]).to.include('Referenced Objects (1)');
     expect(builder.addMarkdown.firstCall.args[0]).to.include('Dependent Objects (1)');
     expect(builder.addSql.callCount).to.equal(5);
-    expect(builder.addSql.getCall(0).args[0]).to.include('DROP MATERIALIZED VIEW IF EXISTS public.sales_mv;');
-    expect(builder.addSql.getCall(0).args[0]).to.include('CREATE MATERIALIZED VIEW public.sales_mv AS');
-    expect(builder.addSql.getCall(0).args[0]).to.include("COMMENT ON MATERIALIZED VIEW public.sales_mv IS 'Owner''s summary';");
+    expect(builder.addSql.getCall(0).args[0]).to.include('DROP MATERIALIZED VIEW IF EXISTS "public"."sales_mv";');
+    expect(builder.addSql.getCall(0).args[0]).to.include('CREATE MATERIALIZED VIEW "public"."sales_mv" AS');
+    expect(builder.addSql.getCall(0).args[0]).to.include("COMMENT ON MATERIALIZED VIEW \"public\".\"sales_mv\" IS 'Owner''s summary';");
     expect(builder.addSql.getCall(0).args[0]).to.include('CREATE UNIQUE INDEX sales_mv_unique_idx ON public.sales_mv (id);');
     expect(builder.addSql.getCall(1).args[0]).to.equal(MaterializedViewSQL.refresh('public', 'sales_mv'));
     expect(builder.addSql.getCall(2).args[0]).to.equal(MaterializedViewSQL.select('public', 'sales_mv'));

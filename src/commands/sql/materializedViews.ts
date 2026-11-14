@@ -19,7 +19,7 @@ LIMIT 100;`,
         `REFRESH MATERIALIZED VIEW "${schema}"."${matviewName}";
 
 -- Use CONCURRENTLY when you need non-blocking refresh (requires a unique index)
-    -- REFRESH MATERIALIZED VIEW CONCURRENTLY "${schema}"."${matviewName}";`,
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY "${schema}"."${matviewName}";`,
 
     /**
      * Create materialized view template
@@ -42,7 +42,7 @@ WITH DATA;`,
         `DROP MATERIALIZED VIEW "${schema}"."${matviewName}";
 
 -- Use CASCADE to also drop dependent objects
-    -- DROP MATERIALIZED VIEW "${schema}"."${matviewName}" CASCADE;`,
+-- DROP MATERIALIZED VIEW "${schema}"."${matviewName}" CASCADE;`,
 
     /**
      * Update query planner statistics

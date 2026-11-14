@@ -5,7 +5,7 @@ import { ConnectionManager } from '../services/ConnectionManager';
 import { ErrorService } from '../services/ErrorService';
 import { SessionRegistry } from '../services/SessionRegistry';
 import { ConnectionUtils } from '../utils/connectionUtils';
-import { isProFeatureEnabled, ProFeature } from '../services/featureGates';
+import { FREE_NOTEBOOKS_PER_CONNECTION, isProFeatureEnabled, ProFeature } from '../services/featureGates';
 import { isProBuild } from '../common/buildTier';
 
 /** Module-level ExtensionContext set once by NotebookBuilder.setContext() */
@@ -310,9 +310,9 @@ export class NotebookBuilder {
             // Free/OSS build has no notebook quota; the license gate only applies in pro builds.
             const isUnlimited = !isProBuild() || isProFeatureEnabled(ProFeature.UnlimitedNotebooks);
 
-            if (!isUnlimited && totalNotebooks >= 2) {
+            if (!isUnlimited && totalNotebooks >= FREE_NOTEBOOKS_PER_CONNECTION) {
               const choiceLimit = await vscode.window.showWarningMessage(
-                `Free tier is limited to 2 notebooks per connection. Upgrade to Sponsor or Team for unlimited notebooks.`,
+                `Free tier is limited to ${FREE_NOTEBOOKS_PER_CONNECTION} notebooks per connection. Upgrade to Sponsor or Team for unlimited notebooks.`,
                 'Open Existing Notebook',
                 'Upgrade'
               );

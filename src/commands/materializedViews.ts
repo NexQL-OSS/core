@@ -12,6 +12,12 @@ import {
 } from './helper';
 import { MaterializedViewSQL } from './sql';
 
+/** `"schema"."name"`, escaping embedded quotes, so mixed-case and reserved names round-trip. */
+function qualifiedMatViewName(schema: string, name: string): string {
+  const q = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  return `${q(schema)}.${q(name)}`;
+}
+
 
 
 /**
@@ -48,7 +54,8 @@ export async function cmdEditMatView(item: DatabaseTreeItem, context: vscode.Ext
       }
 
       const viewDef = (result.rows[0].definition || '').replace(/;\s*$/, '');
-      const createMatViewStatement = `CREATE MATERIALIZED VIEW ${item.schema}.${item.label} AS\n${viewDef}\nWITH DATA;`;
+      const qualified = qualifiedMatViewName(item.schema!, item.label);
+      const createMatViewStatement = `CREATE MATERIALIZED VIEW ${qualified} AS\n${viewDef}\nWITH DATA;`;
 
       await new NotebookBuilder(metadata)
           .addMarkdown(
@@ -56,7 +63,7 @@ export async function cmdEditMatView(item: DatabaseTreeItem, context: vscode.Ext
             MarkdownUtils.warningBox('This will drop and recreate the materialized view.')
           )
         .addMarkdown('##### 📝 View Definition')
-        .addSql(`DROP MATERIALIZED VIEW IF EXISTS ${item.schema}.${item.label};\n\n${createMatViewStatement}`)
+        .addSql(`DROP MATERIALIZED VIEW IF EXISTS ${qualified};\n\n${createMatViewStatement}`)
         .show();
     } finally {
       // Connection is managed by ConnectionManager
@@ -238,7 +245,7 @@ ${dependencyRows}
           '---'
         )
         .addMarkdown('##### 📝 CREATE MATERIALIZED VIEW Script')
-        .addSql(`-- DROP MATERIALIZED VIEW IF EXISTS ${item.schema}.${item.label};\n\nCREATE MATERIALIZED VIEW ${item.schema}.${item.label} AS\n${viewDefinition}\nWITH DATA;\n\n-- Materialized view comment\n${matview.comment ? `COMMENT ON MATERIALIZED VIEW ${item.schema}.${item.label} IS '${matview.comment.replace(/'/g, "''")}';` : `-- COMMENT ON MATERIALIZED VIEW ${item.schema}.${item.label} IS 'view description';`}\n\n-- Indexes\n${indexes.map((idx: any) => idx.definition).join('\n')}`)
+        .addSql(`-- DROP MATERIALIZED VIEW IF EXISTS ${qualifiedMatViewName(item.schema!, item.label)};\n\nCREATE MATERIALIZED VIEW ${qualifiedMatViewName(item.schema!, item.label)} AS\n${viewDefinition}\nWITH DATA;\n\n-- Materialized view comment\n${matview.comment ? `COMMENT ON MATERIALIZED VIEW ${qualifiedMatViewName(item.schema!, item.label)} IS '${matview.comment.replace(/'/g, "''")}';` : `-- COMMENT ON MATERIALIZED VIEW ${qualifiedMatViewName(item.schema!, item.label)} IS 'view description';`}\n\n-- Indexes\n${indexes.map((idx: any) => idx.definition).join('\n')}`)
         .addMarkdown('##### 🔄 Refresh Materialized View')
         .addSql(MaterializedViewSQL.refresh(item.schema!, item.label))
         .addMarkdown('##### 📖 Query Materialized View Data')
