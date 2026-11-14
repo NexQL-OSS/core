@@ -20,9 +20,28 @@ export interface CellEditorOptions {
   /** Mount bottom-docked panels after this node (e.g. table scroll area). */
   dockParent?: HTMLElement;
   dockAfter?: HTMLElement;
-  /** Highlight this row while a bottom-docked editor is open. */
+  /** Highlight this row while an editor popover is open. */
   editingRowEl?: HTMLTableRowElement | null;
+  /**
+   * Hand the value to a real VS Code editor tab (virtual document). When omitted
+   * (tests, standalone exports) the in-output popover is always used.
+   */
+  onOpenInEditor?: (request: ExternalEditRequest) => void;
 }
+
+export type ExternalEditFormat = 'json' | 'xml' | 'html' | 'text';
+
+export interface ExternalEditRequest {
+  content: string;
+  format: ExternalEditFormat;
+}
+
+/** Longest single-line value that is edited directly in the grid cell. */
+export const INLINE_TEXT_MAX_CHARS = 120;
+/** Largest value edited in the in-output popover; bigger values go to an editor tab. */
+export const POPOVER_MAX_BYTES = 10 * 1024;
+
+export type TextEditDepth = 'inline' | 'popover' | 'editor-tab';
 
 export type EditorType =
   | 'number'
@@ -156,6 +175,50 @@ export function getEditorType(columnType: string, currentValue: any): EditorType
   return 'longtext';
 }
 
+function utf8Length(text: string): number {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(text).length;
+  }
+  return text.length;
+}
+
+/** Pretty-printed text shown when editing a json/jsonb value. */
+export function formatJsonForEdit(value: any): string {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return JSON.stringify(parsed, null, 2) ?? '';
+  } catch {
+    return value != null ? cellValueToEditString(value) : '';
+  }
+}
+
+/**
+ * Pick how deep the edit surface goes for a text-like or JSON value:
+ *   inline      short single-line text, edited in the cell like numbers
+ *   popover     longer / multi-line text and JSON, an overlay inside the output
+ *   editor-tab  values past POPOVER_MAX_BYTES (only when a tab can be opened)
+ */
+export function getTextEditDepth(
+  columnType: string,
+  currentValue: any,
+  canOpenInEditor: boolean = false,
+): TextEditDepth {
+  const editorType = getEditorType(columnType, currentValue);
+  const isJson = editorType === 'json';
+  const content = isJson ? formatJsonForEdit(currentValue) : cellValueToEditString(currentValue);
+
+  if (canOpenInEditor && utf8Length(content) > POPOVER_MAX_BYTES) {
+    return 'editor-tab';
+  }
+  if (isJson) {
+    return 'popover';
+  }
+  if (content.length > INLINE_TEXT_MAX_CHARS || /[\r\n]/.test(content)) {
+    return 'popover';
+  }
+  return 'inline';
+}
+
 /**
  * Main factory function: creates the appropriate editor element
  * and returns it ready to be injected into the cell.
@@ -267,10 +330,28 @@ function modalPlainEditorTitle(opts: CellEditorOptions): string {
   return `${opts.columnName} (${t})`;
 }
 
+function externalFormatFor(opts: CellEditorOptions, content: string): ExternalEditFormat {
+  const format = getFormatType(opts.columnType, content);
+  return format ?? 'text';
+}
+
 function createLongTextEditor(opts: CellEditorOptions): HTMLElement {
+  const content = opts.currentValue != null ? cellValueToEditString(opts.currentValue) : '';
+  const depth = getTextEditDepth(opts.columnType, opts.currentValue, !!opts.onOpenInEditor);
+
+  if (depth === 'inline') {
+    return createInlineTextEditor(opts, content);
+  }
+  if (depth === 'editor-tab' && opts.onOpenInEditor) {
+    return openInEditorTab(opts, content, externalFormatFor(opts, content));
+  }
+  return createPopoverTextEditor(opts, content);
+}
+
+function createPopoverTextEditor(opts: CellEditorOptions, content: string): HTMLElement {
   return createModalEditor({
     title: modalPlainEditorTitle(opts),
-    initialContent: opts.currentValue != null ? cellValueToEditString(opts.currentValue) : '',
+    initialContent: content,
     isCode: false,
     validate: () => null,
     onSave: opts.onSave,
@@ -282,7 +363,92 @@ function createLongTextEditor(opts: CellEditorOptions): HTMLElement {
     editingRowEl: opts.editingRowEl,
     columnName: opts.columnName,
     columnType: opts.columnType,
+    onOpenInEditor: opts.onOpenInEditor,
   });
+}
+
+/**
+ * Tier 1: single-line text edited in the cell itself, exactly like numbers.
+ * Enter saves, Escape cancels, an unchanged value is a no-op (so NULL stays NULL),
+ * and the expand button (or Shift+Enter) promotes the value to the popover.
+ */
+function createInlineTextEditor(opts: CellEditorOptions, content: string): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'display:flex;align-items:center;gap:4px;width:100%;';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = content;
+  applyEditorBaseStyle(input);
+  input.style.minWidth = '120px';
+  input.style.flex = '1';
+  if (opts.currentValue === null || opts.currentValue === undefined) {
+    input.placeholder = 'NULL';
+  }
+
+  const expandBtn = document.createElement('button');
+  expandBtn.type = 'button';
+  expandBtn.textContent = '⤢';
+  expandBtn.title = 'Expand editor (Shift+Enter)';
+  expandBtn.setAttribute('aria-label', 'Expand editor');
+  expandBtn.style.cssText = `
+    flex-shrink:0;background:none;border:1px solid var(--vscode-widget-border,#555);
+    color:var(--vscode-descriptionForeground);border-radius:2px;cursor:pointer;
+    font-size:12px;line-height:1;padding:3px 5px;
+  `;
+
+  let settled = false;
+  const finish = (fn: () => void) => {
+    if (settled) { return; }
+    settled = true;
+    fn();
+  };
+
+  const save = () => finish(() => {
+    if (input.value === content) { opts.onCancel(); return; }
+    opts.onSave(input.value);
+  });
+
+  const expand = () => finish(() => {
+    const popover = createPopoverTextEditor(
+      { ...opts, onSave: opts.onSave, onCancel: opts.onCancel },
+      input.value,
+    );
+    wrapper.replaceChildren(popover);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); expand(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); save(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); finish(() => opts.onCancel()); }
+  });
+  input.addEventListener('blur', save);
+  // mousedown (not click) so the input's blur-save does not win the race.
+  expandBtn.addEventListener('mousedown', (e) => { e.preventDefault(); expand(); });
+
+  wrapper.appendChild(input);
+  wrapper.appendChild(expandBtn);
+  setTimeout(() => { input.focus(); input.select(); }, 0);
+  return wrapper;
+}
+
+/** Tier 3 from the cell: hand the value to a VS Code editor tab, leave the cell untouched. */
+function openInEditorTab(
+  opts: CellEditorOptions,
+  content: string,
+  format: ExternalEditFormat,
+): HTMLElement {
+  const placeholder = createDockedCellIndicator(
+    opts.columnName,
+    `Opening ${opts.columnName} in an editor tab`,
+  );
+  // Defer: TableRenderer appends this element to the cell after we return.
+  setTimeout(() => {
+    opts.onOpenInEditor?.({ content, format });
+    opts.onCancel();
+  }, 0);
+  return placeholder;
 }
 
 // ─── Date ────────────────────────────────────────────────────────────
@@ -378,14 +544,10 @@ function createDateTimeEditor(opts: CellEditorOptions): HTMLElement {
 // ─── JSON Modal ───────────────────────────────────────────────────────
 
 function createJsonEditor(opts: CellEditorOptions): HTMLElement {
-  let formatted = '';
-  try {
-    const parsed = typeof opts.currentValue === 'string'
-      ? JSON.parse(opts.currentValue)
-      : opts.currentValue;
-    formatted = JSON.stringify(parsed, null, 2);
-  } catch {
-    formatted = opts.currentValue != null ? cellValueToEditString(opts.currentValue) : '';
+  const formatted = formatJsonForEdit(opts.currentValue);
+
+  if (getTextEditDepth(opts.columnType, opts.currentValue, !!opts.onOpenInEditor) === 'editor-tab' && opts.onOpenInEditor) {
+    return openInEditorTab(opts, formatted, 'json');
   }
 
   return createModalEditor({
@@ -408,6 +570,7 @@ function createJsonEditor(opts: CellEditorOptions): HTMLElement {
     editingRowEl: opts.editingRowEl,
     columnName: opts.columnName,
     columnType: opts.columnType,
+    onOpenInEditor: opts.onOpenInEditor,
   });
 }
 
@@ -759,6 +922,37 @@ function applyEditingRowHighlight(row: HTMLElement | null | undefined, active: b
   }
 }
 
+const POPOVER_MAX_WIDTH_PX = 640;
+
+interface PopoverHostControl {
+  /** Grow the host's min-height so an absolutely positioned popover fits inside it. */
+  growTo(px: number): void;
+  restore(): void;
+}
+
+/**
+ * The popover is absolutely positioned inside the output container. Make that
+ * container a positioning context and remember how to undo any height reservation.
+ */
+function preparePopoverHost(host: HTMLElement): PopoverHostControl {
+  const prevPosition = host.style.position;
+  const prevMinHeight = host.style.minHeight;
+  if (window.getComputedStyle(host).position === 'static') {
+    host.style.position = 'relative';
+  }
+  return {
+    growTo(px: number) {
+      if (px > host.getBoundingClientRect().height) {
+        host.style.minHeight = `${Math.ceil(px)}px`;
+      }
+    },
+    restore() {
+      host.style.position = prevPosition;
+      host.style.minHeight = prevMinHeight;
+    },
+  };
+}
+
 function insertDockedPanel(opts: ModalEditorOptions, panel: HTMLElement): HTMLElement {
   if (opts.dockParent) {
     if (opts.dockAfter?.parentNode === opts.dockParent) {
@@ -787,9 +981,10 @@ interface ModalEditorOptions {
   dockParent?: HTMLElement;
   dockAfter?: HTMLElement;
   editingRowEl?: HTMLTableRowElement | null;
-  /** Shown in the table cell while the docked panel is open. */
+  /** Shown in the table cell while the popover is open. */
   columnName?: string;
   columnType?: string;
+  onOpenInEditor?: (request: ExternalEditRequest) => void;
 }
 
 /**
@@ -1411,32 +1606,49 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
 
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-inline-editor', 'true');
+    wrapper.setAttribute('role', 'dialog');
+    wrapper.setAttribute('aria-label', `Edit ${columnLabel}`);
+    // Overlay inside the output frame (positioned by placePopover): it never pushes the grid.
     wrapper.style.cssText = `
-      position:relative;
-      width:100%;
-      flex-shrink:0;
+      position:absolute;
+      left:8px;
+      top:8px;
+      z-index:50;
+      width:${POPOVER_MAX_WIDTH_PX}px;
+      max-width:calc(100% - 16px);
       box-sizing:border-box;
       padding:12px;
-      margin:6px 0 0;
       background:var(--vscode-editor-background);
-      border:2px solid var(--vscode-focusBorder);
-      border-radius:4px;
-      box-shadow:0 2px 12px rgba(0,0,0,0.28);
+      border:1.5px solid var(--vscode-focusBorder);
+      border-radius:6px;
+      box-shadow:0 12px 32px rgba(0,0,0,0.45);
       display:flex;
       flex-direction:column;
       gap:8px;
     `;
+    const caret = document.createElement('div');
+    caret.setAttribute('aria-hidden', 'true');
+    caret.style.cssText = `
+      position:absolute;width:12px;height:12px;box-sizing:border-box;
+      background:var(--vscode-editor-background);
+      border:1.5px solid var(--vscode-focusBorder);
+      pointer-events:none;
+    `;
+    wrapper.appendChild(caret);
 
     // ── Title bar ──
     const titleBar = document.createElement('div');
-    titleBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;flex-shrink:0;';
+    titleBar.style.cssText = 'display:flex;align-items:center;gap:8px;flex-shrink:0;';
     const titleMain = document.createElement('span');
     titleMain.style.cssText = 'font-size:13px;font-weight:600;color:var(--vscode-editor-foreground);';
     titleMain.textContent = opts.title;
     const titleHint = document.createElement('span');
     titleHint.style.cssText = 'font-size:11px;color:var(--vscode-descriptionForeground);white-space:nowrap;';
     titleHint.textContent = 'Ctrl+Enter to save · Escape to cancel';
+    const statusEl = document.createElement('span');
+    statusEl.style.cssText = 'font-size:11px;font-family:var(--vscode-editor-font-family,monospace);margin-left:auto;margin-right:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;';
     titleBar.appendChild(titleMain);
+    titleBar.appendChild(statusEl);
     titleBar.appendChild(titleHint);
 
     // ── Textarea ──
@@ -1477,7 +1689,7 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
       formatBtn.style.cssText = `
         background:none;border:1px solid var(--vscode-button-border,#555);
         color:var(--vscode-descriptionForeground);border-radius:2px;
-        padding:4px 10px;cursor:pointer;font-size:12px;margin-right:auto;
+        padding:4px 10px;cursor:pointer;font-size:12px;
       `;
       formatBtn.addEventListener('click', () => {
         try {
@@ -1487,6 +1699,7 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
             textarea.value = prettyFormatXmlOrHtml(textarea.value, activeFormat === 'html');
           }
           errorDiv.textContent = '';
+          updateStatus();
         } catch (e) {
           errorDiv.textContent = `Cannot format: ${(e as Error).message}`;
         }
@@ -1494,11 +1707,43 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
       btnRow.appendChild(formatBtn);
     }
 
+    if (activeFormat === 'json') {
+      const minifyBtn = document.createElement('button');
+      minifyBtn.textContent = 'Minify';
+      minifyBtn.style.cssText = `
+        background:none;border:1px solid var(--vscode-button-border,#555);
+        color:var(--vscode-descriptionForeground);border-radius:2px;
+        padding:4px 10px;cursor:pointer;font-size:12px;
+      `;
+      minifyBtn.addEventListener('click', () => {
+        try {
+          textarea.value = JSON.stringify(JSON.parse(textarea.value));
+          errorDiv.textContent = '';
+          updateStatus();
+        } catch (e) {
+          errorDiv.textContent = `Cannot minify: ${(e as Error).message}`;
+        }
+      });
+      btnRow.appendChild(minifyBtn);
+    }
+
+    let openEditorBtn: HTMLButtonElement | null = null;
+    if (opts.onOpenInEditor) {
+      openEditorBtn = document.createElement('button');
+      openEditorBtn.textContent = 'Open in editor ↗';
+      openEditorBtn.title = 'Edit in a full VS Code editor tab; Ctrl+S stages the change here';
+      openEditorBtn.style.cssText = `
+        background:none;border:none;color:var(--vscode-textLink-foreground,#3794ff);
+        padding:4px 6px;cursor:pointer;font-size:12px;margin-left:auto;
+      `;
+      btnRow.appendChild(openEditorBtn);
+    }
+
     const saveBtn = document.createElement('button');
     saveBtn.textContent = 'Save';
     saveBtn.style.cssText = `
       background:var(--vscode-button-background);color:var(--vscode-button-foreground);
-      border:none;border-radius:2px;padding:4px 14px;cursor:pointer;font-size:12px;
+      border:none;border-radius:2px;padding:4px 14px;cursor:pointer;font-size:12px;margin-left:auto;
     `;
 
     const cancelBtn = document.createElement('button');
@@ -1685,8 +1930,33 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
 
     const stopKeysEscaping = (e: Event) => { e.stopPropagation(); };
 
+    let hostCtl: PopoverHostControl | null = null;
+
+    const updateStatus = () => {
+      const value = textarea.value;
+      const bytes = utf8Length(value);
+      const size = bytes >= 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${bytes} B`;
+      let state = '';
+      let color = 'var(--vscode-descriptionForeground)';
+      if (activeFormat === 'json' && bytes <= 256 * 1024) {
+        try {
+          JSON.parse(value);
+          state = '● valid JSON · ';
+          color = 'var(--vscode-testing-iconPassed, #73c991)';
+        } catch (e) {
+          state = `● ${(e as Error).message.slice(0, 60)} · `;
+          color = 'var(--vscode-errorForeground)';
+        }
+      }
+      statusEl.textContent = `${state}${size}`;
+      statusEl.style.color = color;
+    };
+    textarea.addEventListener('input', updateStatus);
+    updateStatus();
+
     const teardown = () => {
       keyboardTrapAbort.abort();
+      hostCtl?.restore();
       applyDockedAnchorCellStyle(opts.anchorEl, false);
       applyEditingRowHighlight(opts.editingRowEl ?? null, false);
       if (wrapper.parentNode) {
@@ -1726,6 +1996,12 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
 
     saveBtn.addEventListener('click', doSave);
     cancelBtn.addEventListener('click', doCancel);
+    openEditorBtn?.addEventListener('click', () => {
+      const content = textarea.value;
+      teardown();
+      opts.onOpenInEditor?.({ content, format: activeFormat ?? 'text' });
+      opts.onCancel();
+    });
 
     // ── Assemble & mount ──
     wrapper.appendChild(titleBar);
@@ -1739,9 +2015,59 @@ function createModalEditor(opts: ModalEditorOptions): HTMLElement {
     wrapper.appendChild(errorDiv);
     wrapper.appendChild(btnRow);
 
-    insertDockedPanel(opts, wrapper);
-    wrapper.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    setTimeout(() => { textarea.focus(); textarea.setSelectionRange(0, 0); }, 0);
+    const host = insertDockedPanel(opts, wrapper);
+    hostCtl = preparePopoverHost(host);
+
+    let placeBelow: boolean | null = null;
+    const placePopover = () => {
+      if (!wrapper.isConnected || !hostCtl) { return; }
+      const margin = 8;
+      const gap = 10;
+      const hostRect = host.getBoundingClientRect();
+      const anchor = opts.anchorEl;
+      const aRect = anchor && anchor.isConnected ? anchor.getBoundingClientRect() : null;
+      const width = Math.max(260, Math.min(POPOVER_MAX_WIDTH_PX, hostRect.width - margin * 2));
+      wrapper.style.width = `${width}px`;
+      const height = wrapper.offsetHeight;
+      const anchorCenter = aRect ? aRect.left - hostRect.left + aRect.width / 2 : hostRect.width / 2;
+      const left = Math.min(
+        Math.max(anchorCenter - width / 2, margin),
+        Math.max(margin, hostRect.width - width - margin),
+      );
+      const cellTop = aRect ? aRect.top - hostRect.top : margin;
+      const cellBottom = aRect ? aRect.bottom - hostRect.top : margin;
+      if (placeBelow === null) {
+        const roomBelow = hostRect.height - cellBottom - gap - margin;
+        const roomAbove = cellTop - gap - margin;
+        // Prefer below the cell; flip above only when that fits and below does not.
+        placeBelow = roomBelow >= height || roomAbove < height;
+      }
+      const top = Math.max(margin, placeBelow ? cellBottom + gap : cellTop - gap - height);
+      if (placeBelow) {
+        // Neither side fits: grow the output once instead of covering the cell.
+        hostCtl.growTo(top + height + margin);
+      }
+      wrapper.style.left = `${left}px`;
+      wrapper.style.top = `${top}px`;
+
+      const caretLeft = Math.min(Math.max(anchorCenter - left - 6, 14), width - 26);
+      caret.style.left = `${caretLeft}px`;
+      caret.style.transform = 'rotate(45deg)';
+      if (placeBelow) {
+        caret.style.top = '-7px';
+        caret.style.bottom = '';
+        caret.style.borderWidth = '1.5px 0 0 1.5px';
+      } else {
+        caret.style.bottom = '-7px';
+        caret.style.top = '';
+        caret.style.borderWidth = '0 1.5px 1.5px 0';
+      }
+    };
+
+    placePopover();
+    opts.dockAfter?.addEventListener('scroll', placePopover, { signal, passive: true });
+    window.addEventListener('resize', placePopover, { signal });
+    setTimeout(() => { textarea.focus(); textarea.setSelectionRange(0, 0); textarea.scrollTop = 0; }, 0);
   };
 
   showEditor();

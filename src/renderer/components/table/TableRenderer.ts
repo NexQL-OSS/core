@@ -10,7 +10,8 @@ import {
   BYTEA_DISPLAY_DEFAULT,
   ByteaDisplayFormat,
 } from '../../../common/types';
-import { createCellEditor } from './CellEditors';
+import { createCellEditor, getEditorType } from './CellEditors';
+import type { ExternalEditFormat } from './CellEditors';
 import { FilterBar } from './FilterBar';
 import { ColumnStatsTooltip, attachColumnStatsTooltip } from '../ColumnStats';
 
@@ -31,6 +32,22 @@ export interface TableEvents {
   onSortChange?: (column: string | null, direction: 'asc' | 'desc' | 'none') => void;
   onFilterChange?: (filterState: FilterState) => void;
   onRunDerivedQuery?: (sql: string) => void;
+  /**
+   * Edit a long text/JSON cell in a real editor tab. The host opens the tab and
+   * calls `apply(text)` on every save to stage the change in Review Changes.
+   */
+  onOpenCellInEditor?: (request: OpenCellInEditorRequest) => void;
+}
+
+export interface OpenCellInEditorRequest {
+  requestId: string;
+  rowIndex: number;
+  rowLabel: string;
+  columnName: string;
+  columnType: string;
+  format: ExternalEditFormat;
+  content: string;
+  apply: (content: string) => void;
 }
 
 interface PendingInsertRow {
@@ -1177,9 +1194,61 @@ export class TableRenderer {
       dockParent: this.mainContainer,
       dockAfter: this.tableContainer,
       editingRowEl: editingRow instanceof HTMLTableRowElement ? editingRow : null,
+      onOpenInEditor: this.events.onOpenCellInEditor
+        ? (req) => {
+            this.events.onOpenCellInEditor?.({
+              requestId: `cell-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              rowIndex: sourceIndex,
+              rowLabel: this.describeRow(sourceIndex),
+              columnName: col,
+              columnType: colType,
+              format: req.format,
+              content: req.content,
+              apply: (content) => this.applyExternalCellEdit(sourceIndex, col, colType, content),
+            });
+          }
+        : undefined,
     });
 
     td.appendChild(editorEl);
+  }
+
+  /** `id=5` from primary keys when known, otherwise `row-N`. */
+  private describeRow(sourceIndex: number): string {
+    const pks = this.tableInfo?.primaryKeys;
+    const row = this.originalRows[sourceIndex] as Record<string, unknown> | undefined;
+    if (pks && pks.length > 0 && row) {
+      return pks.map((pk) => `${pk}=${String(row[pk])}`).join(',');
+    }
+    return `row-${sourceIndex + 1}`;
+  }
+
+  /**
+   * Stage an edit made outside the output (editor tab). Same bookkeeping as an
+   * in-grid save, but it must not disturb an editor the user has open meanwhile.
+   */
+  private applyExternalCellEdit(sourceIndex: number, col: string, colType: string, text: string) {
+    if (!this.rows[sourceIndex]) return;
+    const orig = this.originalRows[sourceIndex]?.[col] ?? null;
+    let newValue: any = text;
+    if (getEditorType(colType, orig) === 'json') {
+      try {
+        newValue = JSON.parse(text);
+      } catch {
+        return; // the host already rejects invalid JSON; never stage garbage
+      }
+    }
+    const cellKey = `${sourceIndex}-${col}`;
+    if (JSON.stringify(newValue) !== JSON.stringify(orig)) {
+      this.modifiedCells.set(cellKey, { originalValue: orig, newValue });
+    } else {
+      this.modifiedCells.delete(cellKey);
+    }
+    this.rows[sourceIndex][col] = newValue;
+    this.events.onDataChange?.(sourceIndex, col, newValue, orig);
+    if (!this.currentlyEditingCell) {
+      this.rerenderTable();
+    }
   }
 
   private setupInfiniteScroll() {
