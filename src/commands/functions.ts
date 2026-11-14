@@ -44,7 +44,7 @@ export async function cmdFunctionOperations(item: DatabaseTreeItem, context: vsc
       .addSql(FunctionSQL.createOrReplace(item.schema!))
       .addMarkdown('##### 🗑️ DROP')
       .addSql(FunctionSQL.drop(item.schema!, item.label, functionInfo.arguments || ''))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create function operations notebook');
   } finally {
@@ -73,7 +73,7 @@ export async function cmdEditFunction(item: DatabaseTreeItem, context: vscode.Ex
       .addMarkdown(MarkdownUtils.header(`✏️ Edit Function: \`${item.schema}.${item.label}\``, 'Modify the function definition below and execute to update.'))
       .addMarkdown('##### 📝 Function Definition')
       .addSql(functionInfo.definition)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create function edit notebook');
   } finally {
@@ -118,7 +118,7 @@ export async function cmdDropFunction(item: DatabaseTreeItem, context: vscode.Ex
         MarkdownUtils.dangerBox(`Dropping \`${item.schema}.${item.label}\` is permanent and will fail if dependent objects exist.`)
       )
       .addSql(FunctionSQL.drop(item.schema!, item.label, functionInfo.arguments || ''))
-      .show();
+      .showTemp();
   });
 }
 
@@ -269,7 +269,7 @@ ${dependencyRows}
       .addSql(FunctionSQL.drop(item.schema!, item.label, func.arguments || ''))
       .addMarkdown('##### 📊 Function Metadata')
       .addSql(FunctionSQL.metadata(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show function properties');
   } finally {
@@ -294,6 +294,6 @@ export async function cmdCreateFunction(item: DatabaseTreeItem, context: vscode.
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`➕ Create New Function in Schema: \`${schema}\``, 'Create or replace a function using the template below.'))
       .addSql(FunctionSQL.createOrReplace(schema))
-      .show();
+      .showTemp();
   });
 }

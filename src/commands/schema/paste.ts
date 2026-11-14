@@ -83,7 +83,7 @@ export async function cmdPasteTable(item: DatabaseTreeItem, context: vscode.Exte
       .addSql(ddl)
       .addMarkdown('#### 2. Insert Data')
       .addSql(insert)
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     vscode.window.showErrorMessage(`Smart Paste failed: ${err.message}`);

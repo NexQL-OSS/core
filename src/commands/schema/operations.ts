@@ -29,7 +29,7 @@ export async function cmdCreateSchema(item: DatabaseTreeItem, context: vscode.Ex
     await new NotebookBuilder(metadata)
       .addMarkdown(`### ➕ Create New Schema in Database: \`${databaseName}\`\n\nCreate a new schema using the template below.`)
       .addSql(SchemaSQL.create())
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create schema notebook');
   } finally {
@@ -71,7 +71,7 @@ export async function cmdCreateObjectInSchema(item: DatabaseTreeItem, context: v
         )
         .addMarkdown('##### 📝 Object Definition')
         .addSql(selection.query)
-        .show();
+        .showTemp();
     }
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create notebook');
@@ -98,7 +98,7 @@ export async function cmdSchemaOperations(item: DatabaseTreeItem, context: vscod
       .addSql(SchemaSQL.grant(item.schema!))
       .addMarkdown('##### ❌ Drop Schema\n\n⚠️ **Warning:** Dropping this schema is permanent and will remove all contained objects if CASCADE is used.')
       .addSql(SchemaSQL.drop(item.schema!))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create schema operations notebook');
@@ -245,7 +245,7 @@ ${extensionRows}
       .addSql(`-- View all schema privileges\nSELECT \n    nspname as schema_name,\n    nspacl as access_control_list,\n    pg_catalog.pg_get_userbyid(nspowner) as owner\nFROM pg_namespace\nWHERE nspname = '${item.schema}';\n\n-- Grant privileges (modify as needed)\n-- GRANT USAGE ON SCHEMA ${item.schema} TO role_name;\n-- GRANT CREATE ON SCHEMA ${item.schema} TO role_name;\n-- GRANT ALL ON SCHEMA ${item.schema} TO role_name;\n\n-- Revoke privileges\n-- REVOKE ALL ON SCHEMA ${item.schema} FROM role_name;`)
       .addMarkdown('##### 🔍 Schema Dependencies')
       .addSql(`-- Find all functions in schema\nSELECT \n    p.proname as function_name,\n    pg_get_function_arguments(p.oid) as arguments,\n    pg_get_function_result(p.oid) as return_type\nFROM pg_proc p\nJOIN pg_namespace n ON n.oid = p.pronamespace\nWHERE n.nspname = '${item.schema}';`)
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show schema properties');

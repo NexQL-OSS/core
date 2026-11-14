@@ -273,3 +273,101 @@ describe('NotebookBuilder.show()', () => {
     expect(SessionRegistry.get('conn-5:mydb')).to.equal(existingDoc);
   });
 });
+
+describe('NotebookBuilder.showTemp()', () => {
+  let sandbox: sinon.SinonSandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    (SessionRegistry as any).map?.clear?.();
+    // A fully wired context: show() would take the persistent path here.
+    NotebookBuilder.setContext(makeContext());
+    (vscode.workspace as any).notebookDocuments = [];
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    NotebookBuilder.setContext(undefined as any);
+    (SessionRegistry as any).map?.clear?.();
+  });
+
+  const metadata = {
+    connectionId: 'conn-1',
+    databaseName: 'appdb',
+    name: 'Primary',
+    password: 'hunter2',
+    custom: { cells: [], metadata: { connectionId: 'conn-1', databaseName: 'appdb', password: 'hunter2', enableScripts: true } },
+  };
+
+  it('opens an untitled notebook and never touches the saved-notebook path', async () => {
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/nb')));
+    const showNotebook = sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
+    const writeFile = sandbox.stub(vscode.workspace.fs, 'writeFile').resolves();
+    const applyEdit = sandbox.stub(vscode.workspace, 'applyEdit').resolves(true);
+
+    await new NotebookBuilder(metadata).addMarkdown('# Report').addSql('SELECT 1').showTemp();
+
+    expect(openNotebook.calledOnce).to.be.true;
+    // (viewType, NotebookData): the untitled overload, not a file Uri.
+    expect(openNotebook.firstCall.args[0]).to.equal('postgres-notebook');
+    const data = openNotebook.firstCall.args[1] as any;
+    expect(data.cells).to.have.length(2);
+    expect(data.metadata.connectionId).to.equal('conn-1');
+    expect(data.metadata.databaseName).to.equal('appdb');
+    expect(showNotebook.calledOnce).to.be.true;
+    // No scratch file, no append to an existing document, no registry entry.
+    expect(writeFile.called).to.be.false;
+    expect(applyEdit.called).to.be.false;
+    expect(SessionRegistry.get('conn-1:appdb')).to.be.undefined;
+  });
+
+  it('does not append to an already-open saved notebook for the same database', async () => {
+    const saved = makeNotebookDoc(vscode.Uri.file('/global-storage/Primary/appdb/Primary-appdb.pgsql'), 3);
+    SessionRegistry.set('conn-1:appdb', saved);
+    (vscode.workspace as any).notebookDocuments = [saved];
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/untitled')));
+    sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
+    const applyEdit = sandbox.stub(vscode.workspace, 'applyEdit').resolves(true);
+
+    await new NotebookBuilder(metadata).addSql('SELECT 1').showTemp();
+
+    expect(applyEdit.called).to.be.false;
+    expect(SessionRegistry.get('conn-1:appdb')).to.equal(saved);
+    expect(openNotebook.firstCall.args[0]).to.equal('postgres-notebook');
+  });
+
+  it('opens a separate notebook on every call', async () => {
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/nb')));
+    sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
+
+    await new NotebookBuilder(metadata).addSql('SELECT 1').showTemp();
+    await new NotebookBuilder(metadata).addSql('SELECT 2').showTemp();
+
+    expect(openNotebook.callCount).to.equal(2);
+  });
+
+  it('keeps the password out of the untitled notebook metadata', async () => {
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/nb')));
+    sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
+
+    await new NotebookBuilder(metadata).addSql('SELECT 1').showTemp();
+
+    const sent = (openNotebook.firstCall.args[1] as any).metadata;
+    expect(sent).to.not.have.property('password');
+    expect(sent.custom.metadata).to.not.have.property('password');
+    expect(sent.custom.metadata.enableScripts).to.equal(true);
+    // The caller's metadata object is not mutated.
+    expect(metadata.password).to.equal('hunter2');
+    expect(metadata.custom.metadata.password).to.equal('hunter2');
+  });
+
+  it('works without an extension context', async () => {
+    NotebookBuilder.setContext(undefined as any);
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/nb')));
+    sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
+
+    await new NotebookBuilder(metadata).addSql('SELECT 1').showTemp();
+
+    expect(openNotebook.calledOnce).to.be.true;
+  });
+});

@@ -33,7 +33,7 @@ export async function cmdAllOperationsTypes(item: DatabaseTreeItem, context: vsc
       .addSql(TypeSQL.createEnum(schema))
       .addMarkdown(`##### 🗑️ Drop Type`)
       .addSql(TypeSQL.drop(schema, typeName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show type operations');
   } finally {
@@ -61,7 +61,7 @@ export async function cmdEditTypes(item: DatabaseTreeItem, context: vscode.Exten
         )
         .addMarkdown(`##### 📝 Type Definition`)
         .addSql(`-- Drop existing type\nDROP TYPE IF EXISTS ${item.schema}.${item.label} CASCADE;\n\n-- Create type with new definition\nCREATE TYPE ${item.schema}.${item.label} AS (\n${fields}\n);`)
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -185,7 +185,7 @@ FROM pg_type t
 JOIN pg_namespace n ON n.oid = t.typnamespace
 WHERE t.typname = '${item.label}' AND n.nspname = '${item.schema}';`);
 
-    await nb.show();
+    await nb.showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show type properties');
@@ -206,7 +206,7 @@ export async function cmdDropType(item: DatabaseTreeItem, context: vscode.Extens
         MarkdownUtils.dangerBox(`Dropping \`${item.schema}.${item.label}\` is permanent and will fail if dependent objects exist.`)
       )
       .addSql(TypeSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create drop type notebook');
   } finally {
@@ -238,7 +238,7 @@ export async function cmdCreateType(item: DatabaseTreeItem, context: vscode.Exte
       .addSql(TypeSQL.createComposite(item.schema!))
       .addMarkdown(`##### ➕ Create Enum Type`)
       .addSql(TypeSQL.createEnum(item.schema!))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create type notebook');
   } finally {

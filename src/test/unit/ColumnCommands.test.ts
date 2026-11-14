@@ -13,6 +13,7 @@ function createBuilderStub(sandbox: sinon.SinonSandbox) {
   builder.addMarkdown = sandbox.stub().returns(builder);
   builder.addSql = sandbox.stub().returns(builder);
   builder.show = sandbox.stub().resolves();
+  builder.showTemp = sandbox.stub().resolves();
   sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
     return builder;
   });
@@ -96,7 +97,8 @@ describe('column commands', () => {
     expect(dbConnection.query.firstCall.args[0]).to.equal(QueryBuilder.columnDetails('public', 'customers', 'customer_name'));
     expect(builder.addMarkdown.callCount).to.be.greaterThan(1);
     expect(builder.addSql.calledOnce).to.be.true;
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
+    expect(builder.show.called).to.be.false;
     expect(errorStub.calledOnceWithExactly('Column not found')).to.be.true;
     expect(dbConnection.release.callCount).to.equal(2);
   });
@@ -145,7 +147,9 @@ describe('column commands', () => {
     await columnCommands.viewColumnStatistics(item);
     await columnCommands.cmdAddColumn(item);
 
-    expect(builder.show.callCount).to.equal(5);
+    // Rename and CREATE INDEX are scripts (saved); comment, statistics and add-column are temp.
+    expect(builder.show.callCount).to.equal(2);
+    expect(builder.showTemp.callCount).to.equal(3);
     expect(builder.addSql.firstCall.args[0]).to.equal(ColumnSQL.rename('public', 'customers', 'customer_name', 'renamed_customer_name'));
     expect(builder.addSql.getCall(1).args[0]).to.contain('COMMENT ON COLUMN public.customers.customer_name IS');
     expect(builder.addSql.getCall(2).args[0]).to.equal(ColumnSQL.createIndex('public', 'customers', 'customer_name', 'idx_customers_customer_name'));

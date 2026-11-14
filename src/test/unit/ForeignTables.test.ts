@@ -11,6 +11,7 @@ function createBuilderStub(sandbox: sinon.SinonSandbox) {
   builder.addMarkdown = sandbox.stub().returns(builder);
   builder.addSql = sandbox.stub().returns(builder);
   builder.show = sandbox.stub().resolves();
+  builder.showTemp = sandbox.stub().resolves();
   sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
     return builder;
   });
@@ -139,7 +140,7 @@ describe('foreign table commands', () => {
     expect(builder.addSql.getCall(1).args[0]).to.equal(ForeignTableSQL.queryData('public', 'remote_orders'));
     expect(builder.addSql.getCall(2).args[0]).to.equal(ForeignTableSQL.edit('public', 'remote_orders'));
     expect(builder.addSql.getCall(3).args[0]).to.equal(ForeignTableSQL.drop('public', 'remote_orders'));
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -170,7 +171,7 @@ describe('foreign table commands', () => {
     expect(builder.addSql.firstCall.args[0]).to.include('CREATE FOREIGN TABLE public.remote_orders');
     expect(builder.addSql.firstCall.args[0]).to.include('SERVER remote_server');
     expect(builder.addSql.firstCall.args[0]).to.include("OPTIONS (\n    schema_name 'remote',\n    table_name 'orders'\n)");
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -189,7 +190,7 @@ describe('foreign table commands', () => {
     expect(builder.addSql.getCall(2).args[0]).to.equal(ForeignTableSQL.create.fileBased('public'));
     expect(builder.addSql.getCall(3).args[0]).to.equal(ForeignTableSQL.queryWithJoin('public'));
     expect(builder.addSql.getCall(4).args[0]).to.equal(ForeignTableSQL.manageForeignServer());
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -242,7 +243,7 @@ describe('foreign table commands', () => {
     expect(builder.addSql.getCall(0).args[0]).to.include('CREATE FOREIGN TABLE public.remote_orders');
     expect(builder.addSql.getCall(1).args[0]).to.equal(ForeignTableSQL.queryData('public', 'remote_orders'));
     expect(builder.addSql.getCall(2).args[0]).to.equal(ForeignTableSQL.drop('public', 'remote_orders'));
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -270,7 +271,7 @@ describe('foreign table commands', () => {
 
     expect(handleCommandError.calledOnce).to.be.true;
     expect(handleCommandError.firstCall.args[1]).to.equal('show foreign table properties');
-    expect(builder.show.called).to.be.false;
+    expect(builder.showTemp.called).to.be.false;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 });

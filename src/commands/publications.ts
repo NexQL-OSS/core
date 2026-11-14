@@ -12,7 +12,7 @@ export async function cmdListPublications(item: DatabaseTreeItem, context: vscod
         MarkdownUtils.infoBox('Publications define which tables are replicated to subscribers in logical replication. Requires PostgreSQL 10+.')
       )
       .addSql(PublicationSQL.list())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -33,7 +33,7 @@ export async function cmdCreatePublication(item: DatabaseTreeItem, context: vsco
         MarkdownUtils.infoBox('Choose to publish all tables or specific tables. Uncomment and adjust the appropriate statement.')
       )
       .addSql(PublicationSQL.create(name))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -55,7 +55,7 @@ export async function cmdDropPublication(item: DatabaseTreeItem, context: vscode
         MarkdownUtils.dangerBox(`Dropping publication "${pubName}". Any subscriptions to this publication will fail.`)
       )
       .addSql(PublicationSQL.drop(pubName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -71,7 +71,7 @@ export async function cmdShowPublicationProperties(item: DatabaseTreeItem, conte
         MarkdownUtils.infoBox('Shows published operations, tables, and replication settings.')
       )
       .addSql(PublicationSQL.getDefinition(pubName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -86,7 +86,7 @@ export async function cmdListSubscriptions(item: DatabaseTreeItem, context: vsco
         MarkdownUtils.infoBox('Subscriptions connect to a publisher and receive replicated data. Requires superuser or pg_create_subscription privilege.')
       )
       .addSql(PublicationSQL.listSubscriptions())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -108,7 +108,7 @@ export async function cmdDropSubscription(item: DatabaseTreeItem, context: vscod
         MarkdownUtils.dangerBox(`Dropping subscription "${subName}". Replication from the publisher will stop.`)
       )
       .addSql(PublicationSQL.dropSubscription(subName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -124,7 +124,7 @@ export async function cmdShowSubscriptionProperties(item: DatabaseTreeItem, cont
         MarkdownUtils.infoBox('Shows connection info, publications, slot name, and sync status.')
       )
       .addSql(PublicationSQL.getSubscriptionDefinition(subName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -146,7 +146,7 @@ export async function cmdPublicationOperations(item: DatabaseTreeItem, context: 
       .addSql(PublicationSQL.getDefinition(pubName))
       .addMarkdown('##### Drop Publication — WARNING: breaks connected subscriptions')
       .addSql(PublicationSQL.drop(pubName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

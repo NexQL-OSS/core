@@ -122,7 +122,7 @@ export async function showIndexProperties(treeItem: DatabaseTreeItem): Promise<v
       .addSql(`-- Index Definition\n${idx.index_definition};`)
       .addMarkdown('##### 📊 Usage Statistics')
       .addSql(IndexSQL.usageStats(schema, indexName))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show index properties');
@@ -238,7 +238,7 @@ export async function analyzeIndexUsage(treeItem: DatabaseTreeItem): Promise<voi
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`📊 Index Usage Analysis: \`${schema}.${indexName}\``, 'Query usage statistics for this index.'))
       .addSql(IndexSQL.usageStats(schema, indexName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'analyze index usage');
   } finally {
@@ -293,7 +293,7 @@ export async function addIndexComment(treeItem: DatabaseTreeItem): Promise<void>
       )
       .addSql(`-- Add comment to index
 COMMENT ON INDEX "${schema}"."${indexName}" IS '${FormatHelpers.escapeSqlString(comment)}';`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'add index comment');
   } finally {
@@ -327,7 +327,7 @@ export async function cmdIndexOperations(item: DatabaseTreeItem, context: vscode
       .addSql(IndexSQL.alter(schema, indexName))
       .addMarkdown('##### 🗑️ Drop Index')
       .addSql(IndexSQL.drop(schema, indexName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show index operations');
   } finally {
@@ -364,7 +364,7 @@ ON "${schema}"."${tableName}" (column_name);
 -- CREATE INDEX idx_${tableName}_partial
 -- ON "${schema}"."${tableName}" (column_name)
 -- WHERE condition;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'add index');
   } finally {

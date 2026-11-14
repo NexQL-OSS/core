@@ -46,7 +46,7 @@ export async function cmdForeignTableOperations(item: DatabaseTreeItem, context:
       .addSql(ForeignTableSQL.edit(item.schema!, item.label))
       .addMarkdown('##### ❌ Drop Foreign Table')
       .addSql(ForeignTableSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create foreign table operations notebook');
@@ -78,7 +78,7 @@ export async function cmdEditForeignTable(item: DatabaseTreeItem, context: vscod
       .addMarkdown(MarkdownUtils.header(`✏️ Edit Foreign Table: \`${item.schema}.${item.label}\``, 'Modify the foreign table definition below and execute the cells to update it.'))
       .addMarkdown('##### 📝 Table Definition')
       .addSql(`-- Drop existing foreign table\nDROP FOREIGN TABLE IF EXISTS ${item.schema}.${item.label};\n\n-- Create foreign table with new definition\n${createStatement}`)
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create foreign table edit notebook');
@@ -131,7 +131,7 @@ export async function cmdCreateForeignTable(item: DatabaseTreeItem, context: vsc
       .addMarkdown('##### 🛠️ Manage Foreign Server')
       .addSql(ForeignTableSQL.manageForeignServer())
       .addMarkdown(MarkdownUtils.warningBox('Foreign tables require proper network connectivity and authentication. Ensure firewall rules allow connections and credentials are correct. Performance may vary based on network latency.'))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create foreign table notebook');
   } finally {
@@ -224,7 +224,7 @@ ${columnRows}
       .addSql(ForeignTableSQL.queryData(item.schema!, item.label))
       .addMarkdown('##### 🗑️ DROP Foreign Table Script')
       .addSql(ForeignTableSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show foreign table properties');
@@ -249,7 +249,7 @@ export async function cmdDropForeignTable(item: DatabaseTreeItem, context: vscod
       )
       .addMarkdown('##### ❌ DROP')
       .addSql(ForeignTableSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'drop foreign table');
   } finally {

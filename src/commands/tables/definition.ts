@@ -169,7 +169,7 @@ export async function cmdTableDefinition(item: DatabaseTreeItem, context: vscode
       builder.addMarkdown('#### 🔗 Query: Incoming Foreign Keys\n\nFind all tables that have foreign key relationships to this table.');
       builder.addSql(referencingQuery);
 
-      await builder.show();
+      await builder.showTemp();
 
     } finally {
       release();

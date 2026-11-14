@@ -99,7 +99,7 @@ export async function cmdDatabaseHealth(item: DatabaseTreeItem, _context?: vscod
       ).addSql(HealthSQL.statementsExtensionCheck());
     }
 
-    await nb.show();
+    await nb.showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create database health report');
   } finally {

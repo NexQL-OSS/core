@@ -14,7 +14,7 @@ export async function cmdListTriggers(item: DatabaseTreeItem, context: vscode.Ex
         MarkdownUtils.infoBox('Lists all triggers defined on this table. Triggers fire automatically on INSERT, UPDATE, or DELETE.')
       )
       .addSql(TriggerSQL.list(schema, table))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -31,7 +31,7 @@ export async function cmdCreateTrigger(item: DatabaseTreeItem, context: vscode.E
         MarkdownUtils.infoBox('Fill in the trigger name, timing (BEFORE/AFTER/INSTEAD OF), event, and function body.')
       )
       .addSql(TriggerSQL.create(schema, table))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -55,7 +55,7 @@ export async function cmdDropTrigger(item: DatabaseTreeItem, context: vscode.Ext
         MarkdownUtils.dangerBox(`Dropping trigger "${triggerName}" from "${schema}"."${table}". This is permanent.`)
       )
       .addSql(TriggerSQL.drop(schema, table, triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -73,7 +73,7 @@ export async function cmdEnableTrigger(item: DatabaseTreeItem, context: vscode.E
         MarkdownUtils.infoBox(`Enabling trigger "${triggerName}" on "${schema}"."${table}".`)
       )
       .addSql(TriggerSQL.enable(schema, table, triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -91,7 +91,7 @@ export async function cmdDisableTrigger(item: DatabaseTreeItem, context: vscode.
         MarkdownUtils.warningBox(`Disabling trigger "${triggerName}" on "${schema}"."${table}". The trigger will not fire until re-enabled.`)
       )
       .addSql(TriggerSQL.disable(schema, table, triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -109,7 +109,7 @@ export async function cmdShowTriggerProperties(item: DatabaseTreeItem, context: 
         MarkdownUtils.infoBox('Detailed trigger definition and status.')
       )
       .addSql(TriggerSQL.getDefinition(schema, table, triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -140,7 +140,7 @@ export async function cmdTriggerOperations(item: DatabaseTreeItem, context: vsco
       .addSql(TriggerSQL.disable(schema, table, triggerName))
       .addMarkdown('##### Drop Trigger — WARNING: permanently deletes the trigger')
       .addSql(TriggerSQL.drop(schema, table, triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

@@ -11,6 +11,7 @@ function createBuilderStub(sandbox: sinon.SinonSandbox) {
   builder.addMarkdown = sandbox.stub().returns(builder);
   builder.addSql = sandbox.stub().returns(builder);
   builder.show = sandbox.stub().resolves();
+  builder.showTemp = sandbox.stub().resolves();
   sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
     return builder;
   });
@@ -39,7 +40,8 @@ async function assertSingleNotebookCommand(
   command: (item: any, context: any) => Promise<void>,
   item: any,
   expectedSql: string,
-  expectedMarkdownFragment: string
+  expectedMarkdownFragment: string,
+  destination: 'saved' | 'temp' = 'temp'
 ) {
   const builder = createBuilderStub(sandbox);
   const dbConnection = createDbConnection();
@@ -53,7 +55,10 @@ async function assertSingleNotebookCommand(
   expect(builder.addMarkdown.firstCall.args[0]).to.include(expectedMarkdownFragment);
   expect(builder.addSql.calledOnce).to.be.true;
   expect(builder.addSql.calledWithExactly(expectedSql)).to.be.true;
-  expect(builder.show.calledOnce).to.be.true;
+  const used = destination === 'saved' ? builder.show : builder.showTemp;
+  const unused = destination === 'saved' ? builder.showTemp : builder.show;
+  expect(used.calledOnce).to.be.true;
+  expect(unused.called).to.be.false;
   expect(dbConnection.release.calledOnce).to.be.true;
 }
 
@@ -103,7 +108,8 @@ describe('materialized view commands', () => {
       materializedViews.cmdViewMatViewData,
       item,
       MaterializedViewSQL.select('public', 'sales_mv'),
-      'View Data: `public.sales_mv`'
+      'View Data: `public.sales_mv`',
+      'saved'
     );
   });
 
@@ -145,7 +151,7 @@ describe('materialized view commands', () => {
     expect(builder.addSql.getCall(2).args[0]).to.equal(MaterializedViewSQL.refresh('public', 'sales_mv'));
     expect(builder.addSql.getCall(3).args[0]).to.equal(MaterializedViewSQL.createIndex('public', 'sales_mv'));
     expect(builder.addSql.getCall(4).args[0]).to.equal(MaterializedViewSQL.drop('public', 'sales_mv'));
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -165,7 +171,7 @@ describe('materialized view commands', () => {
     expect(builder.addSql.firstCall.args[0]).to.include('CREATE MATERIALIZED VIEW "public"."sales_mv" AS');
     expect(builder.addSql.firstCall.args[0]).to.include('SELECT id, total FROM source_sales WHERE active = true');
     expect(builder.addSql.firstCall.args[0]).to.include('WITH DATA;');
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -181,7 +187,7 @@ describe('materialized view commands', () => {
 
     expect(handleCommandError.calledOnce).to.be.true;
     expect(handleCommandError.firstCall.args[1]).to.equal('create materialized view edit notebook');
-    expect(builder.show.called).to.be.false;
+    expect(builder.showTemp.called).to.be.false;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -293,7 +299,7 @@ describe('materialized view commands', () => {
     expect(builder.addSql.getCall(2).args[0]).to.equal(MaterializedViewSQL.select('public', 'sales_mv'));
     expect(builder.addSql.getCall(3).args[0]).to.include('SELECT');
     expect(builder.addSql.getCall(4).args[0]).to.equal(MaterializedViewSQL.drop('public', 'sales_mv'));
-    expect(builder.show.calledOnce).to.be.true;
+    expect(builder.showTemp.calledOnce).to.be.true;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 
@@ -310,7 +316,7 @@ describe('materialized view commands', () => {
 
     expect(handleCommandError.calledOnce).to.be.true;
     expect(handleCommandError.firstCall.args[1]).to.equal('show materialized view properties');
-    expect(builder.show.called).to.be.false;
+    expect(builder.showTemp.called).to.be.false;
     expect(dbConnection.release.calledOnce).to.be.true;
   });
 });

@@ -16,7 +16,7 @@ export async function cmdListPartitions(item: DatabaseTreeItem, context: vscode.
       .addSql(PartitionSQL.list(schema, table))
       .addMarkdown('##### Partition Key Definition')
       .addSql(PartitionSQL.isPartitioned(schema, table))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -40,7 +40,7 @@ export async function cmdDetachPartition(item: DatabaseTreeItem, context: vscode
         MarkdownUtils.warningBox(`Detaching partition "${partitionName}" from "${schema}"."${table}". The table will remain as a standalone table.`)
       )
       .addSql(PartitionSQL.detach(schema, table, partitionName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -62,7 +62,7 @@ export async function cmdShowPartitionProperties(item: DatabaseTreeItem, context
       .addSql(PartitionSQL.createRangePartition(schema, table))
       .addMarkdown('##### Create List Partition Template')
       .addSql(PartitionSQL.createListPartition(schema, table))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -88,7 +88,7 @@ export async function cmdCreatePartition(item: DatabaseTreeItem, context: vscode
         ),
       )
       .addSql(PartitionSQL.createPartition(def))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

@@ -59,7 +59,7 @@ export async function showConstraintProperties(treeItem: DatabaseTreeItem): Prom
       }
     }
 
-    await nb.show();
+    await nb.showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show constraint properties');
@@ -152,7 +152,7 @@ export async function validateConstraint(treeItem: DatabaseTreeItem): Promise<vo
       )
       .addMarkdown(`##### ✅ Validate Constraint`)
       .addSql(ConstraintSQL.validate(schema, tableName, constraintName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'validate constraint');
   } finally {
@@ -183,7 +183,7 @@ export async function generateAddConstraintScript(treeItem: DatabaseTreeItem): P
       .addSql(ConstraintSQL.addUnique(schema, tableName))
       .addMarkdown(`##### ✓ Add Check Constraint`)
       .addSql(ConstraintSQL.addCheck(schema, tableName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'generate add constraint script');
   } finally {
@@ -229,7 +229,7 @@ JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE con.conname = '${constraintName}'
     AND con.connamespace = (SELECT oid FROM pg_namespace WHERE nspname = '${schema}')
 ORDER BY dependent_schema, dependent_object;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'view constraint dependencies');
   } finally {
@@ -265,7 +265,7 @@ export async function cmdConstraintOperations(item: DatabaseTreeItem, _context?:
       .addSql(ConstraintSQL.addCheck(schema, tableName))
       .addMarkdown(`##### 🗑️ Drop Constraint`)
       .addSql(ConstraintSQL.drop(schema, tableName, constraintName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create constraint operations notebook');
   } finally {
@@ -296,7 +296,7 @@ export async function cmdAddConstraint(item: DatabaseTreeItem): Promise<void> {
       .addSql(ConstraintSQL.addUnique(schema, tableName))
       .addMarkdown(`##### ✓ Add Check Constraint`)
       .addSql(ConstraintSQL.addCheck(schema, tableName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'add constraint');
   } finally {

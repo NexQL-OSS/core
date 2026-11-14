@@ -107,6 +107,11 @@ await new NotebookBuilder(metadata)
     .show();
 ```
 
+**Saved vs temporary notebooks.** `NotebookBuilder` has two ways to open cells, and every command must pick one:
+- `.show()` opens or appends to the user's saved, named notebook for the connection + database. Use it only for SQL the user writes, runs and keeps: Query Tool, New Notebook, View Data, Call Function/Procedure, every Scripts submenu entry (including Insert/Update Data and the "... Script" entries), history and saved-query opens.
+- `.showTemp()` opens a new untitled notebook (never saved, never appended to, one tab per call). Use it for everything informational or managed: reports, properties, operations menus, profile/activity/index usage/definition, column statistics, maintenance, lists, and create/edit/drop/truncate/clone/enable/disable helpers. Closing the tab discards it.
+When one function backs two menu entries that should route differently (e.g. `cmdEditView`), take a `destination: 'saved' | 'temp'` parameter instead of picking one.
+
 ### Key Utilities (`src/commands/helper.ts`)
 - `getDatabaseConnection(item)` — validates tree item, resolves password, returns `{connection, client, metadata}`
 - `NotebookBuilder` — fluent API: `.addMarkdown()`, `.addSql()`, `.show()`

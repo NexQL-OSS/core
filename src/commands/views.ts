@@ -27,14 +27,22 @@ export async function cmdScriptSelect(item: DatabaseTreeItem, context: vscode.Ex
  * cmdScriptCreate - Delegates to cmdEditView to fetch the actual view definition
  */
 export async function cmdScriptCreate(item: DatabaseTreeItem, context: vscode.ExtensionContext) {
-  await cmdEditView(item, context);
+  await cmdEditView(item, context, 'saved');
 }
 
 /**
  * cmdEditView - Fetches the actual view definition from the DB and opens it for editing.
  * Kept as-is: it queries the live definition, not a template.
+ *
+ * `destination` picks where the notebook opens: the Scripts > "Script as CREATE" entry
+ * passes 'saved' (the user's named notebook); the standalone "Edit View Definition"
+ * entry uses the default 'temp' (an untitled notebook the user can discard).
  */
-export async function cmdEditView(item: DatabaseTreeItem, context: vscode.ExtensionContext) {
+export async function cmdEditView(
+  item: DatabaseTreeItem,
+  context: vscode.ExtensionContext,
+  destination: 'saved' | 'temp' = 'temp',
+) {
   await CommandBase.run(context, item, 'create view edit notebook', async (conn: any, client: any, metadata: any) => {
     const viewResult = await client.query(QueryBuilder.viewDefinition(item.schema!, item.label));
     if (!viewResult.rows[0]?.definition) {
@@ -43,11 +51,11 @@ export async function cmdEditView(item: DatabaseTreeItem, context: vscode.Extens
 
     const createViewStatement = `CREATE OR REPLACE VIEW ${item.schema}.${item.label} AS\n${viewResult.rows[0].definition} `;
 
-    await new NotebookBuilder(metadata)
+    const builder = new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`✏️ Edit View: \`${item.schema}.${item.label}\``, 'Modify the view definition below and execute to update.'))
       .addMarkdown('##### 📝 View Definition')
-      .addSql(createViewStatement)
-      .show();
+      .addSql(createViewStatement);
+    await (destination === 'saved' ? builder.show() : builder.showTemp());
   });
 }
 
@@ -74,7 +82,7 @@ export async function cmdDropView(item: DatabaseTreeItem, context: vscode.Extens
         MarkdownUtils.dangerBox(`Dropping \`${item.schema}.${item.label}\` is permanent and will fail if dependent objects exist.`)
       )
       .addSql(ViewSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -94,7 +102,7 @@ export async function cmdViewOperations(item: DatabaseTreeItem, context: vscode.
       .addSql(ViewSQL.createOrReplace(item.schema!, item.label))
       .addMarkdown('##### 🗑️ DROP')
       .addSql(ViewSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -245,7 +253,7 @@ ${dependencyRows}
       .addSql(ViewSQL.select(item.schema!, item.label))
       .addMarkdown('##### 📊 View Definition Details')
       .addSql(ViewSQL.definition(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -266,6 +274,6 @@ export async function cmdCreateView(item: DatabaseTreeItem, context: vscode.Exte
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`➕ Create New View in Schema: \`${schema}\``, 'Create or replace a view using the template below.'))
       .addSql(ViewSQL.createOrReplace(schema, 'new_view'))
-      .show();
+      .showTemp();
   });
 }

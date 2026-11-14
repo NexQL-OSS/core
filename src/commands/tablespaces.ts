@@ -12,7 +12,7 @@ export async function cmdListTablespaces(item: DatabaseTreeItem, context: vscode
         MarkdownUtils.infoBox('Tablespaces define locations on disk where PostgreSQL stores database files. Requires superuser to create.')
       )
       .addSql(TablespaceSQL.list())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -30,7 +30,7 @@ export async function cmdShowTablespaceProperties(item: DatabaseTreeItem, contex
       .addSql(TablespaceSQL.getDefinition(tablespaceName))
       .addMarkdown('##### Objects in Tablespace')
       .addSql(TablespaceSQL.listObjects(tablespaceName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -55,7 +55,7 @@ export async function cmdTablespaceOperations(item: DatabaseTreeItem, context: v
       .addSql(TablespaceSQL.listObjects(tablespaceName))
       .addMarkdown('##### Drop Tablespace — WARNING: tablespace must be empty first')
       .addSql(TablespaceSQL.drop(tablespaceName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

@@ -36,6 +36,24 @@ export async function getDatabaseConnection(item: DatabaseTreeItem, validateFn: 
     release: () => client.release()
   };
 }
+/**
+ * Returns metadata safe to attach to an untitled notebook: a copy with `password`
+ * removed at the top level and under `custom.metadata`. Untitled notebooks can be
+ * backed up or saved by VS Code, so credentials must not ride along in metadata.
+ */
+export function stripNotebookPassword(metadata: any): any {
+  if (!metadata || typeof metadata !== 'object') {
+    return metadata ?? {};
+  }
+  const { password: _password, ...rest } = metadata;
+  const custom = rest.custom;
+  if (custom && typeof custom === 'object' && custom.metadata && typeof custom.metadata === 'object') {
+    const { password: _customPassword, ...customRest } = custom.metadata;
+    rest.custom = { ...custom, metadata: customRest };
+  }
+  return rest;
+}
+
 /** Fluent builder for notebook cells */
 export class NotebookBuilder {
   private cells: vscode.NotebookCellData[] = [];
@@ -172,6 +190,23 @@ export class NotebookBuilder {
       // Fallback when context not set (e.g. tests / legacy path)
       await createAndShowNotebook(this.cells, this.metadata);
     }
+  }
+
+  /**
+   * Opens the cells in a brand-new untitled notebook that is never written to
+   * `globalStorageUri`, never registered in `SessionRegistry` and never appended to
+   * the user's saved notebook for this connection+database.
+   *
+   * Use this for informational or one-shot output (reports, properties, operations
+   * menus, maintenance, destructive helpers) that the user should be able to close and
+   * discard. Use `show()` for SQL the user is meant to author, run and keep.
+   *
+   * Every call opens its own untitled notebook; nothing is appended to an earlier one.
+   * The connection is carried in notebook metadata (without the password: the kernel
+   * resolves credentials from the connection id) so cells still execute.
+   */
+  async showTemp(): Promise<void> {
+    await createAndShowNotebook(this.cells, stripNotebookPassword(this.metadata));
   }
 
   async show(): Promise<void> {

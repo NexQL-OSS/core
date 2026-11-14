@@ -21,7 +21,7 @@ export async function cmdListCronJobs(item: DatabaseTreeItem, _context: vscode.E
           ),
       )
       .addSql(PgCronSQL.listJobs())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -38,7 +38,7 @@ export async function cmdInstallPgCron(item: DatabaseTreeItem, _context: vscode.
           ),
       )
       .addSql(PgCronSQL.installExtension())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -53,7 +53,7 @@ export async function cmdScheduleCronJob(item: DatabaseTreeItem, _context: vscod
           MarkdownUtils.infoBox('Edit the cron expression and SQL body, then execute the cell.'),
       )
       .addSql(PgCronSQL.scheduleNewJob())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -74,7 +74,7 @@ export async function cmdShowCronJobProperties(item: DatabaseTreeItem, _context:
       .addSql(PgCronSQL.jobRunHistory(item.cronJobId))
       .addMarkdown('##### Alter / advanced')
       .addSql(PgCronSQL.alterJobNote())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -98,7 +98,7 @@ export async function cmdUnscheduleCronJob(item: DatabaseTreeItem, _context: vsc
           MarkdownUtils.dangerBox('This removes the job from the schedule. It cannot be undone except by creating a new job.'),
       )
       .addSql(PgCronSQL.unschedule(item.cronJobId))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

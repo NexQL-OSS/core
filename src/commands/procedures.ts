@@ -67,7 +67,7 @@ export async function cmdProcedureOperations(item: DatabaseTreeItem, context: vs
       .addSql(ProcedureSQL.createOrReplace(item.schema!))
       .addMarkdown('##### 🗑️ DROP')
       .addSql(ProcedureSQL.drop(item.schema!, item.label, procedureInfo.arguments || ''))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create procedure operations notebook');
   } finally {
@@ -95,7 +95,7 @@ export async function cmdEditProcedure(item: DatabaseTreeItem, context: vscode.E
       .addMarkdown(MarkdownUtils.header(`✏️ Edit Procedure: \`${item.schema}.${item.label}\``, 'Modify the procedure definition below and execute to update.'))
       .addMarkdown('##### 📝 Procedure Definition')
       .addSql(procedureInfo.definition)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create procedure edit notebook');
   } finally {
@@ -140,7 +140,7 @@ export async function cmdDropProcedure(item: DatabaseTreeItem, context: vscode.E
         MarkdownUtils.dangerBox(`Dropping \`${item.schema}.${item.label}\` is permanent and will fail if dependent objects exist.`)
       )
       .addSql(ProcedureSQL.drop(item.schema!, item.label, procedureInfo.arguments || ''))
-      .show();
+      .showTemp();
   });
 }
 
@@ -284,7 +284,7 @@ ${dependencyRows}
       .addSql(ProcedureSQL.drop(item.schema!, item.label, proc.arguments || ''))
       .addMarkdown('##### 📊 Procedure Metadata')
       .addSql(ProcedureSQL.metadata(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show procedure properties');
   } finally {
@@ -309,6 +309,6 @@ export async function cmdCreateProcedure(item: DatabaseTreeItem, context: vscode
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`➕ Create New Procedure in Schema: \`${schema}\``, 'Create or replace a procedure using the template below.'))
       .addSql(ProcedureSQL.createOrReplace(schema))
-      .show();
+      .showTemp();
   });
 }
