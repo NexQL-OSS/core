@@ -159,7 +159,7 @@ async function _openCreateExtensionNotebook(metadata: any): Promise<void> {
         )
     )
     .addSql('CREATE EXTENSION IF NOT EXISTS pg_stat_statements;')
-    .show();
+    .showTemp();
 }
 
 /** Open the main advisor notebook */
@@ -208,7 +208,7 @@ async function _openAdvisorNotebook(
       '-- Full pg_stat_statements output (top 20 by mean exec time)\n' +
         'SELECT * FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 20;'
     )
-    .show();
+    .showTemp();
 }
 
 // ---------------------------------------------------------------------------

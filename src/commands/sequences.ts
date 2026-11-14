@@ -13,7 +13,7 @@ export async function cmdListSequences(item: DatabaseTreeItem, context: vscode.E
         MarkdownUtils.infoBox('Lists all sequences in this schema with their current values and settings.')
       )
       .addSql(SequenceSQL.list(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -26,7 +26,7 @@ export async function cmdCreateSequence(item: DatabaseTreeItem, context: vscode.
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`➕ Create Sequence in Schema: \`${schema}\``, 'Create a new sequence in the current schema.'))
       .addSql(SequenceSQL.create(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -49,7 +49,7 @@ export async function cmdDropSequence(item: DatabaseTreeItem, context: vscode.Ex
         MarkdownUtils.dangerBox(`Dropping sequence "${schema}"."${seqName}". This is permanent.`)
       )
       .addSql(SequenceSQL.drop(schema, seqName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -66,7 +66,7 @@ export async function cmdSequenceNextValue(item: DatabaseTreeItem, context: vsco
         MarkdownUtils.warningBox('Calling nextval() will advance the sequence and cannot be rolled back even if the transaction fails.')
       )
       .addSql(SequenceSQL.nextValue(schema, seqName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -87,7 +87,7 @@ export async function cmdShowSequenceProperties(item: DatabaseTreeItem, context:
       .addSql(SequenceSQL.currentValue(schema, seqName))
       .addMarkdown('##### Alter Sequence Template')
       .addSql(SequenceSQL.alter(schema, seqName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -110,7 +110,7 @@ export async function cmdSequenceOperations(item: DatabaseTreeItem, context: vsc
       .addSql(SequenceSQL.alter(schema, seqName))
         .addMarkdown('##### 🗑️ Drop Sequence')
       .addSql(SequenceSQL.drop(schema, seqName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

@@ -13,6 +13,7 @@ function createBuilderStub(sandbox: sinon.SinonSandbox) {
   builder.addMarkdown = sandbox.stub().returns(builder);
   builder.addSql = sandbox.stub().returns(builder);
   builder.show = sandbox.stub().resolves();
+  builder.showTemp = sandbox.stub().resolves();
   builder.showNew = sandbox.stub().resolves();
   sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
     return builder;
@@ -109,7 +110,9 @@ describe('database commands', () => {
     expect((connectionModule.getConnectionWithPassword as sinon.SinonStub).callCount).to.equal(3);
     expect(getPooledClientStub.callCount).to.equal(3);
     expect(pooledClient.release.callCount).to.equal(3);
-    expect(builder.show.callCount).to.equal(3);
+    // Create and Drop Database are temp; the CREATE script is saved.
+    expect(builder.show.callCount).to.equal(1);
+    expect(builder.showTemp.callCount).to.equal(2);
     expect(builder.addSql.getCall(0).args[0]).to.include('CREATE DATABASE new_database;');
     expect(builder.addSql.getCall(2).args[0]).to.include('DROP DATABASE IF EXISTS "appdb";');
     expect(builder.addSql.getCall(3).args[0]).to.include('CREATE DATABASE "appdb"');
@@ -133,7 +136,8 @@ describe('database commands', () => {
     expect(openWorkspace.calledOnce).to.be.true;
     const cells = openWorkspace.firstCall.args[2] as Array<{ kind: string; value: string }>;
     expect(cells.some((cell) => cell.value.includes('Query Tool: `appdb`'))).to.be.true;
-    expect(builder.show.calledTwice).to.be.true;
+    expect(builder.showTemp.calledTwice).to.be.true;
+    expect(builder.show.called).to.be.false;
     expect(dbConnection.release.callCount).to.equal(3);
     expect(builder.addMarkdown.getCalls().some((call) => String(call.args[0]).includes('Database Maintenance: `appdb`'))).to.be.true;
     expect(builder.addMarkdown.getCalls().some((call) => String(call.args[0]).includes('Database Configuration: `appdb`'))).to.be.true;
@@ -184,7 +188,8 @@ describe('database commands', () => {
     expect(getDatabaseConnectionStub.callCount).to.equal(5);
     expect(dbConnection.release.callCount).to.equal(5);
     expect(quickPickStub.callCount).to.equal(5);
-    expect(builder.show.callCount).to.equal(4);
+    expect(builder.showTemp.callCount).to.equal(4);
+    expect(builder.show.called).to.be.false;
     expect(builder.addSql.callCount).to.be.greaterThan(0);
   });
 });

@@ -11,7 +11,7 @@ export async function cmdListRules(item: DatabaseTreeItem, context: vscode.Exten
     await new NotebookBuilder(metadata)
       .addMarkdown(MarkdownUtils.header(`⚙️ Rules on \`${schema}.${table}\``, 'Rules redirect or suppress SQL commands on a table or view.'))
       .addSql(RuleSQL.list(schema, table))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -35,7 +35,7 @@ export async function cmdDropRule(item: DatabaseTreeItem, context: vscode.Extens
         MarkdownUtils.dangerBox(`Dropping rule "${ruleName}" from "${schema}"."${table}". This is permanent.`)
       )
       .addSql(RuleSQL.drop(schema, table, ruleName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -53,7 +53,7 @@ export async function cmdShowRuleProperties(item: DatabaseTreeItem, context: vsc
         MarkdownUtils.infoBox(`Rule definition on "${schema}"."${table}". Shows the command it handles and the INSTEAD or ALSO qualifier.`)
       )
       .addSql(RuleSQL.getDefinition(schema, table, ruleName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -73,7 +73,7 @@ export async function cmdRuleOperations(item: DatabaseTreeItem, context: vscode.
       .addSql(RuleSQL.drop(schema, table, ruleName))
       .addMarkdown('##### 🗑️ Drop Rule CASCADE')
       .addSql(RuleSQL.dropCascade(schema, table, ruleName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

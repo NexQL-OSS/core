@@ -13,7 +13,7 @@ export async function cmdListAggregates(item: DatabaseTreeItem, context: vscode.
         MarkdownUtils.infoBox('Aggregate functions compute a single result from multiple input rows (e.g., SUM, AVG, custom aggregates).')
       )
       .addSql(AggregateSQL.list(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -36,7 +36,7 @@ export async function cmdDropAggregate(item: DatabaseTreeItem, context: vscode.E
         MarkdownUtils.dangerBox(`Dropping aggregate "${schema}"."${aggName}". Specify the argument types if needed.`)
       )
       .addSql(AggregateSQL.drop(schema, aggName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -53,7 +53,7 @@ export async function cmdShowAggregateProperties(item: DatabaseTreeItem, context
         MarkdownUtils.infoBox('Shows state transition function, final function, initial value, and data types.')
       )
       .addSql(AggregateSQL.getDefinition(schema, aggName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -69,7 +69,7 @@ export async function cmdCreateAggregate(item: DatabaseTreeItem, context: vscode
         MarkdownUtils.infoBox('Fill in the transition function (SFUNC), state data type (STYPE), and optionally a final function (FINALFUNC).')
       )
       .addSql(AggregateSQL.create(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

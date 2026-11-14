@@ -63,7 +63,7 @@ export async function cmdForeignDataWrapperOperations(item: DatabaseTreeItem, co
         .addSql(ForeignDataWrapperSQL.grant.usageOnFDW(item.label, 'role_name'))
         .addMarkdown('##### ❌ Drop Foreign Data Wrapper')
         .addSql(ForeignDataWrapperSQL.drop.fdw(item.label))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -129,7 +129,7 @@ ${serverRows}
         .addSql(ForeignDataWrapperSQL.query.fdwDetails(item.label))
         .addMarkdown('##### 🔍 Handler and Validator Functions')
         .addSql(ForeignDataWrapperSQL.query.fdwFunctions(item.label))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -193,7 +193,7 @@ export async function cmdCreateForeignServer(item: DatabaseTreeItem, context: vs
       .addMarkdown('##### ✅ Test Server Connection')
       .addSql(ForeignDataWrapperSQL.test.connection('server_name'))
       .addMarkdown(MarkdownUtils.warningBox('Remember to: 1) Replace placeholder values with actual connection details, 2) Use SSL/TLS for production, 3) Test the connection, 4) Create USER MAPPING for authentication, 5) Grant USAGE permission to appropriate roles.'))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create foreign server notebook');
   } finally {
@@ -259,7 +259,7 @@ export async function cmdForeignServerOperations(item: DatabaseTreeItem, context
         .addSql(ForeignDataWrapperSQL.test.connection(item.label))
         .addMarkdown('##### ❌ Drop Foreign Server')
         .addSql(ForeignDataWrapperSQL.drop.server(item.label))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -366,7 +366,7 @@ ${tableRows}
         .addSql(`${ForeignDataWrapperSQL.alter.serverOptions(item.label)}\n\n${ForeignDataWrapperSQL.alter.serverOwner(item.label)}\n\n${ForeignDataWrapperSQL.alter.serverRename(item.label)}`)
         .addMarkdown('##### 🗑️ DROP SERVER')
         .addSql(ForeignDataWrapperSQL.drop.server(item.label, true))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -422,7 +422,7 @@ export async function cmdCreateUserMapping(item: DatabaseTreeItem, context: vsco
       .addMarkdown('##### ✅ Test User Mapping')
       .addSql(`-- Test by querying a foreign table\n-- SELECT * FROM foreign_table_name LIMIT 1;\n\n-- Or test permissions\n${ForeignDataWrapperSQL.test.permissions(serverName)}`)
       .addMarkdown(MarkdownUtils.successBox('After creating user mapping, test it by querying a foreign table. If you get permission errors, check the remote server permissions and credentials.', 'Tip'))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create user mapping notebook');
   } finally {
@@ -480,7 +480,7 @@ export async function cmdUserMappingOperations(item: DatabaseTreeItem, context: 
         .addSql(ForeignDataWrapperSQL.test.permissions(serverName))
         .addMarkdown('##### ❌ Drop User Mapping')
         .addSql(ForeignDataWrapperSQL.drop.userMapping(serverName, userName))
-        .show();
+        .showTemp();
     } catch (err: any) {
       // If query fails, still show templates
       await new NotebookBuilder(metadata)
@@ -494,7 +494,7 @@ export async function cmdUserMappingOperations(item: DatabaseTreeItem, context: 
         .addSql(ForeignDataWrapperSQL.alter.userMappingOptions(serverName, userName))
         .addMarkdown('##### ❌ Drop User Mapping')
         .addSql(ForeignDataWrapperSQL.drop.userMapping(serverName, userName))
-        .show();
+        .showTemp();
     }
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create user mapping operations notebook');
@@ -568,7 +568,7 @@ ${optionRows}
         .addSql(ForeignDataWrapperSQL.alter.userMappingOptions(serverName, userName))
         .addMarkdown('##### 🗑️ DROP USER MAPPING')
         .addSql(ForeignDataWrapperSQL.drop.userMapping(serverName, userName))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -606,7 +606,7 @@ export async function cmdDropForeignServer(item: DatabaseTreeItem, context: vsco
       .addSql(ForeignDataWrapperSQL.drop.server(item.label))
       .addMarkdown('#### 🗑️ Drop Server with CASCADE (Drops All Foreign Tables)')
       .addSql(ForeignDataWrapperSQL.drop.server(item.label, true))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create drop server notebook');
   } finally {
@@ -640,7 +640,7 @@ export async function cmdDropUserMapping(item: DatabaseTreeItem, context: vscode
       )
       .addMarkdown('#### 🗑️ Drop User Mapping')
       .addSql(ForeignDataWrapperSQL.drop.userMapping(serverName, userName))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create drop user mapping notebook');
   } finally {

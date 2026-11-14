@@ -68,7 +68,7 @@ export async function showColumnProperties(item: DatabaseTreeItem) {
     nb.addMarkdown('##### 📖 Query Column')
       .addSql(ColumnSQL.select(item.schema!, tableName, columnName));
 
-    await nb.show();
+    await nb.showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'get column properties');
@@ -234,7 +234,7 @@ ${SQL_TEMPLATES.COMMENT.COLUMN(item.schema!, tableName, columnName, comment)}
 
 -- To remove a comment, use:
 -- COMMENT ON COLUMN ${item.schema}.${tableName}.${columnName} IS NULL;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'generate comment script');
   } finally {
@@ -296,7 +296,7 @@ WHERE schemaname = '${item.schema}'
 
 -- Run ANALYZE to refresh statistics if missing
 -- ANALYZE ${item.schema}.${tableName};`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'view column statistics');
   } finally {
@@ -328,7 +328,7 @@ ALTER TABLE ${schema}.${tableName}
 -- Use IF NOT EXISTS to suppress error if column already exists
 -- ALTER TABLE ${schema}.${tableName}
 --     ADD COLUMN IF NOT EXISTS column_name data_type;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'add column');
   } finally {

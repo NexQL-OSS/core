@@ -12,6 +12,7 @@ function createBuilderStub(sandbox: sinon.SinonSandbox) {
   builder.addMarkdown = sandbox.stub().returns(builder);
   builder.addSql = sandbox.stub().returns(builder);
   builder.show = sandbox.stub().resolves();
+  builder.showTemp = sandbox.stub().resolves();
   sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
     return builder;
   });
@@ -57,7 +58,9 @@ describe('view commands', () => {
 
     expect(runStub.callCount).to.equal(5);
     expect(refreshStub.calledOnceWithExactly(item)).to.be.true;
-    expect(builder.show.callCount).to.equal(5);
+    // SELECT, CREATE script and View Data are saved; Drop and Create View are temp.
+    expect(builder.show.callCount).to.equal(3);
+    expect(builder.showTemp.callCount).to.equal(2);
     expect(builder.addSql.firstCall.args[0]).to.equal(ViewSQL.select('public', 'active_users'));
     expect(builder.addSql.getCall(1).args[0]).to.contain('CREATE OR REPLACE VIEW public.active_users AS');
     expect(builder.addSql.getCall(2).args[0]).to.equal(ViewSQL.select('public', 'active_users'));
@@ -129,6 +132,7 @@ describe('view commands', () => {
     expect(builder.addSql.getCall(1).args[0]).to.equal(ViewSQL.select('public', 'active_users'));
     expect(builder.addSql.getCalls().some((call) => String(call.args[0]).includes('SELECT id, name FROM public.users'))).to.be.true;
     expect(builder.addSql.getCalls().some((call) => String(call.args[0]).includes('DROP VIEW IF EXISTS "public"."active_users";'))).to.be.true;
-    expect(builder.show.calledThrice).to.be.true;
+    expect(builder.showTemp.calledThrice).to.be.true;
+    expect(builder.show.called).to.be.false;
   });
 });

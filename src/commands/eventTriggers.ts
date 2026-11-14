@@ -12,7 +12,7 @@ export async function cmdListEventTriggers(item: DatabaseTreeItem, context: vsco
         MarkdownUtils.infoBox('Event triggers fire on DDL events (ddl_command_start, ddl_command_end, table_rewrite, sql_drop). Requires superuser to create.')
       )
       .addSql(EventTriggerSQL.list())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -27,7 +27,7 @@ export async function cmdCreateEventTrigger(item: DatabaseTreeItem, context: vsc
         MarkdownUtils.warningBox('Creating event triggers requires superuser privileges. Event triggers fire on DDL operations.')
       )
       .addSql(EventTriggerSQL.create())
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -49,7 +49,7 @@ export async function cmdDropEventTrigger(item: DatabaseTreeItem, context: vscod
         MarkdownUtils.dangerBox(`Dropping event trigger "${triggerName}". This is permanent.`)
       )
       .addSql(EventTriggerSQL.drop(triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -65,7 +65,7 @@ export async function cmdEnableEventTrigger(item: DatabaseTreeItem, context: vsc
         MarkdownUtils.infoBox(`Enabling event trigger "${triggerName}".`)
       )
       .addSql(EventTriggerSQL.enable(triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -81,7 +81,7 @@ export async function cmdDisableEventTrigger(item: DatabaseTreeItem, context: vs
         MarkdownUtils.warningBox(`Disabling event trigger "${triggerName}". DDL events will not fire this trigger until re-enabled.`)
       )
       .addSql(EventTriggerSQL.disable(triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -97,7 +97,7 @@ export async function cmdShowEventTriggerProperties(item: DatabaseTreeItem, cont
         MarkdownUtils.infoBox('Shows event trigger details, function definition, and current status.')
       )
       .addSql(EventTriggerSQL.getDefinition(triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -125,7 +125,7 @@ export async function cmdEventTriggerOperations(item: DatabaseTreeItem, context:
       .addSql(EventTriggerSQL.disable(triggerName))
       .addMarkdown('##### Drop — WARNING: permanently deletes the trigger')
       .addSql(EventTriggerSQL.drop(triggerName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

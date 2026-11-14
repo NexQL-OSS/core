@@ -13,7 +13,7 @@ export async function cmdListDomains(item: DatabaseTreeItem, context: vscode.Ext
         MarkdownUtils.infoBox('Domains are user-defined data types with optional constraints. They are based on existing types.')
       )
       .addSql(DomainSQL.list(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -29,7 +29,7 @@ export async function cmdCreateDomain(item: DatabaseTreeItem, context: vscode.Ex
         MarkdownUtils.infoBox('Domains constrain an existing base type with optional NOT NULL, DEFAULT, and CHECK constraints.')
       )
       .addSql(DomainSQL.create(schema))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -54,7 +54,7 @@ export async function cmdDropDomain(item: DatabaseTreeItem, context: vscode.Exte
       .addSql(DomainSQL.drop(schema, domainName))
       .addMarkdown('##### Drop with CASCADE (also drops dependent objects)')
       .addSql(DomainSQL.dropCascade(schema, domainName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }
@@ -71,7 +71,7 @@ export async function cmdShowDomainProperties(item: DatabaseTreeItem, context: v
         MarkdownUtils.infoBox('Shows base type, constraints, default value, and NOT NULL setting.')
       )
       .addSql(DomainSQL.getDefinition(schema, domainName))
-      .show();
+      .showTemp();
   } finally {
     release();
   }

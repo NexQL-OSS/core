@@ -372,7 +372,7 @@ WHERE p.prokind = 'a' AND n.nspname = '${row.schema}' AND p.proname = '${row.nam
             MarkdownUtils.infoBox(`Object type: ${row.type} | Schema: ${row.schema}`),
         )
         .addSql(sql)
-        .show();
+        .showTemp();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       void vscode.window.showErrorMessage(`Could not open object: ${msg}`);

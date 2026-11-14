@@ -37,7 +37,7 @@ export async function cmdMaintenanceVacuum(item: DatabaseTreeItem, context: vsco
         MarkdownUtils.successBox('PostgreSQL has autovacuum running automatically, but manual VACUUM can be useful after bulk operations. Use VACUUM FULL only during maintenance windows as it locks the table.')
       )
       .addSql(TableSQL.vacuum(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -74,7 +74,7 @@ export async function cmdMaintenanceAnalyze(item: DatabaseTreeItem, context: vsc
         MarkdownUtils.successBox('ANALYZE is fast and non-blocking. Run it frequently, especially after data changes. Use VERBOSE to see detailed statistics updates.')
       )
       .addSql(TableSQL.analyze(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -120,6 +120,6 @@ export async function cmdMaintenanceReindex(item: DatabaseTreeItem, context: vsc
         MarkdownUtils.dangerBox('REINDEX locks the table for writes. Schedule during maintenance windows or use REINDEX CONCURRENTLY if supported.', 'Caution')
       )
       .addSql(TableSQL.reindex(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }

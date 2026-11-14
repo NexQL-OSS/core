@@ -33,7 +33,7 @@ export async function cmdRefreshMatView(item: DatabaseTreeItem, context: vscode.
       .addMarkdown(MarkdownUtils.header(`🔄 Refresh Materialized View: \`${item.schema}.${item.label}\``, 'Refresh the materialized view data from underlying tables.'))
       .addMarkdown('##### 🔄 REFRESH')
       .addSql(MaterializedViewSQL.refresh(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create refresh materialized view notebook');
   } finally {
@@ -64,7 +64,7 @@ export async function cmdEditMatView(item: DatabaseTreeItem, context: vscode.Ext
           )
         .addMarkdown('##### 📝 View Definition')
         .addSql(`DROP MATERIALIZED VIEW IF EXISTS ${qualified};\n\n${createMatViewStatement}`)
-        .show();
+        .showTemp();
     } finally {
       // Connection is managed by ConnectionManager
     }
@@ -254,7 +254,7 @@ ${dependencyRows}
         .addSql(`-- Get detailed statistics\nSELECT \n    schemaname,\n    matviewname,\n    matviewowner,\n    tablespace,\n    hasindexes,\n    ispopulated,\n    pg_size_pretty(pg_total_relation_size(schemaname||'.'||matviewname)) as total_size\nFROM pg_matviews\nWHERE schemaname = '${item.schema}' AND matviewname = '${item.label}';\n\n-- Check when it was last refreshed\nSELECT \n    schemaname,\n    relname,\n    last_vacuum,\n    last_autovacuum,\n    last_analyze,\n    last_autoanalyze,\n    n_live_tup,\n    n_dead_tup\nFROM pg_stat_user_tables\nWHERE schemaname = '${item.schema}' AND relname = '${item.label}';`)
         .addMarkdown('##### 🗑️ DROP Materialized View Script')
         .addSql(MaterializedViewSQL.drop(item.schema!, item.label))
-        .show();
+        .showTemp();
     } finally {
       // Do not close shared client
     }
@@ -281,7 +281,7 @@ export async function cmdDropMatView(item: DatabaseTreeItem, context: vscode.Ext
       )
       .addMarkdown('##### 🗑️ DROP')
       .addSql(MaterializedViewSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create drop materialized view notebook');
   } finally {
@@ -311,7 +311,7 @@ export async function cmdMatViewOperations(item: DatabaseTreeItem, context: vsco
       .addSql(MaterializedViewSQL.createIndex(item.schema!, item.label))
       .addMarkdown('##### ❌ DROP — ⚠️ Warning: permanently deletes the materialized view')
       .addSql(MaterializedViewSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show materialized view operations');
   } finally {
@@ -334,7 +334,7 @@ export async function cmdCreateMaterializedView(item: DatabaseTreeItem, context:
       .addMarkdown(`### ➕ Create New Materialized View in Schema: \`${schema}\`\n\nCreate a materialized view using the template below.`)
       .addMarkdown('##### 📝 CREATE MATERIALIZED VIEW')
       .addSql(MaterializedViewSQL.create(schema, 'new_matview'))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create materialized view notebook');
   } finally {

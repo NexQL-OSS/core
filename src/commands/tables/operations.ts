@@ -38,7 +38,7 @@ export async function cmdTableOperations(item: DatabaseTreeItem, context: vscode
       .addMarkdown('##### DROP\n\n⚠️ Warning: This operation permanently deletes the table and all its data.')
       .addSql(TableSQL.drop(item.schema!, item.label));
 
-    await notebook.show();
+    await notebook.showTemp();
   });
 }
 
@@ -149,7 +149,7 @@ export async function cmdDropTable(item: DatabaseTreeItem, context: vscode.Exten
       .addSql(QueryBuilder.objectDependencies(item.schema!, item.label))
       .addMarkdown('##### DROP\n\n⚠️ Warning: This operation permanently deletes the table and all its data.')
       .addSql(TableSQL.drop(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -159,7 +159,7 @@ export async function cmdTruncateTable(item: DatabaseTreeItem, context: vscode.E
       .addMarkdown(`### 🧹 Truncate Table: \`${item.schema}.${item.label}\`\n\nRemove all rows from the \`${item.schema}.${item.label}\` table.`)
       .addMarkdown('##### TRUNCATE\n\n⚠️ Warning: This operation removes all rows permanently and cannot be filtered.')
       .addSql(TableSQL.truncate(item.schema!, item.label))
-      .show();
+      .showTemp();
   });
 }
 
@@ -470,7 +470,7 @@ FROM pg_stats
 WHERE schemaname = '${item.schema}' AND tablename = '${item.label}'
 ORDER BY attname;`);
 
-    await notebook.show();
+    await notebook.showTemp();
   });
 }
 
@@ -668,7 +668,7 @@ CREATE TABLE ${schema}.logs_2024_02 PARTITION OF ${schema}.logs
 -- Create index on partitioned table
 CREATE INDEX idx_logs_created_at ON ${schema}.logs(created_at);`)
       .addMarkdown(MarkdownUtils.warningBox('After creating a table, remember to: 1) Add appropriate indexes for query patterns, 2) Set up foreign key relationships, 3) Grant necessary permissions to roles.'))
-      .show();
+      .showTemp();
   });
 }
 
@@ -698,6 +698,6 @@ SELECT * FROM ${schema}.${table};
 -- 'INCLUDING ALL' copies defaults, so if default is nextval('seq'), both tables share the sequence.
 -- You might want to create a new sequence for the copy.
 `)
-      .show();
+      .showTemp();
   });
 }

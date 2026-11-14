@@ -338,7 +338,7 @@ FROM pg_extension
 ORDER BY extname;`);
       }
 
-      await builder.show();
+      await builder.showTemp();
     }
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create notebook');
@@ -432,7 +432,7 @@ ${QueryBuilder.databaseMaintenanceStats()}
       .addSql(`-- Terminate connections (BE CAREFUL!)
 -- List commands to terminate other connections to this database
 ${QueryBuilder.databaseTerminateConnections()}`)
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create database operations notebook');
@@ -491,7 +491,7 @@ CREATE DATABASE new_database;
 --     LC_CTYPE = 'en_US.UTF-8'
 --     TEMPLATE = template0
 --     CONNECTION LIMIT = -1;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create database notebook');
   } finally {
@@ -533,7 +533,7 @@ ${QueryBuilder.terminateConnectionsByPid(item.label)}`)
       .addMarkdown(`##### ❌ Drop Command`)
       .addSql(`-- Drop database (use with extreme caution!)
 DROP DATABASE IF EXISTS "${item.label}";`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create delete database notebook');
   } finally {
@@ -642,7 +642,7 @@ export async function cmdMaintenanceDatabase(item: DatabaseTreeItem, context: vs
       .addSql(`-- Check tables with dead tuples\n` + QueryBuilder.databaseMaintenanceStats())
       .addMarkdown(`##### 🔄 REINDEX (Use with Caution)`)
       .addSql(MaintenanceTemplates.reindexDatabase(item.label) + `\n\n-- Reindex specific table (safer approach)\n-- REINDEX TABLE schema_name.table_name;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create maintenance notebook');
   } finally {
@@ -729,7 +729,7 @@ export async function cmdShowConfiguration(item: DatabaseTreeItem, context: vsco
       .addSql(`-- Memory-related settings\n` + QueryBuilder.databaseMemorySettings())
       .addMarkdown(`##### 🔗 Connection Settings`)
       .addSql(`-- Connection-related settings\n` + QueryBuilder.databaseConnectionSettings())
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show configuration');
   } finally {

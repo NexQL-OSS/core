@@ -90,7 +90,7 @@ export async function cmdTableProfile(item: DatabaseTreeItem, context: vscode.Ex
       builder.addMarkdown('#### 🔍 Query: Column Details\n\nDetailed column information with types, defaults, and constraints.');
       builder.addSql(ProfileSQL.columnDetails(item.schema, item.label));
 
-      await builder.show();
+      await builder.showTemp();
 
     } finally {
       release();
@@ -183,7 +183,7 @@ export async function cmdTableActivity(item: DatabaseTreeItem, context: vscode.E
       builder.addMarkdown('#### ⚡ Query: Table Activity Statistics\n\nAccess patterns, data modifications, and maintenance history.');
       builder.addSql(ProfileSQL.tableActivity(item.schema, item.label));
 
-      await builder.show();
+      await builder.showTemp();
 
     } finally {
       release();
@@ -261,7 +261,7 @@ export async function cmdIndexUsage(item: DatabaseTreeItem, context: vscode.Exte
       builder.addMarkdown('#### 📑 Query: Index Usage Details\n\nFetch index names, types, sizes, and access statistics.');
       builder.addSql(ProfileSQL.indexUsage(item.schema, item.label));
 
-      await builder.show();
+      await builder.showTemp();
 
     } finally {
       release();

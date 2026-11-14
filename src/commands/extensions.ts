@@ -33,7 +33,7 @@ export async function cmdEnableExtension(item: DatabaseTreeItem, context: vscode
       )
       .addMarkdown('##### 🔌 Enable Command')
       .addSql(ExtensionSQL.enable(extensionName))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create extension notebook');
@@ -74,7 +74,7 @@ export async function cmdExtensionOperations(item: DatabaseTreeItem, context: vs
       .addSql(QueryBuilder.extensionObjects(extensionName))
       .addMarkdown('##### ❌ Drop Extension')
       .addSql(ExtensionSQL.drop(extensionName))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create extension operations notebook');
@@ -104,7 +104,7 @@ export async function cmdDropExtension(item: DatabaseTreeItem, context: vscode.E
       )
       .addMarkdown('##### ❌ Drop Command')
       .addSql(ExtensionSQL.dropCascade(extensionName))
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create drop extension notebook');

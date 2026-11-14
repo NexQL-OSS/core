@@ -130,7 +130,7 @@ FROM pg_namespace n
 WHERE has_schema_privilege('${roleName}', n.nspname, 'USAGE')
 AND n.nspname NOT LIKE 'pg_%'
 AND n.nspname != 'information_schema';`)
-      .show();
+      .showTemp();
 
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show role properties');
@@ -169,7 +169,7 @@ export async function cmdAddUser(item: DatabaseTreeItem, context: vscode.Extensi
     await new NotebookBuilder(metadata)
       .addMarkdown(`### ➕ Create New User\n\nCreate a new PostgreSQL user with login privileges.`)
       .addSql(UserRoleSQL.createUser(item.databaseName || 'database_name'))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create user notebook');
   } finally {
@@ -189,7 +189,7 @@ export async function cmdAddRole(item: DatabaseTreeItem, context: vscode.Extensi
     await new NotebookBuilder(metadata)
       .addMarkdown(`### ➕ Create New Role\n\nCreate a new PostgreSQL role for grouping privileges.`)
       .addSql(UserRoleSQL.createRole())
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'create role notebook');
   } finally {
@@ -209,7 +209,7 @@ export async function cmdEditRole(item: DatabaseTreeItem, context: vscode.Extens
     await new NotebookBuilder(metadata)
       .addMarkdown(`### ✏️ Edit Role: \`${item.label}\`\n\nModify role attributes using ALTER ROLE.`)
       .addSql(UserRoleSQL.alterRole(item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'edit role');
   } finally {
@@ -229,7 +229,7 @@ export async function cmdGrantRevokeRole(item: DatabaseTreeItem, context: vscode
     await new NotebookBuilder(metadata)
       .addMarkdown(`### 🔐 Manage Privileges: \`${item.label}\`\n\nGrant or revoke privileges for this role.`)
       .addSql(UserRoleSQL.grant(item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'manage privileges');
   } finally {
@@ -249,7 +249,7 @@ export async function cmdDropRole(item: DatabaseTreeItem, context: vscode.Extens
     await new NotebookBuilder(metadata)
       .addMarkdown(`### ❌ Drop Role: \`${item.label}\`\n\n⚠️ **Warning:** This permanently deletes the role. Reassign or drop owned objects first.`)
       .addSql(UserRoleSQL.dropRole(item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'drop role');
   } finally {
@@ -291,7 +291,7 @@ WHERE r.rolname = '${item.label}';`)
       .addSql(UserRoleSQL.grant(item.label))
       .addMarkdown('##### ❌ DROP ROLE — ⚠️ Warning: permanently deletes the role')
       .addSql(UserRoleSQL.dropRole(item.label))
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'show role operations');
   } finally {
@@ -327,7 +327,7 @@ JOIN pg_namespace n ON n.oid = c.relnamespace
 JOIN pg_roles r ON r.oid = c.relowner
 WHERE r.rolname = '${item.label}'
 ORDER BY n.nspname, c.relname;`)
-      .show();
+      .showTemp();
   } catch (err: any) {
     await ErrorHandlers.handleCommandError(err, 'view role dependencies');
   } finally {

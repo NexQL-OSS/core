@@ -31,6 +31,7 @@ describe('cmdDatabaseHealth', () => {
     builder.addMarkdown = sandbox.stub().returns(builder);
     builder.addSql = sandbox.stub().returns(builder);
     builder.show = sandbox.stub().resolves();
+    builder.showTemp = sandbox.stub().resolves();
     sandbox.stub(helper as any, 'NotebookBuilder').callsFake(function () {
       return builder;
     });
@@ -65,7 +66,8 @@ describe('cmdDatabaseHealth', () => {
     await cmdDatabaseHealth(item);
 
     expect(handleError.called, String(handleError.firstCall?.args[0])).to.equal(false);
-    expect(builder.show.calledOnce).to.equal(true);
+    expect(builder.showTemp.calledOnce).to.equal(true);
+    expect(builder.show.called).to.equal(false);
     const sql: string[] = builder.addSql.getCalls().map((c: any) => c.args[0]);
     expect(sql).to.have.length(6);
     expect(sql[5]).to.include('total_exec_time');
@@ -87,6 +89,6 @@ describe('cmdDatabaseHealth', () => {
   it('still rejects a selection with no connection', async () => {
     await cmdDatabaseHealth({ label: 'x' } as any);
     expect(handleError.calledOnce).to.equal(true);
-    expect(builder.show.called).to.equal(false);
+    expect(builder.showTemp.called).to.equal(false);
   });
 });
