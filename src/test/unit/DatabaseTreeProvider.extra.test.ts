@@ -4,6 +4,24 @@ import * as vscode from 'vscode';
 
 import { DatabaseTreeItem, DatabaseTreeProvider } from '../../providers/DatabaseTreeProvider';
 import { ConnectionManager } from '../../services/ConnectionManager';
+import { PlatformConnectionService } from '../../services/PlatformConnectionService';
+import * as logger from '../../common/logger';
+import { NotebookIndexService } from '../../services/NotebookIndexService';
+import { QueryHistoryService } from '../../services/QueryHistoryService';
+import { SavedQueriesService } from '../../features/savedQueries/SavedQueriesService';
+
+/**
+ * The provider probes the server version and platform on every expand.
+ * Answer `SHOW server_version_num` here so each test's onCall(n) stubs stay
+ * aligned with the catalog queries it is actually asserting on.
+ */
+function answerVersionProbe(client: { query: sinon.SinonStub }): void {
+  const catalog = client.query;
+  (client as any).query = (sql: string, ...rest: unknown[]) =>
+    /SHOW\s+server_version_num/i.test(String(sql))
+      ? Promise.resolve({ rows: [{ server_version_num: '160000' }] })
+      : catalog(sql, ...rest);
+}
 
 describe('DatabaseTreeProvider additional coverage', () => {
   let sandbox: sinon.SinonSandbox;
@@ -30,6 +48,9 @@ describe('DatabaseTreeProvider additional coverage', () => {
     connectionManagerStub = {
       getPooledClient: sandbox.stub(),
     };
+    connectionManagerStub.getPooledClient.callsFake(async () => undefined);
+    sandbox.stub(PlatformConnectionService.prototype, 'probeIfNeeded').resolves({} as any);
+    sandbox.stub(PlatformConnectionService.prototype, 'getProfile').returns(undefined);
     sandbox.stub(ConnectionManager, 'getInstance').returns(connectionManagerStub);
 
     sandbox.stub(vscode.window, 'showInformationMessage').resolves(undefined);
@@ -76,8 +97,11 @@ describe('DatabaseTreeProvider additional coverage', () => {
       query: sandbox.stub(),
       release: sandbox.stub(),
     };
-    client.query.onCall(0).resolves({ rows: [{ count: '3' }] });
-    client.query.onCall(1).resolves({ rows: [{ count: '1' }] });
+    client.query.onCall(0).resolves({ rows: [{ db_count: '3', roles_count: '1', tablespace_count: '1' }] });
+    sandbox.stub(NotebookIndexService, 'getInstance').returns({ getNotebooksForConnection: () => [] } as any);
+    sandbox.stub(SavedQueriesService, 'getInstance').returns({ getByConnection: () => [] } as any);
+    sandbox.stub(QueryHistoryService, 'getInstance').returns({ getByConnection: () => [] } as any);
+    answerVersionProbe(client);
     connectionManagerStub.getPooledClient.resolves(client);
 
     const connectionItem = new DatabaseTreeItem('Primary', vscode.TreeItemCollapsibleState.Collapsed, 'connection', 'c1');
@@ -184,7 +208,7 @@ describe('DatabaseTreeProvider additional coverage', () => {
   });
 
   it('returns early when no tree view is configured for reveal', async () => {
-    const warn = sandbox.stub(console, 'warn');
+    const warn = sandbox.stub(logger, 'debugWarn');
     const provider = new DatabaseTreeProvider(contextStub);
 
     await provider.revealItem('c1');
@@ -204,6 +228,8 @@ describe('DatabaseTreeProvider additional coverage', () => {
     client.query.onCall(0).resolves({ rows: [{ table_schema: 'public', table_name: 'users', columns: ['id', 'name'] }] });
     client.query.onCall(1).resolves({ rows: [{ table_schema: 'public', table_name: 'user_view', columns: ['id'] }] });
     client.query.onCall(2).resolves({ rows: [{ schema_name: 'public', function_name: 'calc_total' }] });
+    client.query.onCall(3).resolves({ rows: [] }); // procedures (PG 11+)
+    answerVersionProbe(client);
     connectionManagerStub.getPooledClient.resolves(client);
 
     const objects = await provider.getDbObjectsForConnection({ id: 'c1', host: 'localhost', port: 5432, username: 'postgres', database: 'appdb', name: 'Primary' });
@@ -227,6 +253,7 @@ describe('DatabaseTreeProvider additional coverage', () => {
     };
     client.query.onCall(0).resolves({ rows: [{ name: 'remote_server' }] });
     client.query.onCall(1).resolves({ rows: [{ name: 'mapping_user' }] });
+    answerVersionProbe(client);
     connectionManagerStub.getPooledClient.resolves(client);
 
     const fdwChildren = await provider.getChildren(new DatabaseTreeItem('postgres_fdw', vscode.TreeItemCollapsibleState.Collapsed, 'foreign-data-wrapper', 'c1', 'appdb'));

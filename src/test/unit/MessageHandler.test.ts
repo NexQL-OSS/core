@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
+import * as logger from '../../common/logger';
 
 import { MessageHandlerRegistry } from '../../services/MessageHandler';
 
@@ -29,7 +30,7 @@ describe('MessageHandlerRegistry', () => {
   });
 
   it('warns when overwriting handlers and surfaces handler errors', async () => {
-    const warnStub = sandbox.stub(console, 'warn');
+    const warnStub = sandbox.stub(logger, 'debugWarn');
     const errorStub = sandbox.stub(console, 'error');
     const showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage').resolves(undefined as any);
 
@@ -47,7 +48,7 @@ describe('MessageHandlerRegistry', () => {
   });
 
   it('warns when no handler is registered', async () => {
-    const warnStub = sandbox.stub(console, 'warn');
+    const warnStub = sandbox.stub(logger, 'debugWarn');
     const registry = MessageHandlerRegistry.getInstance();
 
     await registry.handleMessage({ type: 'missing-handler' }, {});

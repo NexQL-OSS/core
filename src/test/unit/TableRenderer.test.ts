@@ -3,6 +3,8 @@ import * as sinon from 'sinon';
 import { JSDOM } from 'jsdom';
 import { TableRenderer } from '../../renderer/components/table/TableRenderer';
 
+const NodeAbortController = globalThis.AbortController;
+
 describe('TableRenderer', () => {
   let sandbox: sinon.SinonSandbox;
   let dom: JSDOM;
@@ -15,6 +17,12 @@ describe('TableRenderer', () => {
     (global as any).document = dom.window.document;
     (global as any).MouseEvent = dom.window.MouseEvent;
     (global as any).Event = dom.window.Event;
+    (global as any).HTMLElement = dom.window.HTMLElement;
+    (global as any).HTMLTableRowElement = dom.window.HTMLTableRowElement;
+    // The modal editor passes an AbortSignal to jsdom's addEventListener; it must be jsdom's own.
+    (global as any).AbortController = dom.window.AbortController;
+    // jsdom has no layout, so no scrollIntoView; the cell editor calls it.
+    dom.window.HTMLElement.prototype.scrollIntoView = function () {};
     (global as any).IntersectionObserver = class {
       observe() {}
       disconnect() {}
@@ -33,6 +41,9 @@ describe('TableRenderer', () => {
     delete (global as any).document;
     delete (global as any).MouseEvent;
     delete (global as any).Event;
+    delete (global as any).HTMLElement;
+    delete (global as any).HTMLTableRowElement;
+    (global as any).AbortController = NodeAbortController;
     delete (global as any).IntersectionObserver;
   });
 
@@ -79,11 +90,12 @@ describe('TableRenderer', () => {
 
     editableCell.dispatchEvent(new dom.window.MouseEvent('dblclick', { bubbles: true }));
 
-    const editor = editableCell.querySelector('input') as HTMLInputElement;
+    // Text columns open the modal long-text editor; Ctrl+Enter saves.
+    const editor = dom.window.document.querySelector('textarea') as HTMLTextAreaElement;
     expect(editor).to.exist;
     editor.value = 'Changed';
     editor.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    editor.dispatchEvent(new dom.window.Event('blur'));
+    editor.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 

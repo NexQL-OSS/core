@@ -3,7 +3,7 @@ import { escapeHtml, simpleMarkdownToHtml } from '../../features/notebook/notebo
 
 describe('notebookExportHtml', () => {
   it('escapeHtml escapes special characters', () => {
-    expect(escapeHtml(`<&>"'`)).to.equal('&amp;&lt;&gt;&quot;&#39;');
+    expect(escapeHtml(`<&>"'`)).to.equal('&lt;&amp;&gt;&quot;&#39;');
   });
 
   it('simpleMarkdownToHtml handles headers and paragraphs', () => {

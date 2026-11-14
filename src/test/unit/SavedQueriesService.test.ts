@@ -85,7 +85,8 @@ describe('SavedQueriesService', () => {
     await service.deleteQuery('stored');
     expect(service.getQuery('stored')).to.equal(undefined);
 
-    expect((context.workspaceState.update as sinon.SinonStub).callCount).to.be.greaterThan(0);
+    // Saved queries persist to globalState (migrated off workspaceState).
+    expect((context.globalState.update as sinon.SinonStub).callCount).to.be.greaterThan(0);
     clock.restore();
   });
 

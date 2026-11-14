@@ -31,6 +31,8 @@ describe('TelemetryService', () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     (TelemetryService as any).instance = undefined;
+    // The shipped posthogApiKey default is a real project key: every config
+    // stub below returns '' for it so no PostHog sink is built in tests.
   });
 
   afterEach(() => {
@@ -48,6 +50,7 @@ describe('TelemetryService', () => {
             if (key === 'mode') return mode as unknown as T;
             if (key === 'allowUsage') return true as unknown as T;
             if (key === 'allowPerformance') return false as unknown as T;
+            if (key === 'posthogApiKey') return '' as unknown as T;
             return defaultValue as T;
           }
         } as any;
@@ -73,7 +76,8 @@ describe('TelemetryService', () => {
     service.initialize(context);
 
     expect(createOutputChannelStub.called).to.be.true;
-    expect(context.subscriptions).to.have.lengthOf(1);
+    // Config listener + flush-on-dispose.
+    expect(context.subscriptions).to.have.lengthOf(2);
 
     expect(service.startSpan('query.execute')).to.equal('');
     service.recordMetric('rows', 5, 'count');
@@ -103,6 +107,7 @@ describe('TelemetryService', () => {
             if (key === 'allowPerformance') return true as unknown as T;
             if (key === 'maxBatchSize') return 10 as unknown as T;
             if (key === 'flushIntervalMs') return 5000 as unknown as T;
+            if (key === 'posthogApiKey') return '' as unknown as T;
             return defaultValue as T;
           }
         } as any;
@@ -124,7 +129,8 @@ describe('TelemetryService', () => {
     const context = createContext();
     service.initialize(context);
 
-    expect(context.subscriptions).to.have.lengthOf(1);
+    // Config listener + flush-on-dispose.
+    expect(context.subscriptions).to.have.lengthOf(2);
 
     const clock = sandbox.useFakeTimers({ now: 1_000 });
 
@@ -177,6 +183,7 @@ describe('TelemetryService', () => {
             if (key === 'mode') return 'basic' as unknown as T;
             if (key === 'allowUsage') return true as unknown as T;
             if (key === 'allowPerformance') return false as unknown as T;
+            if (key === 'posthogApiKey') return '' as unknown as T;
             return defaultValue as T;
           }
         } as any;
@@ -199,6 +206,7 @@ describe('TelemetryService', () => {
     service.trackEvent('command_invoked', { group: 'test' });
     service.trackEvent('extension_activated', {});
     service.trackEvent('daily_active_user', {});
+    await service.flush();
 
     expect(appendLine.callCount).to.be.greaterThan(0);
     const calls = appendLine.getCalls();
@@ -226,6 +234,7 @@ describe('TelemetryService', () => {
             if (key === 'mode') return 'basic' as unknown as T;
             if (key === 'allowUsage') return true as unknown as T;
             if (key === 'allowPerformance') return false as unknown as T;
+            if (key === 'posthogApiKey') return '' as unknown as T;
             return defaultValue as T;
           }
         } as any;
@@ -249,6 +258,7 @@ describe('TelemetryService', () => {
     service.trackEvent('agentic_loop_started', { provider: 'claude', database: 'testdb' });
     service.trackEvent('agentic_pseudo_tool_call_recovered', { provider: 'claude', count: 2 });
     service.trackEvent('agentic_loop_completed', { provider: 'claude', turns: 3, database: 'testdb', success: true });
+    await service.flush();
 
     expect(appendLine.callCount).to.be.greaterThan(0);
     const calls = appendLine.getCalls();

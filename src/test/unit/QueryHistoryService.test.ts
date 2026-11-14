@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
+import * as vscode from 'vscode';
 
 import { QueryHistoryService } from '../../services/QueryHistoryService';
 
@@ -63,16 +64,23 @@ describe('QueryHistoryService', () => {
     expect(changed.callCount).to.equal(4);
   });
 
-  it('trims to the maximum history size and computes trend statistics', async () => {
+  it('trims each connection/database history to the maximum size and computes trend statistics', async () => {
     const storage = createStorage();
     QueryHistoryService.initialize(storage);
     const service = QueryHistoryService.getInstance();
+    // Default cap is 200; pin it to 100 so 101 adds exercise the trim.
+    sandbox.stub(vscode.workspace, 'getConfiguration').returns({
+      get: (key: string, def?: unknown) => (key === 'postgresExplorer.queryHistory.maxItems' ? 100 : def),
+      update: async () => undefined,
+    } as any);
 
     sandbox.useFakeTimers({ now: 10_000 });
 
     for (let index = 0; index < 101; index++) {
       await service.add({
         query: `select ${index}`,
+        connectionId: 'conn-1',
+        databaseName: 'appdb',
         success: index % 2 === 0,
         durationMs: index === 100 ? undefined : index + 1,
         duration: index === 100 ? 2 : undefined,

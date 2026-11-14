@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { NotebookStatusBar } from '../../activation/statusBar';
 import { ProfileManager } from '../../features/connections/ProfileManager';
 import * as TransactionModule from '../../services/TransactionManager';
+import { accessModeText } from '../../common/accessMode';
 
 const extensionModule = require('../../extension');
 
@@ -98,22 +99,23 @@ describe('NotebookStatusBar', () => {
     (vscode.window as any).activeNotebookEditor = createNotebookEditor('postgres-query', {});
     statusBar.update();
 
-    const [connectionItem, databaseItem, riskItem, profileItem, transactionItem, workspaceItem] = items;
+    // Creation order in NotebookStatusBar's constructor.
+    const [connectionItem, databaseItem, userItem, environmentItem, profileItem, transactionItem, tierItem, accessModeItem] = items;
+    expect(items).to.have.lengthOf(8);
     expect(connectionItem.text).to.equal('$(plug) Click to Connect');
     expect(connectionItem.backgroundColor.id).to.equal('statusBarItem.warningBackground');
     expect(connectionItem.show.called).to.be.true;
-    expect(databaseItem.hide.called).to.be.true;
-    expect(riskItem.hide.called).to.be.true;
-    expect(profileItem.hide.called).to.be.true;
-    expect(workspaceItem.hide.called).to.be.true;
+    for (const hidden of [databaseItem, userItem, environmentItem, profileItem, accessModeItem, tierItem]) {
+      expect(hidden.hide.called).to.be.true;
+    }
 
     statusBar.updateTransactionState();
     expect(transactionItem.hide.called).to.be.true;
 
     statusBar.dispose();
-    expect(connectionItem.dispose.called).to.be.true;
-    expect(databaseItem.dispose.called).to.be.true;
-    expect(workspaceItem.dispose.called).to.be.true;
+    for (const item of items) {
+      expect(item.dispose.called).to.be.true;
+    }
   });
 
   it('shows connection, profile, risk, and transaction indicators for an active notebook', () => {
@@ -157,14 +159,23 @@ describe('NotebookStatusBar', () => {
     }, 'nb:active');
 
     const statusBar = new NotebookStatusBar();
-    const [connectionItem, databaseItem, riskItem, profileItem, transactionItem, workspaceItem] = items;
+    // Creation order in NotebookStatusBar's constructor.
+    const [connectionItem, databaseItem, userItem, environmentItem, profileItem, transactionItem, tierItem, accessModeItem] = items;
+    expect(items).to.have.lengthOf(8);
 
     expect(connectionItem.text).to.equal('$(server) Primary');
     expect(databaseItem.text).to.equal('$(database) appdb');
-    expect(connectionItem.backgroundColor.id).to.equal('statusBarItem.prominentBackground');
-    expect(databaseItem.backgroundColor.id).to.equal('statusBarItem.prominentBackground');
-    expect(riskItem.text).to.equal('$(shield) PROD (READ-ONLY)');
-    expect(riskItem.tooltip).to.equal('Production environment - Read-only mode active');
+    // Production connections are tinted red (Sentinel environment signaling).
+    expect(connectionItem.backgroundColor.id).to.equal('statusBarItem.errorBackground');
+    expect(databaseItem.backgroundColor.id).to.equal('statusBarItem.errorBackground');
+    // No username on the connection, and Sentinel is not active in this test.
+    expect(userItem.hide.called).to.be.true;
+    expect(environmentItem.hide.called).to.be.true;
+    // Free build: the tier item doubles as the environment-risk indicator.
+    expect(tierItem.text).to.equal('[PROD-RO]');
+    expect(tierItem.tooltip).to.contain('Production (Read-only mode');
+    expect(accessModeItem.text).to.equal(accessModeText('read'));
+    expect(accessModeItem.show.called).to.be.true;
     expect(profileItem.text).to.contain('Profile: Read Only Analyst');
     expect(profileItem.text).to.contain('Limit: 100');
     expect(executeCommandStub.calledWith('setContext', 'nexql.connectionName', 'Primary')).to.be.true;
@@ -179,14 +190,9 @@ describe('NotebookStatusBar', () => {
     expect(transactionItem.backgroundColor.id).to.equal('statusBarItem.warningBackground');
     expect(transactionItem.show.called).to.be.true;
 
-    expect(workspaceItem.hide.called).to.be.true;
-
     statusBar.dispose();
-    expect(connectionItem.dispose.called).to.be.true;
-    expect(databaseItem.dispose.called).to.be.true;
-    expect(riskItem.dispose.called).to.be.true;
-    expect(profileItem.dispose.called).to.be.true;
-    expect(transactionItem.dispose.called).to.be.true;
-    expect(workspaceItem.dispose.called).to.be.true;
+    for (const item of items) {
+      expect(item.dispose.called).to.be.true;
+    }
   });
 });

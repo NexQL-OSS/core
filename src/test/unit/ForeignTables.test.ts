@@ -38,13 +38,13 @@ describe('ForeignTableSQL', () => {
   it('builds the foreign table template variants', () => {
     expect(ForeignTableSQL.queryData('public', 'remote_orders')).to.equal(`-- Query data
 SELECT *
-FROM public.remote_orders
+FROM "public"."remote_orders"
 LIMIT 100;`);
 
     expect(ForeignTableSQL.edit('public', 'remote_orders')).to.equal(`-- Edit table (requires dropping and recreating)
-DROP FOREIGN TABLE IF EXISTS public.remote_orders;
+DROP FOREIGN TABLE IF EXISTS "public"."remote_orders";
 
-CREATE FOREIGN TABLE public.remote_orders (
+CREATE FOREIGN TABLE "public"."remote_orders" (
     -- Define columns here
     column_name data_type
 ) SERVER server_name
@@ -54,11 +54,11 @@ OPTIONS (
 );`);
 
     expect(ForeignTableSQL.drop('public', 'remote_orders')).to.equal(`-- Drop table
-DROP FOREIGN TABLE IF EXISTS public.remote_orders;`);
+DROP FOREIGN TABLE IF EXISTS "public"."remote_orders";`);
 
-    expect(ForeignTableSQL.create.basic('public')).to.include('CREATE FOREIGN TABLE public.foreign_table_name');
-    expect(ForeignTableSQL.create.postgresRemote('public')).to.include('CREATE FOREIGN TABLE public.remote_table');
-    expect(ForeignTableSQL.create.fileBased('public')).to.include('CREATE FOREIGN TABLE public.csv_data');
+    expect(ForeignTableSQL.create.basic('public')).to.include('CREATE FOREIGN TABLE "public"."foreign_table_name"');
+    expect(ForeignTableSQL.create.postgresRemote('public')).to.include('CREATE FOREIGN TABLE "public"."remote_table"');
+    expect(ForeignTableSQL.create.fileBased('public')).to.include('CREATE FOREIGN TABLE "public"."csv_data"');
     expect(ForeignTableSQL.queryWithJoin('public')).to.include('JOIN public.foreign_table_name ft ON lt.id = ft.id;');
     expect(ForeignTableSQL.manageForeignServer()).to.include('DROP SERVER foreign_server_name CASCADE;');
   });

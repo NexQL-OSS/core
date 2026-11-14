@@ -13,6 +13,7 @@ import {
   ShowErrorMessageHandler
 } from '../../services/handlers/CoreHandlers';
 import { ConnectionUtils } from '../../utils/connectionUtils';
+import { WorkspaceStateService } from '../../services/WorkspaceStateService';
 
 describe('CoreHandlers', () => {
   let sandbox: sinon.SinonSandbox;
@@ -38,7 +39,10 @@ describe('CoreHandlers', () => {
       port: 5432,
       username: 'u'
     });
+    const picker = sandbox.stub(ConnectionUtils, 'showDatabasePicker').resolves('db3');
     const update = sandbox.stub(ConnectionUtils, 'updateNotebookMetadata').resolves();
+    const recordSwitch = sandbox.stub().resolves();
+    sandbox.stub(WorkspaceStateService, 'getInstance').returns({ recordConnectionSwitch: recordSwitch } as any);
 
     await handler.handle(
       { connectionId: 'c1' },
@@ -47,11 +51,14 @@ describe('CoreHandlers', () => {
       }
     );
 
+    expect(picker.calledOnce).to.be.true;
     expect(update.calledOnce).to.be.true;
+    expect(update.firstCall.args[1]).to.include({ connectionId: 'c2', databaseName: 'db3' });
+    expect(recordSwitch.calledOnceWith('c2', 'db3')).to.be.true;
     expect(statusBar.update.calledOnce).to.be.true;
   });
 
-  it('ShowConnectionSwitcherHandler does nothing when picker returns same id', async () => {
+  it('ShowConnectionSwitcherHandler does nothing when the database picker is cancelled', async () => {
     const handler = new ShowConnectionSwitcherHandler({ update: sandbox.stub() });
     sandbox.stub(ConnectionUtils, 'showConnectionPicker').resolves({
       id: 'c1',
@@ -60,6 +67,7 @@ describe('CoreHandlers', () => {
       port: 5432,
       username: 'u'
     });
+    sandbox.stub(ConnectionUtils, 'showDatabasePicker').resolves(undefined);
     const update = sandbox.stub(ConnectionUtils, 'updateNotebookMetadata').resolves();
 
     await handler.handle(
@@ -110,7 +118,7 @@ describe('CoreHandlers', () => {
       .true;
   });
 
-  it('ShowDatabaseSwitcherHandler does nothing when the database stays the same', async () => {
+  it('ShowDatabaseSwitcherHandler does nothing when the picker is cancelled', async () => {
     const statusBar = { update: sandbox.stub() };
     const handler = new ShowDatabaseSwitcherHandler(statusBar);
     sandbox.stub(ConnectionUtils, 'findConnection').returns({
@@ -119,7 +127,7 @@ describe('CoreHandlers', () => {
       port: 5432,
       database: 'postgres'
     });
-    sandbox.stub(ConnectionUtils, 'showDatabasePicker').resolves('postgres');
+    sandbox.stub(ConnectionUtils, 'showDatabasePicker').resolves(undefined);
     const update = sandbox.stub(ConnectionUtils, 'updateNotebookMetadata').resolves();
 
     await handler.handle(
@@ -161,6 +169,7 @@ describe('CoreHandlers', () => {
         {
           editor: {
             notebook: {
+              uri: { toString: () => 'notebook-uri' },
               metadata: { connectionId: 'c1' }
             }
           } as any
@@ -192,6 +201,7 @@ describe('CoreHandlers', () => {
         {
           editor: {
             notebook: {
+              uri: { toString: () => 'notebook-uri' },
               metadata: { connectionId: 'c1' }
             }
           } as any
@@ -225,6 +235,7 @@ describe('CoreHandlers', () => {
         {
           editor: {
             notebook: {
+              uri: { toString: () => 'notebook-uri' },
               metadata: { connectionId: 'c1' }
             }
           } as any
@@ -275,6 +286,7 @@ describe('CoreHandlers', () => {
         {
           editor: {
             notebook: {
+              uri: { toString: () => 'notebook-uri' },
               metadata: { connectionId: 'c1' }
             }
           } as any
@@ -303,6 +315,7 @@ describe('CoreHandlers', () => {
       {
         editor: {
           notebook: {
+            uri: { toString: () => 'notebook-uri' },
             getCells: sandbox.stub().returns([])
           }
         } as any
@@ -326,6 +339,7 @@ describe('CoreHandlers', () => {
       {
         editor: {
           notebook: {
+            uri: { toString: () => 'notebook-uri' },
             metadata: { connectionId: 'c1', databaseName: 'postgres' }
           }
         } as any
@@ -371,7 +385,7 @@ describe('CoreHandlers', () => {
       },
       {
         editor: {
-          notebook: { metadata: { connectionId: 'c1' } }
+          notebook: { uri: { toString: () => 'notebook-uri' }, metadata: { connectionId: 'c1' } }
         } as unknown as vscode.NotebookEditor
       }
     );
@@ -406,7 +420,7 @@ describe('CoreHandlers', () => {
       { table: 't', schema: 'public', data: [{ a: 1 }] },
       {
         editor: {
-          notebook: { metadata: { connectionId: 'c1' } }
+          notebook: { uri: { toString: () => 'notebook-uri' }, metadata: { connectionId: 'c1' } }
         } as unknown as vscode.NotebookEditor
       }
     );
@@ -438,7 +452,7 @@ describe('CoreHandlers', () => {
       { table: 't', schema: 'public', data: [{ a: 1 }] },
       {
         editor: {
-          notebook: { metadata: { connectionId: 'c1' } }
+          notebook: { uri: { toString: () => 'notebook-uri' }, metadata: { connectionId: 'c1' } }
         } as unknown as vscode.NotebookEditor
       }
     );
@@ -463,7 +477,7 @@ describe('CoreHandlers', () => {
         { table: 't', schema: 'public', data: [] },
         {
           editor: {
-            notebook: { metadata: { connectionId: 'c1' } }
+            notebook: { uri: { toString: () => 'notebook-uri' }, metadata: { connectionId: 'c1' } }
           } as unknown as vscode.NotebookEditor
         }
       );
@@ -475,23 +489,17 @@ describe('CoreHandlers', () => {
 
   it('ExportRequestHandler copies CSV to clipboard', async () => {
     const handler = new ExportRequestHandler();
-    const prevPick = vscode.window.showQuickPick;
-    (vscode.window as any).showQuickPick = async () => 'Copy to Clipboard';
-    const prevEnv = vscode.env;
-    const writeText = sandbox.stub().resolves();
-    (vscode as any).env = {
-      clipboard: { writeText }
-    };
-    try {
-      await handler.handle({
+    const writeText = sandbox.stub(vscode.env.clipboard, 'writeText').resolves();
+    await handler.handle(
+      {
         rows: [{ id: 1, name: 'a' }],
-        columns: ['id', 'name']
-      });
-      expect(writeText.calledOnce).to.be.true;
-    } finally {
-      (vscode.window as any).showQuickPick = prevPick;
-      (vscode as any).env = prevEnv;
-    }
+        columns: ['id', 'name'],
+        format: 'clipboard'
+      },
+      {}
+    );
+    expect(writeText.calledOnce).to.be.true;
+    expect(writeText.firstCall.args[0]).to.equal('"id","name"\n1,a');
   });
 
   it('ExportRequestHandler saves CSV when save dialog returns uri', async () => {

@@ -64,13 +64,19 @@ describe('ConnectionUtils', () => {
   describe('updateNotebookMetadata', () => {
     it('merges metadata and applies workspace edit', async () => {
       const applyEdit = sandbox.stub().resolves(true);
+      const previousApplyEdit = vscode.workspace.applyEdit;
       (vscode.workspace as any).applyEdit = applyEdit;
-      const notebook = {
-        uri: vscode.Uri.parse('untitled:nb'),
-        metadata: { connectionId: 'c1' }
-      } as vscode.NotebookDocument;
-      await ConnectionUtils.updateNotebookMetadata(notebook, { databaseName: 'db2' });
-      expect(applyEdit.calledOnce).to.be.true;
+      try {
+        const notebook = {
+          uri: vscode.Uri.parse('untitled:nb'),
+          metadata: { connectionId: 'c1' }
+        } as vscode.NotebookDocument;
+        await ConnectionUtils.updateNotebookMetadata(notebook, { databaseName: 'db2' });
+        expect(applyEdit.calledOnce).to.be.true;
+      } finally {
+        // Leaving the stub in place breaks later sandbox.stub(workspace, 'applyEdit') calls.
+        (vscode.workspace as any).applyEdit = previousApplyEdit;
+      }
     });
   });
 

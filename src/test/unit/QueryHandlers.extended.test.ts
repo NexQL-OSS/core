@@ -3,6 +3,8 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { ErrorHandlers } from '../../commands/helper';
 import { ConnectionManager } from '../../services/ConnectionManager';
+import { ConnectionUtils } from '../../utils/connectionUtils';
+import * as logger from '../../common/logger';
 import {
   CancelQueryHandler,
   ExecuteUpdateBackgroundHandler,
@@ -33,16 +35,18 @@ describe('QueryHandlers (extended)', () => {
   });
 
   it('CancelQueryHandler warns when no executor', async () => {
-    const consoleWarn = sandbox.stub(console, 'warn');
+    const warn = sandbox.stub(logger, 'debugWarn');
     const handler = new CancelQueryHandler();
     await handler.handle({ cellId: 'c1' }, {});
-    expect(consoleWarn.called).to.be.true;
-    consoleWarn.restore();
+    expect(warn.called).to.be.true;
   });
 
   it('ExecuteUpdateBackgroundHandler runs statements', async () => {
     const query = sandbox.stub().resolves({ rowCount: 1 });
     const release = sandbox.stub();
+    sandbox.stub(ConnectionUtils, 'findConnection').returns({
+      id: 'c1', host: 'h', port: 5432, username: 'u', database: 'postgres',
+    } as any);
     sandbox.stub(ConnectionManager, 'getInstance').returns({
       getPooledClient: sandbox.stub().resolves({ query, release })
     } as unknown as ConnectionManager);
@@ -53,6 +57,7 @@ describe('QueryHandlers (extended)', () => {
       {
         editor: {
           notebook: {
+            uri: { toString: () => 'notebook-uri' },
             metadata: {
               connectionId: 'c1',
               host: 'h',

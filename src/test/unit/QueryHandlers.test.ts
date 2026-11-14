@@ -63,6 +63,7 @@ describe('QueryHandlers', () => {
       {
         editor: {
           notebook: {
+            uri: { toString: () => 'notebook-uri' },
             metadata: {
               connectionId: 'conn-1',
               host: 'localhost',
@@ -106,6 +107,7 @@ describe('QueryHandlers', () => {
       {
         editor: {
           notebook: {
+            uri: { toString: () => 'notebook-uri' },
             metadata: {
               connectionId: 'conn-1',
               host: 'localhost',
