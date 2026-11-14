@@ -64,6 +64,20 @@ const FEATURE_LABELS: Record<ProFeature, string> = {
   [ProFeature.QueryStudio]: 'Query Studio',
 };
 
+/**
+ * Features the free tier gets as a quota rather than in full. The free-tier
+ * "everything below singularity" rule does not apply to these.
+ */
+const FREE_TIER_QUOTA_FEATURES: ReadonlySet<ProFeature> = new Set([ProFeature.UnlimitedNotebooks]);
+
+/** Notebooks per connection on the free tier of the Pro build. */
+export const FREE_NOTEBOOKS_PER_CONNECTION = 5;
+
+/** Free tier gets this feature without a license (everything below singularity, minus quota features). */
+function freeTierAllows(feature: ProFeature): boolean {
+  return minTierFor(feature) !== 'singularity' && !FREE_TIER_QUOTA_FEATURES.has(feature);
+}
+
 /** Ordering for entitlement comparison: a tier unlocks everything at or below its rank. */
 const TIER_RANK: Record<LicenseTier, number> = { free: 0, sponsor: 1, singularity: 2 };
 
@@ -173,8 +187,8 @@ export function isProFeatureEnabled(feature: ProFeature): boolean {
   if (meetsTier(tier, minTierFor(feature))) {
     return true;
   }
-  // Free tier: allow all non-team features (anything below singularity).
-  return tier === 'free' && minTierFor(feature) !== 'singularity';
+  // Free tier: allow all non-team features except quota-limited ones.
+  return tier === 'free' && freeTierAllows(feature);
 }
 
 /**
@@ -208,8 +222,8 @@ export async function requirePro(feature: ProFeature, _context?: vscode.Extensio
     return true;
   }
 
-  // Free tier: allow all non-team features. Only singularity-locked capabilities are paid-only.
-  if (!paid && required !== 'singularity') {
+  // Free tier: allow all non-team features except quota-limited ones.
+  if (!paid && freeTierAllows(feature)) {
     reportGate(feature, mode, true, paid);
     return true;
   }

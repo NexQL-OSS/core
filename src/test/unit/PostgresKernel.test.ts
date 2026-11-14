@@ -54,6 +54,8 @@ describe('PostgresKernel', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    // Language providers register once per process; let each test observe registration.
+    (PostgresKernel as any)._languageProvidersRegistered = false;
     connectionList = [];
     messagingStub = { postMessage: sandbox.stub().resolves() };
     contextStub = {
@@ -62,6 +64,10 @@ describe('PostgresKernel', () => {
     controllerStub = {
       id: 'test-controller',
       createNotebookCellExecution: sandbox.stub().returns({
+        token: {
+          isCancellationRequested: false,
+          onCancellationRequested: () => ({ dispose: () => { } })
+        },
         start: sandbox.stub(),
         appendOutput: sandbox.stub(),
         replaceOutput: sandbox.stub(),
@@ -130,7 +136,7 @@ describe('PostgresKernel', () => {
     const kernel = new PostgresKernel(contextStub, messagingStub as any);
     const cell: any = {
       notebook: nb({}),
-      document: { uri: { toString: () => 'cell-uri' } }
+      document: { uri: { toString: () => 'cell-uri' }, getText: () => 'SELECT 1' }
     };
 
     await (kernel as any)._executor.executeCell(cell);

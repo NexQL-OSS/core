@@ -455,7 +455,7 @@ describe('SqlCompletionProvider', () => {
     expect(labels).to.not.include('customer_id');
   });
 
-  it('loads full catalog in one round-trip on first completion (four queries, one connection)', async () => {
+  it('loads full catalog in one background round-trip on first completion (one connection)', async () => {
     (getConfigurationStub as sinon.SinonStub).returns({
       get: (key: string) => (key === 'postgresExplorer.connections'
         ? [{ id: 'conn-1', name: 'Main', host: 'localhost', port: 5432, username: 'postgres' }]
@@ -473,12 +473,15 @@ describe('SqlCompletionProvider', () => {
     attachNotebook(document, { connectionId: 'conn-1', databaseName: 'appdb' });
 
     const pos = new vscode.Position(0, 'SELECT '.length);
+    // The first completion answers from the empty cache and loads the catalog
+    // in the background, so typing is never blocked on the database.
     const itemsFirst = await provider.provideCompletionItems(document, pos, {} as any, {} as any);
+    expect(itemsFirst.map(i => i.label)).to.not.include('id');
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(getPooledClientStub.calledOnce).to.be.true;
     expect(releaseStub.calledOnce).to.be.true;
     expect(queryStub.callCount).to.equal(2);
-    expect(itemsFirst.map(i => i.label)).to.include('id');
 
     queryStub.resetHistory();
     getPooledClientStub.resetHistory();

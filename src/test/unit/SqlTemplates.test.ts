@@ -43,12 +43,12 @@ describe('SQL template modules', () => {
 
   it('covers the shared helper templates', () => {
     expect(SQL_TEMPLATES.DROP.TABLE(schema, table)).to.equal('-- Drop table\nDROP TABLE IF EXISTS "public"."users";');
-    expect(SQL_TEMPLATES.DROP.VIEW(schema, table)).to.equal('-- Drop view\nDROP VIEW IF EXISTS public.users;');
-    expect(SQL_TEMPLATES.DROP.MATERIALIZED_VIEW(schema, table)).to.equal('-- Drop materialized view\nDROP MATERIALIZED VIEW IF EXISTS public.users;');
-    expect(SQL_TEMPLATES.DROP.FUNCTION(schema, table, 'integer')).to.contain('DROP FUNCTION IF EXISTS public.users(integer);');
+    expect(SQL_TEMPLATES.DROP.VIEW(schema, table)).to.equal('-- Drop view\nDROP VIEW IF EXISTS "public"."users";');
+    expect(SQL_TEMPLATES.DROP.MATERIALIZED_VIEW(schema, table)).to.equal('-- Drop materialized view\nDROP MATERIALIZED VIEW IF EXISTS "public"."users";');
+    expect(SQL_TEMPLATES.DROP.FUNCTION(schema, table, 'integer')).to.contain('DROP FUNCTION IF EXISTS "public"."users"(integer);');
     expect(SQL_TEMPLATES.DROP.INDEX(schema, indexName)).to.contain('DROP INDEX "public"."users_email_idx";');
     expect(SQL_TEMPLATES.DROP.CONSTRAINT(schema, table, 'users_email_key')).to.contain('DROP CONSTRAINT "users_email_key";');
-    expect(SQL_TEMPLATES.DROP.TYPE(schema, 'customer_status')).to.contain('DROP TYPE IF EXISTS public.customer_status CASCADE;');
+    expect(SQL_TEMPLATES.DROP.TYPE(schema, 'customer_status')).to.contain('DROP TYPE IF EXISTS "public"."customer_status" CASCADE;');
     expect(SQL_TEMPLATES.DROP.EXTENSION('uuid-ossp')).to.contain('DROP EXTENSION IF EXISTS "uuid-ossp" CASCADE;');
 
     expect(SQL_TEMPLATES.SELECT.ALL(schema, table)).to.contain('LIMIT 100;');
@@ -56,10 +56,10 @@ describe('SQL template modules', () => {
     expect(SQL_TEMPLATES.SELECT.WITH_WHERE(schema, table)).to.contain('WHERE condition');
 
     expect(SQL_TEMPLATES.COMMENT.TABLE(schema, table, "It's ours")).to.contain("IS 'It''s ours';");
-    expect(SQL_TEMPLATES.COMMENT.COLUMN(schema, table, column, 'Column comment')).to.contain('COMMENT ON COLUMN public.users.email');
-    expect(SQL_TEMPLATES.COMMENT.VIEW(schema, 'orders_view', 'View comment')).to.contain('COMMENT ON VIEW public.orders_view');
-    expect(SQL_TEMPLATES.COMMENT.FUNCTION(schema, 'calc_total', 'integer', 'Function comment')).to.contain('COMMENT ON FUNCTION public.calc_total(integer)');
-    expect(SQL_TEMPLATES.COMMENT.TYPE(schema, 'status_enum', 'Type comment')).to.contain('COMMENT ON TYPE public.status_enum');
+    expect(SQL_TEMPLATES.COMMENT.COLUMN(schema, table, column, 'Column comment')).to.contain('COMMENT ON COLUMN "public"."users"."email"');
+    expect(SQL_TEMPLATES.COMMENT.VIEW(schema, 'orders_view', 'View comment')).to.contain('COMMENT ON VIEW "public"."orders_view"');
+    expect(SQL_TEMPLATES.COMMENT.FUNCTION(schema, 'calc_total', 'integer', 'Function comment')).to.contain('COMMENT ON FUNCTION "public"."calc_total"(integer)');
+    expect(SQL_TEMPLATES.COMMENT.TYPE(schema, 'status_enum', 'Type comment')).to.contain('COMMENT ON TYPE "public"."status_enum"');
 
     expect(QueryBuilder.objectInfo('table', schema, table)).to.contain('information_schema.tables');
     expect(QueryBuilder.objectInfo('view', schema, table)).to.contain('information_schema.views');
@@ -169,7 +169,7 @@ describe('SQL template modules', () => {
     expect(SequenceSQL.nextValue(schema, 'order_seq')).to.equal("SELECT nextval('\"public\".\"order_seq\"') AS next_value;");
     expect(SequenceSQL.currentValue(schema, 'order_seq')).to.equal('SELECT last_value, is_called FROM "public"."order_seq";');
     expect(SequenceSQL.resetValue(schema, 'order_seq', 42)).to.equal("SELECT setval('\"public\".\"order_seq\"', 42);");
-    expectSqlContains(SequenceSQL.create(schema), ['CREATE SEQUENCE "public"."new_sequence_name"', 'NO CYCLE']);
+    expectSqlContains(SequenceSQL.create(schema), ['CREATE SEQUENCE IF NOT EXISTS "public"."new_sequence_name"', 'NO CYCLE']);
     expect(SequenceSQL.drop(schema, 'order_seq')).to.equal('DROP SEQUENCE IF EXISTS "public"."order_seq";');
     expectSqlContains(SequenceSQL.alter(schema, 'order_seq'), ['ALTER SEQUENCE "public"."order_seq"', 'RESTART WITH 1']);
 
@@ -178,7 +178,7 @@ describe('SQL template modules', () => {
     expect(TriggerSQL.drop(schema, table, 'users_audit_trigger')).to.equal('DROP TRIGGER IF EXISTS "users_audit_trigger" ON "public"."users";');
     expect(TriggerSQL.enable(schema, table, 'users_audit_trigger')).to.equal('ALTER TABLE "public"."users" ENABLE TRIGGER "users_audit_trigger";');
     expect(TriggerSQL.disable(schema, table, 'users_audit_trigger')).to.equal('ALTER TABLE "public"."users" DISABLE TRIGGER "users_audit_trigger";');
-    expectSqlContains(TriggerSQL.create(schema, table), ['CREATE OR REPLACE FUNCTION public.trigger_function_name()', 'CREATE TRIGGER trigger_name']);
+    expectSqlContains(TriggerSQL.create(schema, table), ['CREATE OR REPLACE FUNCTION "public".trigger_function_name()', 'CREATE TRIGGER trigger_name']);
 
     expectSqlContains(EventTriggerSQL.list(), ['FROM pg_event_trigger', 'REPLICA ONLY', 'ALWAYS']);
     expectSqlContains(EventTriggerSQL.getDefinition('ddl_logger'), ['pg_get_functiondef', "WHERE evtname = 'ddl_logger'"]);
@@ -241,9 +241,9 @@ describe('SQL template modules', () => {
     expectSqlContains(ExtensionSQL.drop('uuid-ossp'), ['DROP EXTENSION IF EXISTS "uuid-ossp";']);
     expectSqlContains(ExtensionSQL.dropCascade('uuid-ossp'), ['DROP EXTENSION IF EXISTS "uuid-ossp" CASCADE;']);
 
-    expectSqlContains(FunctionSQL.call(schema, 'calc_total', '1, 2'), ['SELECT public.calc_total(1, 2);']);
-    expectSqlContains(FunctionSQL.createOrReplace(schema), ['CREATE OR REPLACE FUNCTION public.function_name', 'LANGUAGE sql']);
-    expectSqlContains(FunctionSQL.drop(schema, 'calc_total', 'integer'), ['DROP FUNCTION IF EXISTS public.calc_total(integer);']);
+    expectSqlContains(FunctionSQL.call(schema, 'calc_total', '1, 2'), ['SELECT "public"."calc_total"(1, 2);']);
+    expectSqlContains(FunctionSQL.createOrReplace(schema), ['CREATE OR REPLACE FUNCTION "public"."function_name"', 'LANGUAGE sql']);
+    expectSqlContains(FunctionSQL.drop(schema, 'calc_total', 'integer'), ['DROP FUNCTION IF EXISTS "public"."calc_total"(integer);']);
     expectSqlContains(FunctionSQL.metadata(schema, 'calc_total'), ['pg_get_function_arguments', 'pg_language']);
 
     expectSqlContains(SchemaSQL.create(), ['CREATE SCHEMA schema_name;']);
@@ -251,9 +251,9 @@ describe('SQL template modules', () => {
     expectSqlContains(SchemaSQL.grant(schema), ['GRANT USAGE ON SCHEMA public TO role_name;']);
     expectSqlContains(SchemaSQL.listObjects(schema), ['object_type', 'pg_class c']);
 
-    expectSqlContains(TypeSQL.createComposite(schema), ['CREATE TYPE "public".type_name AS (']);
-    expectSqlContains(TypeSQL.createEnum(schema), ['CREATE TYPE "public".status_enum AS ENUM']);
-    expectSqlContains(TypeSQL.drop(schema, 'status_enum'), ['DROP TYPE "public"."status_enum";']);
+    expectSqlContains(TypeSQL.createComposite(schema), ['CREATE TYPE "public"."type_name" AS (']);
+    expectSqlContains(TypeSQL.createEnum(schema), ['CREATE TYPE "public"."status_enum" AS ENUM']);
+    expectSqlContains(TypeSQL.drop(schema, 'status_enum'), ['DROP TYPE IF EXISTS "public"."status_enum";']);
     expectSqlContains(TypeSQL.rename(schema, 'status_enum'), ['ALTER TYPE "public"."status_enum" RENAME TO new_type_name;']);
     expectSqlContains(TypeSQL.findUsage(schema, 'status_enum'), ['FROM pg_attribute a']);
 
@@ -267,16 +267,16 @@ describe('SQL template modules', () => {
 
   it('covers materialized view and foreign table SQL builders', () => {
     expectSqlContains(MaterializedViewSQL.select(schema, 'sales_mv'), ['SELECT *', 'LIMIT 100;']);
-    expectSqlContains(MaterializedViewSQL.refresh(schema, 'sales_mv'), ['REFRESH MATERIALIZED VIEW public.sales_mv;']);
-    expectSqlContains(MaterializedViewSQL.create(schema, 'sales_mv'), ['CREATE MATERIALIZED VIEW public.sales_mv AS']);
-    expectSqlContains(MaterializedViewSQL.drop(schema, 'sales_mv'), ['DROP MATERIALIZED VIEW public.sales_mv;']);
-    expectSqlContains(MaterializedViewSQL.analyze(schema, 'sales_mv'), ['ANALYZE public.sales_mv;']);
+    expectSqlContains(MaterializedViewSQL.refresh(schema, 'sales_mv'), ['REFRESH MATERIALIZED VIEW "public"."sales_mv";']);
+    expectSqlContains(MaterializedViewSQL.create(schema, 'sales_mv'), ['CREATE MATERIALIZED VIEW "public"."sales_mv" AS']);
+    expectSqlContains(MaterializedViewSQL.drop(schema, 'sales_mv'), ['DROP MATERIALIZED VIEW "public"."sales_mv";']);
+    expectSqlContains(MaterializedViewSQL.analyze(schema, 'sales_mv'), ['ANALYZE "public"."sales_mv";']);
     expectSqlContains(MaterializedViewSQL.createIndex(schema, 'sales_mv'), ['CREATE UNIQUE INDEX sales_mv_unique_idx']);
 
     expectSqlContains(ForeignTableSQL.queryData(schema, 'remote_users'), ['SELECT *', 'LIMIT 100;']);
-    expectSqlContains(ForeignTableSQL.edit(schema, 'remote_users'), ['DROP FOREIGN TABLE IF EXISTS public.remote_users;', 'CREATE FOREIGN TABLE public.remote_users']);
-    expectSqlContains(ForeignTableSQL.drop(schema, 'remote_users'), ['DROP FOREIGN TABLE IF EXISTS public.remote_users;']);
-    expectSqlContains(ForeignTableSQL.create.basic(schema), ['CREATE FOREIGN TABLE public.foreign_table_name']);
+    expectSqlContains(ForeignTableSQL.edit(schema, 'remote_users'), ['DROP FOREIGN TABLE IF EXISTS "public"."remote_users";', 'CREATE FOREIGN TABLE "public"."remote_users"']);
+    expectSqlContains(ForeignTableSQL.drop(schema, 'remote_users'), ['DROP FOREIGN TABLE IF EXISTS "public"."remote_users";']);
+    expectSqlContains(ForeignTableSQL.create.basic(schema), ['CREATE FOREIGN TABLE "public"."foreign_table_name"']);
     expectSqlContains(ForeignTableSQL.create.postgresRemote(schema), ['CREATE EXTENSION IF NOT EXISTS postgres_fdw;']);
     expectSqlContains(ForeignTableSQL.create.fileBased(schema), ['CREATE EXTENSION IF NOT EXISTS file_fdw;']);
     expectSqlContains(ForeignTableSQL.queryWithJoin(schema), ['JOIN public.foreign_table_name ft ON lt.id = ft.id;']);

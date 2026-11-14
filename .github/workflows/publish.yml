@@ -1,4 +1,9 @@
-name: Publish Extension (Stable)
+name: Release (Free build)
+
+# Builds the free/OSS VSIX for a vX.Y.Z tag and attaches it to the GitHub
+# Release. It does NOT publish to the VS Code Marketplace or Open VSX:
+# ric-v.postgres-explorer is published only by the pro repo's
+# "Publish Extension (Pro)" workflow, from this repo at the same tag.
 
 permissions:
   contents: write
@@ -16,12 +21,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version to republish (2.4.0 or v2.4.0). Must match an existing tag. Do not pass vv2.4.0.'
+        description: 'Release version to rebuild (2.4.0 or v2.4.0). Must match an existing tag. Do not pass vv2.4.0.'
         required: true
         type: string
 
 concurrency:
-  group: publish-stable
+  group: release-free
   cancel-in-progress: false
 
 jobs:
@@ -87,6 +92,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Unit tests
+        run: npm run test:unit
+
       - name: Package extension
         run: make package
 
@@ -109,17 +117,6 @@ jobs:
           name: extension-stable-${{ steps.release.outputs.version }}
           path: ${{ steps.vsix.outputs.path }}
           retention-days: 90
-
-      - name: Publish to VS Code Marketplace
-        run: |
-          npx -y "@vscode/vsce@${VSCE_VERSION}" publish \
-            --packagePath "${{ steps.vsix.outputs.path }}" \
-            -p "${{ secrets.VSCE_PAT }}"
-
-      - name: Publish to Open VSX Registry
-        run: |
-          npx -y ovsx publish "${{ steps.vsix.outputs.path }}" \
-            -p "${{ secrets.OVSX_PAT }}"
 
       - name: Extract CHANGELOG section
         id: changelog

@@ -4,7 +4,9 @@
 
 Nightly versions are not written into `package.json` and are not git tags. `scripts/compute-nightly-version.js` derives them (`2.4.0` → `2.5.0`, `2.4.1` → `2.5.1`).
 
-`scripts/check-release-version.js` fails the PR and both publish workflows when those sources disagree. A missing changelog section fails the stable publish. There is no generated-notes fallback.
+`scripts/check-release-version.js` fails the PR, the core release, and both pro publish workflows when those sources disagree. A missing changelog section fails the stable release. There is no generated-notes fallback.
+
+**Who publishes:** the Marketplace and Open VSX listing `ric-v.postgres-explorer` is the Pro build, and only the private pro repo publishes it. Core's tag workflow builds the free VSIX and creates the GitHub Release. Local `make publish*` targets refuse to run so a local publish cannot replace Pro with the free build.
 
 Secrets, tokens, and the long operator notes are in [docs/RELEASE_CI_SETUP.md](docs/RELEASE_CI_SETUP.md).
 
@@ -39,17 +41,18 @@ Secrets, tokens, and the long operator notes are in [docs/RELEASE_CI_SETUP.md](d
    git push origin "vX.Y.Z"
    ```
 
-5. The tag push runs **Publish Extension (Stable)**. It checks out `vX.Y.Z`, refuses a mismatch, publishes the VSIX, and opens a GitHub Release from the changelog section.
+5. The core tag push runs **Release (Free build)**. It checks out `vX.Y.Z`, refuses a mismatch, runs unit tests, packages the free VSIX, and opens a GitHub Release from the changelog section. It does not publish to any registry.
+6. Tag the pro repo with the same `vX.Y.Z` and push it (or run **Publish Extension (Pro)** with input `X.Y.Z`). It checks out core at `vX.Y.Z`, so step 4 must come first. It runs the core and pro unit tests, builds one VSIX per platform (`linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`, `win32-x64`) and publishes each to the Marketplace and Open VSX.
 
-`make git-tag` bumps, checks, commits, tags, and pushes. It refuses an odd minor and a doubled `v`. It does not update the changelog for you. Prefer the steps above.
+`make git-tag` bumps, checks, commits, tags, and pushes core. It refuses an odd minor and a doubled `v`. It does not update the changelog or tag pro. Prefer the steps above.
 
-To republish an existing tag: **Actions → Publish Extension (Stable) → Run workflow**, input `2.4.0` or `v2.4.0`. `vv2.4.0` is rejected.
+To republish: re-run the failed jobs of **Publish Extension (Pro)**, or run it again with the version. Platform/version pairs that already uploaded are rejected by the registries; the missing ones go through.
 
 ## Nightly
 
-Do not tag. Bump the stable patch first (`2.4.0` → `2.4.1`), push `main`, then **Actions → Publish Extension (Nightly)**. The workflow publishes Marketplace pre-release `2.5.1` and Open VSX `postgres-explorer-nightly` `2.5.1`.
+Do not tag. Bump the stable patch first (`2.6.0` → `2.6.1`), push core `main`, then run **Publish Nightly Extension (Pro)** in the pro repo (`core_ref` = `main`). It publishes Marketplace pre-release `2.7.1` and Open VSX `postgres-explorer-nightly` `2.7.1`, one VSIX per platform. Core's **Build Nightly (Free)** only builds artifacts.
 
-The registries reject a version that already exists. The next nightly from unchanged `2.4.0` would try to publish `2.5.0` again and fail.
+The registries reject a version that already exists. A nightly from an unchanged `2.6.0` publishes `2.7.0` once; the next one needs a patch bump.
 
 ## Tag rule
 
@@ -63,8 +66,6 @@ The stable workflow listens for tags matching `v[0-9]*`, then requires the rest 
 
 ## Private pro repo
 
-Pro publish workflows live in `NexQL-OSS/pro` (not this repo). They have not run. Before the first run:
+`NexQL-OSS/pro` holds the registry secrets (`VSCE_PAT`, `OVSX_PAT`) and both publish workflows. Neither has run yet. Before the first run, confirm both secrets are set in pro and removed from core. nexql-mcp is not vendored into the Pro VSIX: Pro launches it via `npx` or the user's own install.
 
-- Stop pinning mcp at `v0.2.0`. The mcp repo's latest release is `v0.5.0`.
-- Package pro from the core commit tagged with this repo's `package.json` version, and publish that same version.
-- Use the same tag rule. Do not prefix `v` onto a ref that already starts with `v`.
+Operator details: [docs/RELEASE_CI_SETUP.md](docs/RELEASE_CI_SETUP.md).

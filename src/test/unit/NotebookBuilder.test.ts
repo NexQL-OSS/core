@@ -152,6 +152,8 @@ describe('NotebookBuilder.show()', () => {
 
     const scratchUri = vscode.Uri.file('/global-storage/conn-3/mydb/scratch.pgsql');
     const doc = makeNotebookDoc(scratchUri, 3, false);
+    // Already bound to this connection/db, so show() skips its metadata repair edit.
+    (doc as any).metadata = { connectionId: 'conn-3', databaseName: 'mydb' };
     SessionRegistry.set('conn-3:mydb', doc);
 
     const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument');

@@ -39,6 +39,7 @@ export const workspace: {
     delete(uri: any, options?: any): Thenable<void>;
   };
   notebookDocuments: any[];
+  workspaceFolders: Array<{ uri: any; name: string; index: number }> | undefined;
   onDidOpenNotebookDocument(cb?: any): { dispose(): void };
   onDidSaveNotebookDocument(cb?: any): { dispose(): void };
   onDidChangeNotebookDocument(cb?: any): { dispose(): void };
@@ -59,6 +60,7 @@ export const workspace: {
     delete: async (_uri: any, _o?: any) => { }
   },
   notebookDocuments: [] as any[],
+  workspaceFolders: undefined,
   onDidOpenNotebookDocument: (_cb?: any) => ({ dispose: () => { } }),
   onDidSaveNotebookDocument: (_cb?: any) => ({ dispose: () => { } }),
   onDidChangeNotebookDocument: (_cb?: any) => ({ dispose: () => { } }),
@@ -81,7 +83,13 @@ export class EventEmitter<T = any> {
 
 export class Disposable { dispose() { } }
 
-export const env = { clipboard: { writeText: async (_s: string) => { } } } as any;
+export const env = {
+  clipboard: { writeText: async (_s: string) => { } },
+  openExternal: async (_uri: any) => true,
+  isTelemetryEnabled: false,
+  onDidChangeTelemetryEnabled: (_listener: (enabled: boolean) => any) => ({ dispose: () => { } }),
+  machineId: 'test-machine-id',
+} as any;
 
 /** Mirrors vscode.ExtensionMode numeric values. */
 export enum ExtensionMode {
@@ -97,6 +105,7 @@ export const extensions = {
 };
 
 export const window = {
+  visibleNotebookEditors: [] as any[],
   createOutputChannel: (_name?: string) => new OutputChannel(),
   showErrorMessage: async (_msg?: string) => undefined,
   showInformationMessage: async (_msg?: string) => undefined,
@@ -122,6 +131,8 @@ export const window = {
   showNotebookDocument: async (_doc?: any, _opts?: any) => new NotebookEditor(),
   createTerminal: (_name?: string) => ({ show: (_preserveFocus?: boolean) => { }, sendText: (_text: string, _addNewLine?: boolean) => { }, dispose: () => { } }),
   onDidChangeActiveNotebookEditor: (_cb?: any) => ({ dispose: () => { } }),
+  onDidChangeActiveTextEditor: (_cb?: any) => ({ dispose: () => { } }),
+  activeTextEditor: undefined as any,
   createTreeView: (_id: string, _opts?: any) => ({ reveal: async (_item?: any, _opts?: any) => { } }),
   withProgress: async (_opt: any, _cb: any) => { return await _cb({ report: (_: any) => { } }); }
 } as any;
@@ -190,6 +201,7 @@ export class CodeAction { edit?: any; diagnostics?: any[]; command?: any; isPref
 export class CompletionItem { detail?: string; documentation?: string | MarkdownString; insertText?: string | SnippetString; sortText?: string; filterText?: string; constructor(public label: string, public kind?: number) { } }
 export const CompletionItemKind = { Text: 0, Method: 1, Function: 2, Constructor: 3, Field: 4, Variable: 5, Class: 6, Interface: 7, Module: 8, Property: 9, Unit: 10, Value: 11, Enum: 12, Keyword: 13, Snippet: 14, Color: 15, File: 16, Reference: 17, Folder: 18, EnumMember: 19, Constant: 20, Struct: 21, Event: 22, Operator: 23, TypeParameter: 24 } as const;
 export type CompletionItemKind = typeof CompletionItemKind[keyof typeof CompletionItemKind];
+export enum CompletionTriggerKind { Invoke = 0, TriggerCharacter = 1, TriggerForIncompleteCompletions = 2 }
 
 export class MarkdownString { constructor(public value?: string) { } appendCodeblock(_v: string, _lang?: string) { return this; } appendMarkdown(_v: string) { return this; } appendText(_v: string) { return this; } }
 export class SnippetString { constructor(public value?: string) { } appendText(_v: string) { return this; } appendTabstop(_n?: number) { return this; } appendPlaceholder(_v: string, _n?: number) { return this; } appendVariable(_n: string, _d?: string) { return this; } }
@@ -209,6 +221,7 @@ export class NotebookController {
   createNotebookCellExecution(_cell: NotebookCell) {
     const exec: any = {
       executionOrder: 0,
+      token: { isCancellationRequested: false, onCancellationRequested: (_l: any) => ({ dispose: () => { } }) },
       start: (_startTime?: number) => { },
       replaceOutput: (_outputs?: any[]) => { },
       clearOutput: () => { },
@@ -387,6 +400,7 @@ const vscode = {
   CodeActionKind,
   CompletionItem,
   CompletionItemKind,
+  CompletionTriggerKind,
   MarkdownString,
   SnippetString,
   Uri,

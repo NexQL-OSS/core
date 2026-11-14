@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import * as connectionModule from '../../commands/connection';
 import * as databaseCommands from '../../commands/database';
 import * as helper from '../../commands/helper';
+import * as queryWorkspace from '../../commands/queryWorkspace';
 import { ConnectionManager } from '../../services/ConnectionManager';
 
 function createBuilderStub(sandbox: sinon.SinonSandbox) {
@@ -119,6 +120,8 @@ describe('database commands', () => {
     const dbConnection = createDbConnection();
     sandbox.stub(helper, 'getDatabaseConnection').resolves(dbConnection as any);
 
+    const openWorkspace = sandbox.stub(queryWorkspace, 'openDefaultQueryWorkspace').resolves();
+
     const item = { label: 'appdb', databaseName: 'appdb', connectionId: 'c1' } as any;
     const context = {} as any;
 
@@ -126,10 +129,12 @@ describe('database commands', () => {
     await databaseCommands.cmdMaintenanceDatabase(item, context);
     await databaseCommands.cmdShowConfiguration(item, context);
 
-    expect(builder.showNew.calledOnce).to.be.true;
+    // The Query Tool opens (or reuses) the connection's default notebook.
+    expect(openWorkspace.calledOnce).to.be.true;
+    const cells = openWorkspace.firstCall.args[2] as Array<{ kind: string; value: string }>;
+    expect(cells.some((cell) => cell.value.includes('Query Tool: `appdb`'))).to.be.true;
     expect(builder.show.calledTwice).to.be.true;
     expect(dbConnection.release.callCount).to.equal(3);
-    expect(builder.addMarkdown.getCalls().some((call) => String(call.args[0]).includes('Query Tool: `appdb`'))).to.be.true;
     expect(builder.addMarkdown.getCalls().some((call) => String(call.args[0]).includes('Database Maintenance: `appdb`'))).to.be.true;
     expect(builder.addMarkdown.getCalls().some((call) => String(call.args[0]).includes('Database Configuration: `appdb`'))).to.be.true;
   });

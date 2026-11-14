@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 
 import { ConnectionManager } from '../../services/ConnectionManager';
 import { ErrorService } from '../../services/ErrorService';
+import { PlatformConnectionService } from '../../services/PlatformConnectionService';
 import { SecretStorageService } from '../../services/SecretStorageService';
 import { SSHService } from '../../services/SSHService';
 import * as pgPassUtils from '../../utils/pgPassUtils';
@@ -27,6 +28,9 @@ describe('ConnectionManager additional coverage', () => {
       get: workspaceConfigGetStub,
     } as any);
     sandbox.stub(pgPassUtils, 'resolvePgPassPassword').returns(undefined);
+    // The platform probe runs its own queries on each new client; these tests
+    // assert only the queries ConnectionManager issues itself.
+    sandbox.stub(PlatformConnectionService.prototype, 'probeIfNeeded').resolves({} as any);
   });
 
   afterEach(() => {

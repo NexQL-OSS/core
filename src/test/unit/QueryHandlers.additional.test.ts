@@ -277,10 +277,14 @@ describe('QueryHandlers (additional error branches)', () => {
       .stub(ConnectionManager, 'getInstance')
       .returns({ getPooledClient: sandbox.stub().resolves({ query, release }) } as any);
     const err = sandbox.stub(ErrorHandlers, 'handleCommandError').resolves();
+    sandbox.stub(ConnectionUtils, 'findConnection').returns({
+      id: 'c1', host: 'h', port: 1, username: 'u', database: 'db',
+    } as any);
 
     await new ExecuteUpdateBackgroundHandler().handle({ statements: ['s1', 's2'] }, {
       editor: {
         notebook: {
+          uri: { toString: () => 'notebook-uri' },
           metadata: { connectionId: 'c1', host: 'h', port: 1, username: 'u', databaseName: 'db' },
         },
       },

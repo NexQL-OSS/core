@@ -3,11 +3,13 @@
 <a href="https://www.producthunt.com/products/nexql?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-nexql" target="_blank" rel="noopener noreferrer"><img alt="NexQL - AI-native Postgres tooling, All in VS Code | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.png?post_id=1198080&amp;theme=neutral&amp;t=1784198674691"></a>
 
 Quick links:
-[NexQL Homepage](https://nexql.astrx.dev/) • [NexQL VSC Theme](https://nexql-themes.astrx.dev/) • [Terms of Service](https://nexql.astrx.dev/terms.html) • [Privacy Policy](https://nexql.astrx.dev/privacy.html)
+[NexQL Homepage](https://nexql.astrx.dev/) • [NexQL MCP](https://nexql-mcp.astrx.dev/) • [NexQL VSC Theme](https://nexql-themes.astrx.dev/) • [Terms of Service](https://nexql.astrx.dev/terms.html) • [Privacy Policy](https://nexql.astrx.dev/privacy.html)
 
 ---
 
-## [Unreleased]
+## [2.6.0] - 2026-11-13
+
+> Stable release. On the Marketplace and Open VSX this is the Pro build, published as one VSIX per platform (Linux x64/arm64, macOS x64/arm64, Windows x64).
 
 ### Changed
 
@@ -19,6 +21,7 @@ Quick links:
 
 - **Database Health Report** — right-click a database and choose *Database Health Report* to open a read-only notebook with an overview (size, connections, cache hit ratio, transaction ID age, longest transaction), table bloat estimate, unused indexes, foreign keys without a supporting index, blocking locks, and slowest `pg_stat_statements` queries. Each check has plain-English guidance. Handles the PostgreSQL 13 `total_time` to `total_exec_time` rename and shows a friendly message when `pg_stat_statements` is not installed.
 - **DDL lock-safety warnings in SQL notebooks.** Cells containing `CREATE INDEX`/`REINDEX` without `CONCURRENTLY`, `ADD CONSTRAINT ... FOREIGN KEY|CHECK` without `NOT VALID`, `ALTER COLUMN ... TYPE` / `SET NOT NULL`, `ADD COLUMN` with a volatile default, `VACUUM FULL`, `CLUSTER`, `LOCK TABLE`, `DROP TABLE`, `TRUNCATE`, `DROP SCHEMA ... CASCADE`, and `DELETE`/`UPDATE` without `WHERE` now show inline diagnostics. A quick fix applies the safer form where one exists. Detection is token-based, so comments, strings, quoted identifiers and `$$` bodies never trigger it. Toggle with `postgresExplorer.ddlSafety.enabled` (default on).
+
 ### Notebook result styling
 
 - **Query results use the NexQL brand tokens.** A 2px ribbon line tops each result, meta labels (row count, duration, connection) are mono uppercase, and the notebook header shows pill chips with a mode-colored dot for read-only and read/write sessions. Active result tabs get an accent underline, and banners (info, warning, error, success, dry run, open transaction, query error) share one left-edge accent style.
@@ -32,9 +35,11 @@ Quick links:
 - **One access-mode signal per connection**, using the same vocabulary as the NexQL MCP server: **Read-only** (`$(lock)`) or **Read/write** (`$(edit)`). Shown in the connection tree description and tooltip next to the environment, and in a new notebook status bar item. Production connections that allow writes get a warning tint.
 - **`NexQL: Toggle Read-only / Read/write Mode`** (`postgres-explorer.toggleReadOnlyMode`) is available from the connection context menu and by clicking the status bar item. Switching a production connection to Read/write asks for confirmation. Open connections and transactions for that connection are closed and reconnect so the new mode takes effect.
 - The connection form and safety dialog now use the same Read-only / Read/write wording.
+
 ### Team config sharing
 
 - **Share connections with nexql-mcp.** New commands **Export Connections to .nexql/config.toml** and **Import Connections from .nexql/config.toml** read and write the same secret-free `[profiles.<name>]` format as the nexql-mcp server. Passwords, SSH keys and tokens are never exported; import prompts for passwords and stores them in SecretStorage. Read-only connections map to `access_mode = "read"`, others to `"write"` (never `"admin"`). Extension-only settings (environment, group, SSH host) go in a `[profiles.<name>.vscode]` sub-table.
+
 ### MCP
 
 - **NexQL MCP server for free users.** The free build now registers a `NexQL` stdio MCP server with VS Code, so Copilot, agent mode and other MCP clients can use `nexql-mcp` without Pro. It launches a vendored `bin/nexql-mcp/<platform>-<arch>` binary when present, otherwise `npx -y nexql-mcp@latest --stdio`, and reads your own nexql-mcp profiles from `~/.config/nexql-mcp/`. Controlled by `postgresExplorer.mcp.enabled` (default on). Hosts without `vscode.lm.registerMcpServerDefinitionProvider` (older VS Code, Cursor) are skipped silently.
@@ -43,8 +48,6 @@ Quick links:
 ### Security
 
 - **License overrides no longer unlock paid tiers in shipped builds.** `postgresExplorer.license.enforcement=off` and a custom `postgresExplorer.license.endpoint` are ignored unless the extension is running in the Extension Development Host. Both keys were removed from the contributed settings manifest. Leftover user values are ignored and do not throw. Fail-open-to-free and the 7-day offline grace window are unchanged: a network failure never grants a paid tier and never locks out a cached paid tier inside that window.
-
-> Unpublished. These notes were drafted on 2026-08-15 as 2.5.1. That version is not on the Marketplace, Open VSX, or a git tag. The current stable release is 2.4.0. Its published nightly is 2.5.0.
 
 ### ⚡ Query execution & cancel
 
@@ -76,6 +79,15 @@ Quick links:
 
 ### Fixed
 
+- **Database Health Report.** Right-click a database → **Database Health Report** failed with "Invalid selection" because the command expected a schema, which database nodes do not have. It now opens the report.
+- **Cursor provider in installed Pro builds.** The packaged extension was missing modules the Cursor SDK loads at runtime (`@connectrpc/connect-web`, and `ajv` 8 / `ajv-formats` for its local executor), so Cursor model listing and chat failed outside a development checkout. They now ship with the extension.
+- **Database index kept when a server is unreachable.** Index cleanup only removes an index after confirming its database is gone on a server it could reach. A server that was offline or unreachable no longer had its indexes deleted.
+- **Faster `resolve_target` and index cleanup.** The live-database check now probes connections in parallel and reuses the result for 60 seconds instead of connecting to every saved server on each call.
+- **Query performance alerts on steady queries.** A query whose runs all took the same time no longer flags every slightly slower run as an outlier.
+- **Materialized view scripts quote names.** *Edit* and *Properties* now generate `"schema"."name"` (with embedded quotes escaped), so mixed-case and reserved-word names work. Stray indentation in the generated `REFRESH` / `DROP` comments is gone.
+- **Local embeddings say what is missing.** When the local embedding runtime (`onnxruntime-node`) is not available, index builds report how to switch to an API provider or turn embeddings off, instead of a raw module error.
+- The Pro build no longer looks for development-only `nexql-mcp` binary paths outside the Extension Development Host.
+- **Free-tier notebook limit applies again in the Pro build.** Free users get 5 notebooks per connection, as the upgrade prompt says; Sponsor and Team stay unlimited. The limit had stopped applying, and one code path used 2 instead of 5. The free (open-source) build has no limit.
 - **Import path** — `DbIndexCompletionSource` pro typecheck resolves core modules correctly (`../../../../../src/…`).
 
 ---

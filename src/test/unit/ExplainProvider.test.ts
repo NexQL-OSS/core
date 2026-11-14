@@ -3,6 +3,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 
 import { ExplainProvider } from '../../providers/ExplainProvider';
+import { WebviewPool } from '../../utils/WebviewPool';
 
 describe('ExplainProvider', () => {
   let sandbox: sinon.SinonSandbox;
@@ -13,6 +14,8 @@ describe('ExplainProvider', () => {
     sandbox = sinon.createSandbox();
     disposeCallback = undefined;
     (ExplainProvider as any).panel = undefined;
+    // The pool is a singleton; a panel left over from the previous test would be reused.
+    (WebviewPool as any)._instance = undefined;
 
     panel = {
       webview: {

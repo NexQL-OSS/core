@@ -23,6 +23,13 @@ function attachNotebookForDocument(document: vscode.TextDocument, metadata: any 
   return notebook;
 }
 
+/** Lens titles without the non-interactive group separators. */
+function actionTitles(lenses: vscode.CodeLens[]): Array<string | undefined> {
+  return lenses
+    .filter(lens => lens.command?.title !== '$(circle-small-filled)')
+    .map(lens => lens.command?.title);
+}
+
 describe('QueryCodeLensProvider', () => {
   afterEach(() => {
     (QueryCodeLensProvider as any)._instance = undefined;
@@ -65,11 +72,19 @@ describe('QueryCodeLensProvider', () => {
       )
     ).to.deep.equal([]);
     expect(
-      provider.provideCodeLenses(
-        createNotebookCellDocument('SELECT 1', 'postgres'),
-        {} as any
+      actionTitles(
+        provider.provideCodeLenses(
+          createNotebookCellDocument('SELECT 1', 'postgres'),
+          {} as any
+        )
       )
-    ).to.have.lengthOf(4);
+    ).to.deep.equal([
+      '$(sparkle) Ask AI',
+      '$(comment) Chat',
+      '$(bookmark) Save Query',
+      '$(table) Full dataset',
+      '$(type-hierarchy-sub) Explain Analyze',
+    ]);
   });
 
   it('builds lenses for runnable queries and hides explain for explain statements', () => {
@@ -82,21 +97,24 @@ describe('QueryCodeLensProvider', () => {
     provider.updatePill(queryDocument.uri.toString(), { success: true, elapsedSeconds: 12, rowCount: 99 });
 
     const queryLenses = provider.provideCodeLenses(queryDocument, {} as any);
-    expect(queryLenses).to.have.lengthOf(5);
-    expect(queryLenses[0].command?.title).to.equal('$(loading~spin) Working...');
-    expect(queryLenses[0].command?.command).to.equal('');
-    expect(queryLenses[1].command?.title).to.equal('◻ Chat');
-    expect(queryLenses[2].command?.title).to.equal('⊞ Save Query');
-    expect(queryLenses[3].command?.title).to.equal('⟐ Explain Analyze');
-    expect(queryLenses[3].command?.arguments).to.deep.equal([queryDocument.uri, true]);
-    expect(queryLenses[4].command?.title).to.equal('12s · 99 rows');
-    expect(queryLenses[4].command?.command).to.equal('');
+    expect(actionTitles(queryLenses)).to.deep.equal([
+      '$(loading~spin) Working...',
+      '$(comment) Chat',
+      '$(bookmark) Save Query',
+      '$(table) Full dataset',
+      '$(type-hierarchy-sub) Explain Analyze',
+      '$(verified-filled) 12s · 99 rows',
+    ]);
+    const working = queryLenses.find(lens => lens.command?.title === '$(loading~spin) Working...');
+    expect(working?.command?.command).to.equal('');
+    const explain = queryLenses.find(lens => lens.command?.title === '$(type-hierarchy-sub) Explain Analyze');
+    expect(explain?.command?.arguments).to.deep.equal([queryDocument.uri, true]);
+    expect(queryLenses[queryLenses.length - 1].command?.command).to.equal('');
 
     const explainDocument = createNotebookCellDocument('EXPLAIN SELECT 1;', 'sql', 'cell-2');
     attachNotebookForDocument(explainDocument);
 
     const explainLenses = provider.provideCodeLenses(explainDocument, {} as any);
-    expect(explainLenses).to.have.lengthOf(3);
-    expect(explainLenses.map(lens => lens.command?.title)).to.deep.equal(['✦ Ask AI', '◻ Chat', '⊞ Save Query']);
+    expect(actionTitles(explainLenses)).to.deep.equal(['$(sparkle) Ask AI', '$(comment) Chat', '$(bookmark) Save Query']);
   });
 });

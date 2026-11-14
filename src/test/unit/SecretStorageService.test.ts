@@ -57,6 +57,20 @@ describe('SecretStorageService', () => {
   it('stores, retrieves, and deletes passwords and API keys', async () => {
     const context = createContext();
     const service = SecretStorageService.getInstance(context);
+    // AI keys go through the provider the AI feature registers at activation.
+    const aiKeys = new Map<string, string>();
+    service.setAiCredentialsProvider({
+      getApiKey: async (provider) => aiKeys.get(provider),
+      setApiKey: async (provider, apiKey) => {
+        if (apiKey === undefined) aiKeys.delete(provider);
+        else aiKeys.set(provider, apiKey);
+      },
+      getCursorApiKey: async () => aiKeys.get('cursor'),
+      setCursorApiKey: async (apiKey) => {
+        if (apiKey === undefined) aiKeys.delete('cursor');
+        else aiKeys.set('cursor', apiKey);
+      },
+    });
 
     await service.setPassword('conn1', 'pw-1');
     await service.setAiApiKey('api-key-1');
@@ -71,9 +85,10 @@ describe('SecretStorageService', () => {
     expect(await service.getAiApiKey()).to.equal(undefined);
 
     expect(context.secrets.store.calledWithExactly('postgres-password-conn1', 'pw-1')).to.be.true;
-    expect(context.secrets.store.calledWithExactly('postgresExplorer.aiApiKey.openai', 'api-key-1')).to.be.true;
     expect(context.secrets.delete.calledWithExactly('postgres-password-conn1')).to.be.true;
-    expect(context.secrets.delete.calledWithExactly('postgresExplorer.aiApiKey.openai')).to.be.true;
+    // deleteAiApiKey also clears the pre-provider legacy key.
+    expect(context.secrets.delete.calledWithExactly('postgresExplorer.aiApiKey')).to.be.true;
+    expect(aiKeys.has('openai')).to.be.false;
   });
 
   it('migrates stored passwords and updates the connection list', async () => {

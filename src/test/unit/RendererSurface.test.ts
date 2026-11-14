@@ -35,14 +35,14 @@ describe('renderer surface components', () => {
   it('creates reusable buttons, tabs, and breadcrumbs', () => {
     const button = createButton('Save');
     expect(button.innerText).to.equal('Save');
-    expect(button.style.padding).to.equal('6px 12px');
+    expect(button.style.padding).to.equal('7px 14px');
     button.onmouseover?.(new windowRef.Event('mouseover') as any);
     expect(button.style.background).to.contain('var(--vscode-button-secondaryHoverBackground)');
     button.onmouseout?.(new windowRef.Event('mouseout') as any);
     expect(button.style.background).to.contain('var(--vscode-button-secondaryBackground)');
 
     const smallButton = createButton('Small', true);
-    expect(smallButton.style.padding).to.equal('4px 8px');
+    expect(smallButton.style.padding).to.equal('5px 10px');
     expect(smallButton.style.fontSize).to.equal('11px');
 
     const tabClick = sandbox.spy();
@@ -135,8 +135,9 @@ describe('renderer surface components', () => {
     buttons[2].click();
     buttons[3].click();
     expect(exportData.firstCall.args[0]).to.equal(buttons[3]);
-    buttons[4].click();
     for (const label of ['Send to Chat', 'Analyze data', 'Optimize query']) {
+      // Picking an item closes the AI menu, so reopen it each time.
+      buttons[4].click();
       const item = Array.from(document.querySelectorAll('body div')).find(
         (d) => d.textContent === label,
       );

@@ -4,7 +4,7 @@ import { DatabaseTreeItem } from '../providers/DatabaseTreeProvider';
 import { getDatabaseConnection, NotebookBuilder, MarkdownUtils, ErrorHandlers, validateNotebookContextItem } from './helper';
 import { PostgresMetadata } from '../common/types';
 import { ConnectionUtils } from '../utils/connectionUtils';
-import { isProFeatureEnabled, ProFeature } from '../services/featureGates';
+import { FREE_NOTEBOOKS_PER_CONNECTION, isProFeatureEnabled, ProFeature } from '../services/featureGates';
 import { isProBuild } from '../common/buildTier';
 import { NotebookIndexService } from '../services/NotebookIndexService';
 
@@ -234,9 +234,9 @@ export async function openOrCreateNotebookWithPicker(
     // Free/OSS build has no notebook quota; the license gate only applies in pro builds.
     const isUnlimited = !isProBuild() || isProFeatureEnabled(ProFeature.UnlimitedNotebooks);
 
-    if (!isUnlimited && totalNotebooks >= 5) {
+    if (!isUnlimited && totalNotebooks >= FREE_NOTEBOOKS_PER_CONNECTION) {
       const choice = await vscode.window.showWarningMessage(
-        `Free tier is limited to 5 notebooks per connection. Upgrade to Sponsor or Team for unlimited notebooks.`,
+        `Free tier is limited to ${FREE_NOTEBOOKS_PER_CONNECTION} notebooks per connection. Upgrade to Sponsor or Team for unlimited notebooks.`,
         'Open Existing Notebook',
         'Upgrade'
       );

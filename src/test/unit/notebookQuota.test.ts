@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { openOrCreateNotebookWithPicker } from '../../commands/notebook';
 import { ConnectionUtils } from '../../utils/connectionUtils';
 import { LicenseService } from '../../services/LicenseService';
+import * as buildTier from '../../common/buildTier';
 
 function makeContext(): vscode.ExtensionContext {
   return {
@@ -53,6 +54,8 @@ describe('Notebook Quota Limit (5 per connection)', () => {
     };
 
     sandbox.stub(vscode.window, 'createQuickPick').returns(qpMock);
+    // The quota exists only in the Pro build; unit tests run as the free build.
+    sandbox.stub(buildTier, 'isProBuild').returns(true);
   });
 
   afterEach(() => {
@@ -199,5 +202,21 @@ describe('Notebook Quota Limit (5 per connection)', () => {
     expect(showWarning.calledOnce).to.be.true;
     expect(openNotebookDoc.calledWith(notebooks[0])).to.be.true;
     expect(showNotebookDoc.calledOnce).to.be.true;
+  });
+  it('does not limit notebooks in the free build', async () => {
+    (buildTier.isProBuild as sinon.SinonStub).returns(false);
+    const context = makeContext();
+    const metadata = { connectionId: 'conn-1', databaseName: 'mydb', name: 'local' };
+    sandbox.stub(ConnectionUtils, 'countNotebooksInConnection').resolves({
+      count: 9,
+      uris: Array.from({ length: 9 }, (_, i) => vscode.Uri.file(`/global-storage/local/mydb/nb${i + 1}.pgsql`))
+    });
+    sandbox.stub(LicenseService, 'getInstance').returns({ getTier: () => 'free', isPaid: () => false } as any);
+    const showWarning = sandbox.stub(vscode.window, 'showWarningMessage');
+    sandbox.stub(vscode.window, 'showQuickPick').resolves(undefined);
+
+    await openOrCreateNotebookWithPicker(metadata, [], context, 'picker');
+
+    expect(showWarning.called).to.be.false;
   });
 });

@@ -78,9 +78,12 @@ export class QueryPerformanceService {
     let baseline: QueryBaseline;
 
     if (existing) {
-      // Outlier guard — skip samples that are statistically extreme
-      if (existing.sampleCount >= BASELINE_MIN_SAMPLES && existing.stdDev > 0) {
-        const zScore = (executionTimeMs - existing.avgExecutionTime) / existing.stdDev;
+      // Outlier guard — skip samples that are statistically extreme. A query with
+      // identical timings has stdDev 0; use a floor (25% of the mean, at least 1 ms)
+      // so a single spike cannot be folded into an otherwise flat baseline.
+      if (existing.sampleCount >= BASELINE_MIN_SAMPLES) {
+        const spread = Math.max(existing.stdDev, existing.avgExecutionTime * 0.25, 1);
+        const zScore = (executionTimeMs - existing.avgExecutionTime) / spread;
         if (zScore > OUTLIER_SIGMA_THRESHOLD) {
           // Do not incorporate outlier — just update lastUpdated
           baseline = { ...existing, lastUpdated: now };

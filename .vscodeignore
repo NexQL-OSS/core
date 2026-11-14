@@ -49,18 +49,25 @@
 !node_modules/vscode-languageclient/**
 !node_modules/vscode-languageserver/**
 
-# Cursor provider (dynamic import in modelListing.ts / AiService.ts) — was
-# missing entirely, causing "Cannot find package '@cursor/sdk'" at runtime.
-# NOTE: @cursor/sdk depends on sqlite3 (native binding); no prebuilt .node
-# binary is vendored here, so any code path that actually touches sqlite3
-# will still fail per-platform until that's vendored like bin/nexql-mcp.
+# Cursor provider (dynamic import in modelListing.ts / AiService.ts).
+# @cursor/sdk 1.2 requires these at runtime but declares only some of them:
+#   index.js      -> @connectrpc/connect, @connectrpc/connect-web, @bufbuild/protobuf, zod
+#   local executor (AiService passes `local: { cwd }`) -> ajv@8 dist/runtime, ajv-formats
+# ajv/ajv-formats are direct dependencies so ajv 8 hoists over eslint's ajv 6.
+# Native code ships as @cursor/sdk-<platform> (covered by @cursor/**); each
+# publish-matrix runner installs only its own. SQLite uses node:sqlite.
 !node_modules/@cursor/**
 !node_modules/@bufbuild/protobuf/**
 !node_modules/@connectrpc/connect/**
-!node_modules/@connectrpc/connect-node/**
+!node_modules/@connectrpc/connect-web/**
 !node_modules/@statsig/js-client/**
 !node_modules/zod/**
-!node_modules/sqlite3/**
+!node_modules/ajv/**
+!node_modules/ajv-formats/**
+!node_modules/fast-deep-equal/**
+!node_modules/fast-uri/**
+!node_modules/json-schema-traverse/**
+!node_modules/require-from-string/**
 
 # ERD DBML import (erdDbmlImport.ts) — same "external + never whitelisted" gap.
 !node_modules/@dbml/core/**
@@ -72,10 +79,11 @@
 !node_modules/parsimmon/**
 !node_modules/pluralize/**
 
-# Local embedder (dbindex localEmbedder.ts) — same gap. onnxruntime-node,
-# onnxruntime-web, and sharp are NOT whitelisted: they're native-binding deps
-# of @huggingface/transformers that aren't declared in package.json here, so
-# they're out of scope for this fix and need their own vendoring pass.
+# Local embedder (dbindex localEmbedder.ts). Its native runtime
+# (onnxruntime-node ~290 MB across platforms, sharp) is deliberately NOT
+# shipped. Embeddings are opt-in (dbIndex.enableEmbeddings, default off) and a
+# missing runtime surfaces as an index-build warning; localEmbedder.ts turns it
+# into an actionable message.
 !node_modules/@huggingface/transformers/**
 !node_modules/@huggingface/jinja/**
 !node_modules/@huggingface/tokenizers/**

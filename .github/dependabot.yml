@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Only here so security updates honour the ignore rules below.
+  # open-pull-requests-limit: 0 keeps scheduled version-update PRs off.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    ignore:
+      # ts-mocha@11 peers mocha <=11; mocha 12 breaks `npm ci` (ERESOLVE).
+      - dependency-name: "mocha"
+        update-types: ["version-update:semver-major"]

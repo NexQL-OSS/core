@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DatabaseTreeItem } from '../providers/DatabaseTreeProvider';
 import { ErrorHandlers, getDatabaseConnection, MarkdownUtils, NotebookBuilder } from './helper';
+import { validateCategoryItem } from './connection';
 import { HealthSQL } from './sql/health';
 import { queryServerVersionNum } from '../lib/postgresServerVersion';
 
@@ -11,7 +12,8 @@ import { queryServerVersionNum } from '../lib/postgresServerVersion';
 export async function cmdDatabaseHealth(item: DatabaseTreeItem, _context?: vscode.ExtensionContext): Promise<void> {
   let dbConn: Awaited<ReturnType<typeof getDatabaseConnection>> | undefined;
   try {
-    dbConn = await getDatabaseConnection(item);
+    // Database nodes carry no schema, so the default schema-level validator would reject them.
+    dbConn = await getDatabaseConnection(item, validateCategoryItem);
     const { client, metadata } = dbConn;
 
     const versionNum = await queryServerVersionNum(client);

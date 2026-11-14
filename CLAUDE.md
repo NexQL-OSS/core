@@ -50,13 +50,14 @@ Docker test credentials: `testuser`/`testpass`, DB: `testdb`
 ### Build & Release
 ```bash
 npm run vscode:prepublish  # Production build (minified, no sourcemaps)
-make package               # Create .vsix package
-make publish               # Publish to VS Code Marketplace + Open VSX
+make package               # Create the free .vsix
+make package-pro VSCE_TARGET=linux-x64  # Pro .vsix for one platform (needs packages/pro)
 make package-nightly       # Nightly VSIX (Marketplace pre-release + Open VSX companion)
-make publish-nightly       # Publish nightlies (needs ./pat and ./pat-open-vsx)
 ```
 
-**Nightly vs stable (VS Marketplace / Open VSX):** Registries only accept `major.minor.patch` (no SemVer tags like `-nightly` on the published version). Use `vsce publish --pre-release` for the Marketplace nightly. Follow [Microsoft’s convention](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions): **even** `minor` for stable releases, **odd** `minor` for pre-release. `scripts/compute-nightly-version.js` derives the published nightly version from `package.json` (part before the first `-`) by ensuring an odd `minor`. Bump the patch on `main` for each new nightly (e.g. `1.2.4-nightly` in repo → `1.3.4` published). CI: `.github/workflows/publish-nightly.yml`.
+**Publishing:** the registry listing `ric-v.postgres-explorer` is the Pro build, published only by the private pro repo's workflows (one VSIX per platform). Core's tag workflow builds the free VSIX and the GitHub Release. `make publish*` targets refuse to run. See `RELEASING.md`.
+
+**Nightly vs stable (VS Marketplace / Open VSX):** Registries only accept `major.minor.patch` (no SemVer tags like `-nightly` on the published version). Use `vsce publish --pre-release` for the Marketplace nightly. Follow [Microsoft’s convention](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#prerelease-extensions): **even** `minor` for stable releases, **odd** `minor` for pre-release. `scripts/compute-nightly-version.js` derives the published nightly version from `package.json` (part before the first `-`) by ensuring an odd `minor`. Bump the patch on `main` for each new nightly (e.g. `1.2.4-nightly` in repo → `1.3.4` published). Nightly publishing: pro repo's `publish-nightly.yml`; core's `.github/workflows/publish-nightly.yml` builds free artifacts only.
 
 ## Architecture
 
