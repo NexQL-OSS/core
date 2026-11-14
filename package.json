@@ -377,7 +377,7 @@
       },
       {
         "command": "postgres-explorer.notebooks.moveNotebook",
-        "title": "Move to Folder\u2026",
+        "title": "Move to Folder…",
         "category": "NexQL",
         "icon": "$(folder-opened)"
       },
@@ -866,7 +866,7 @@
       },
       {
         "command": "postgres-explorer.openListenNotifyFromPalette",
-        "title": "LISTEN/NOTIFY Monitor: Choose Connection & Database\u2026",
+        "title": "LISTEN/NOTIFY Monitor: Choose Connection & Database…",
         "icon": "$(broadcast)"
       },
       {
@@ -1285,31 +1285,31 @@
       },
       {
         "command": "postgres-explorer.loadSavedQueryUI",
-        "title": "\ud83d\udcc2 Load Saved Query",
+        "title": "📂 Load Saved Query",
         "icon": "$(folder-opened)",
         "category": "NexQL: Queries"
       },
       {
         "command": "postgres-explorer.viewSavedQuery",
-        "title": "\ud83d\udccc View Saved Query",
+        "title": "📌 View Saved Query",
         "icon": "$(preview)",
         "category": "NexQL: Queries"
       },
       {
         "command": "postgres-explorer.copySavedQuery",
-        "title": "\ud83d\udccb Copy Query",
+        "title": "📋 Copy Query",
         "icon": "$(copy)",
         "category": "NexQL: Queries"
       },
       {
         "command": "postgres-explorer.editSavedQuery",
-        "title": "\u270f\ufe0f Edit Query",
+        "title": "✏️ Edit Query",
         "icon": "$(edit)",
         "category": "NexQL: Queries"
       },
       {
         "command": "postgres-explorer.openSavedQueryInNotebook",
-        "title": "\ud83d\udcd8 Open in Notebook",
+        "title": "📘 Open in Notebook",
         "icon": "$(notebook)",
         "category": "NexQL: Queries"
       },
@@ -1345,13 +1345,13 @@
       },
       {
         "command": "postgres-explorer.exportConnectionProfiles",
-        "title": "Export Connection Profiles\u2026",
+        "title": "Export Connection Profiles…",
         "icon": "$(export)",
         "category": "NexQL"
       },
       {
         "command": "postgres-explorer.importConnectionProfiles",
-        "title": "Import Connection Profiles\u2026",
+        "title": "Import Connection Profiles…",
         "icon": "$(import)",
         "category": "NexQL"
       },
@@ -1756,7 +1756,7 @@
       },
       {
         "command": "postgres-explorer.showDashboardFromPalette",
-        "title": "Live Dashboard: Choose Connection & Database\u2026",
+        "title": "Live Dashboard: Choose Connection & Database…",
         "icon": "$(graph)"
       },
       {
@@ -1771,7 +1771,7 @@
       },
       {
         "command": "postgres-explorer.openBackupWorkspace",
-        "title": "Backup & Restore Workspace: Choose Connection & Database\u2026",
+        "title": "Backup & Restore Workspace: Choose Connection & Database…",
         "category": "PostgreSQL",
         "icon": "$(archive)"
       },
@@ -1810,7 +1810,7 @@
       },
       {
         "command": "postgres-explorer.openSchemaDiffFromPalette",
-        "title": "Schema Diff: Choose Connection & Schema\u2026",
+        "title": "Schema Diff: Choose Connection & Schema…",
         "icon": "$(diff)",
         "category": "NexQL: Schema"
       },
@@ -1822,19 +1822,19 @@
       },
       {
         "command": "postgres-explorer.openErdMulti",
-        "title": "View ERD (pick schemas)\u2026",
+        "title": "View ERD (pick schemas)…",
         "icon": "$(type-hierarchy)",
         "category": "NexQL: Schema"
       },
       {
         "command": "postgres-explorer.importDbml",
-        "title": "Import DBML \u2192 CREATE TABLE\u2026",
+        "title": "Import DBML → CREATE TABLE…",
         "icon": "$(file-code)",
         "category": "NexQL: Schema"
       },
       {
         "command": "postgres-explorer.importData",
-        "title": "Import Data\u2026",
+        "title": "Import Data…",
         "icon": "$(cloud-upload)",
         "category": "NexQL"
       },
@@ -1910,22 +1910,22 @@
       },
       {
         "command": "postgres-explorer.sync.inviteMember",
-        "title": "Invite to Workspace\u2026",
+        "title": "Invite to Workspace…",
         "category": "NexQL Sync"
       },
       {
         "command": "postgres-explorer.sync.shareWithTeam",
-        "title": "Share with Team\u2026",
+        "title": "Share with Team…",
         "category": "NexQL Sync"
       },
       {
         "command": "postgres-explorer.sync.share",
-        "title": "Invite to Workspace\u2026",
+        "title": "Invite to Workspace…",
         "category": "NexQL Sync"
       },
       {
         "command": "postgres-explorer.sync.importShares",
-        "title": "Manage Workspaces\u2026",
+        "title": "Manage Workspaces…",
         "category": "NexQL Sync"
       },
       {
@@ -1990,7 +1990,7 @@
       },
       {
         "command": "postgres-explorer.openQueryStudioFromPalette",
-        "title": "Query Studio: Choose Connection & Database\u2026",
+        "title": "Query Studio: Choose Connection & Database…",
         "icon": "$(code-oss)",
         "category": "NexQL"
       },
@@ -2060,6 +2060,11 @@
           "id": "postgres-explorer",
           "title": "NexQL",
           "icon": "resources/NexQL-vsc-icon.png"
+        },
+        {
+          "id": "nexql-bot",
+          "title": "NexQL Bot",
+          "icon": "resources/NexQL-chat-vsc-icon.png"
         }
       ]
     },
@@ -2092,6 +2097,15 @@
           "contextualTitle": "NexQL",
           "icon": "$(history)",
           "visibility": "collapsed"
+        }
+      ],
+      "nexql-bot": [
+        {
+          "id": "postgresExplorer.chatView",
+          "name": "NexQL Bot",
+          "type": "webview",
+          "contextualTitle": "NexQL Bot",
+          "icon": "resources/NexQL-chat-vsc-icon.png"
         }
       ]
     },
@@ -2365,7 +2379,7 @@
         "postgresExplorer.sentinel.notifyOnTransition": {
           "type": "boolean",
           "default": false,
-          "description": "Show a notification when the active notebook environment changes (e.g. staging \u2192 production)."
+          "description": "Show a notification when the active notebook environment changes (e.g. staging → production)."
         },
         "postgresExplorer.sentinel.themeSwap.enabled": {
           "type": "boolean",
@@ -2465,7 +2479,7 @@
         "postgresExplorer.opencodeShowLog": {
           "type": "boolean",
           "default": true,
-          "description": "Show the OpenCode output channel while requests are running (View \u2192 Output \u2192 OpenCode)."
+          "description": "Show the OpenCode output channel while requests are running (View → Output → OpenCode)."
         },
         "postgresExplorer.opencodeServePort": {
           "type": "number",
@@ -2556,7 +2570,7 @@
         "postgresExplorer.performance.slidingWindowSelects": {
           "type": "boolean",
           "default": true,
-          "description": "Use a PostgreSQL SCROLL cursor for eligible SELECT queries (no SQL parameters): stream one window of rows into the cell and fetch more on scroll\u2014bounded RAM on host and webview."
+          "description": "Use a PostgreSQL SCROLL cursor for eligible SELECT queries (no SQL parameters): stream one window of rows into the cell and fetch more on scroll—bounded RAM on host and webview."
         },
         "postgresExplorer.performance.slidingWindowRowCap": {
           "type": "number",
@@ -2788,6 +2802,26 @@
           ],
           "default": "notebook",
           "description": "Default SQL workspace when opening Query Tool (notebook or Query Studio)."
+        },
+        "postgresExplorer.license.enforcement": {
+          "type": "string",
+          "enum": [
+            "off",
+            "freemium"
+          ],
+          "enumDescriptions": [
+            "No metering — all features unlimited for everyone (development / dark-ship).",
+            "Freemium: free tier gets daily/weekly per-feature allowances; paid tiers are unlimited (default)."
+          ],
+          "default": "freemium",
+          "scope": "machine",
+          "markdownDescription": "Controls premium feature access. `freemium` (default) gives the free tier metered daily/weekly use of premium features and unlimited use to paid subscribers. `off` disables all metering. Legacy values `soft`/`hard` are treated as `freemium`."
+        },
+        "postgresExplorer.license.endpoint": {
+          "type": "string",
+          "default": "https://nexql.astrx.dev/api",
+          "scope": "machine",
+          "description": "Base URL for the NexQL license validation API."
         }
       }
     },
@@ -2954,6 +2988,11 @@
           "command": "postgres-explorer.loadSavedQuery",
           "when": "view == postgresExplorer",
           "group": "2_phase7"
+        },
+        {
+          "command": "nexql.bot.openTab",
+          "when": "view == postgresExplorer.chatView",
+          "group": "navigation"
         },
         {
           "command": "nexql.bot.openTab",
@@ -4256,6 +4295,116 @@
           "command": "postgres-explorer.sync.excludeItem",
           "when": "view == postgresExplorer.notebooks && viewItem == notebook-file",
           "group": "3_sync@2"
+        },
+        {
+          "command": "postgres-explorer.openQueryStudio",
+          "when": "view == postgresExplorer && (viewItem == connection || viewItem == connection-pinned)",
+          "group": "inline@1"
+        },
+        {
+          "command": "postgres-explorer.openQueryStudio",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "inline@3"
+        },
+        {
+          "command": "postgres-explorer.openQueryStudio",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@2"
+        },
+        {
+          "command": "postgres-explorer.attachToChat",
+          "when": "view == postgresExplorer && viewItem =~ /^(table|partition|view|function|procedure|materialized-view|type|foreign-table|schema)(:|$)/",
+          "group": "inline@0"
+        },
+        {
+          "command": "postgres-explorer.showDashboard",
+          "when": "view == postgresExplorer && (viewItem == connection || viewItem == connection-pinned)",
+          "group": "inline@5"
+        },
+        {
+          "command": "postgres-explorer.showDashboard",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@1"
+        },
+        {
+          "command": "postgres-explorer.backupDatabase",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@4"
+        },
+        {
+          "command": "postgres-explorer.restoreDatabase",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@5"
+        },
+        {
+          "command": "postgres-explorer.openErdMulti",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.openTableDesigner",
+          "when": "view == postgresExplorer && viewItem =~ /^(table|partition)(:|$)/",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.importData",
+          "when": "view == postgresExplorer && viewItem =~ /^(table|partition)(:|$)/",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.openSchemaDiff",
+          "when": "view == postgresExplorer && viewItem =~ /^(table|partition)(:|$)/",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.createTableVisual",
+          "when": "view == postgresExplorer && viewItem == schema",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.openSchemaDiff",
+          "when": "view == postgresExplorer && viewItem == schema",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.openErd",
+          "when": "view == postgresExplorer && viewItem == schema",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.importData",
+          "when": "view == postgresExplorer && viewItem == schema",
+          "group": "1_actions"
+        },
+        {
+          "command": "postgres-explorer.dbindex.build",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@9"
+        },
+        {
+          "command": "postgres-explorer.dbindex.openPanel",
+          "when": "view == postgresExplorer && viewItem == database",
+          "group": "1_operations@9.5"
+        },
+        {
+          "command": "postgres-explorer.sync.shareWithTeam",
+          "when": "view == postgresExplorer.savedQueries && viewItem == savedQuery",
+          "group": "3_sync@1"
+        },
+        {
+          "command": "postgres-explorer.sync.excludeItem",
+          "when": "view == postgresExplorer.savedQueries && viewItem == savedQuery",
+          "group": "3_sync@2"
+        },
+        {
+          "command": "postgres-explorer.sync.shareWithTeam",
+          "when": "view == postgresExplorer.notebooks && viewItem == notebook-file",
+          "group": "3_sync@1"
+        },
+        {
+          "command": "postgres-explorer.sync.excludeItem",
+          "when": "view == postgresExplorer.notebooks && viewItem == notebook-file",
+          "group": "3_sync@2"
         }
       ],
       "postgres-explorer.columnScriptsMenu": [
@@ -4406,6 +4555,16 @@
           "command": "postgres-explorer.chatWithQuery",
           "when": "notebookType == postgres-notebook && notebookCellType == code",
           "group": "inline/cell@11"
+        },
+        {
+          "command": "postgres-explorer.aiAssist",
+          "when": "notebookType == postgres-notebook && notebookCellType == code",
+          "group": "inline/cell@10"
+        },
+        {
+          "command": "postgres-explorer.chatWithQuery",
+          "when": "notebookType == postgres-notebook && notebookCellType == code",
+          "group": "inline/cell@11"
         }
       ]
     },
@@ -4494,11 +4653,12 @@
     "onCommand:postgres-explorer.showDashboardFromPalette",
     "onLanguage:nexql-studio-sql",
     "onCommand:postgres-explorer.openQueryStudio",
-    "onCommand:postgres-explorer.openQueryStudioFromPalette"
+    "onCommand:postgres-explorer.openQueryStudioFromPalette",
+    "onView:postgresExplorer.chatView"
   ],
   "main": "./dist/extension.js",
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base:free -- --minify && npm run esbuild-renderer:free -- --minify && npm run esbuild-erd-webview:free -- --minify && npm run esbuild-chat-chart -- --minify",
+    "vscode:prepublish": "npm run esbuild-base:pro -- --minify && npm run esbuild-renderer:pro -- --minify && npm run esbuild-erd-webview:pro -- --minify && npm run esbuild-query-studio:pro -- --minify && npm run esbuild-chat-chart -- --minify",
     "vscode:prepublish:pro": "npm run esbuild-base:pro -- --minify && npm run esbuild-renderer:pro -- --minify && npm run esbuild-erd-webview:pro -- --minify && npm run esbuild-query-studio:pro -- --minify && npm run esbuild-chat-chart -- --minify",
     "prepare:nightly:manifests": "node ./scripts/prepare-nightly-manifests.js",
     "package:prerelease": "npx @vscode/vsce package --pre-release",
@@ -4516,7 +4676,7 @@
     "copy-templates": "cp -r templates dist/",
     "compile": "tsc -p ./ && npm run esbuild-renderer:free && npm run esbuild-erd-webview && npm run esbuild-chat-chart && npm run copy-templates",
     "compile:pro": "npm run typecheck:pro && npm run esbuild:pro && npm run copy-templates",
-    "typecheck:pro": "if [ -d packages/pro ]; then tsc --noEmit -p tsconfig.pro.typecheck.json; else echo 'packages/pro absent \u2014 skipping pro typecheck'; fi",
+    "typecheck:pro": "if [ -d packages/pro ]; then tsc --noEmit -p tsconfig.pro.typecheck.json; else echo 'packages/pro absent — skipping pro typecheck'; fi",
     "watch": "tsc -watch -p ./",
     "esbuild": "npm run esbuild:free",
     "esbuild:free": "npm run esbuild-base:free -- --sourcemap && npm run esbuild-renderer:free -- --sourcemap && npm run esbuild-erd-webview:free -- --sourcemap && npm run esbuild-chat-chart -- --sourcemap",
@@ -4524,7 +4684,7 @@
     "esbuild-watch": "npm run esbuild-base:free -- --sourcemap --watch & npm run esbuild-renderer:free -- --sourcemap --watch & npm run esbuild-erd-webview:free -- --sourcemap --watch & npm run esbuild-chat-chart -- --sourcemap --watch",
     "test": "npm run compile && node --no-experimental-strip-types ./node_modules/mocha/bin/mocha --loader ./node_modules/ts-node/esm/transpile-only.mjs -r tsconfig-paths/register -r src/test/setup.ts 'src/test/unit/**/*.test.ts'",
     "test:unit": "npm run compile && TS_NODE_PROJECT=src/test/tsconfig.json node --no-experimental-strip-types -r ts-node/register/transpile-only -r tsconfig-paths/register -r ./src/test/setup.ts ./node_modules/mocha/bin/mocha --exit 'src/test/unit/**/*.test.ts'",
-    "test:unit:pro": "if [ -d packages/pro/test ]; then TS_NODE_PROJECT=src/test/tsconfig.json node --preserve-symlinks --preserve-symlinks-main --no-experimental-strip-types -r ts-node/register/transpile-only -r tsconfig-paths/register -r ./src/test/setup.ts ./node_modules/mocha/bin/mocha --exit 'packages/pro/test/**/*.test.ts'; else echo 'packages/pro absent \u2014 skipping pro tests'; fi",
+    "test:unit:pro": "if [ -d packages/pro/test ]; then TS_NODE_PROJECT=src/test/tsconfig.json node --preserve-symlinks --preserve-symlinks-main --no-experimental-strip-types -r ts-node/register/transpile-only -r tsconfig-paths/register -r ./src/test/setup.ts ./node_modules/mocha/bin/mocha --exit 'packages/pro/test/**/*.test.ts'; else echo 'packages/pro absent — skipping pro tests'; fi",
     "test:integration": "npm run compile && ts-mocha -p src/test/tsconfig.json -r tsconfig-paths/register -r src/test/setup.ts 'src/test/integration/**/*.test.ts'",
     "test:renderer": "npm run compile && ts-mocha -p src/test/tsconfig.json -r tsconfig-paths/register -r src/test/setup.ts 'src/test/unit/RendererComponents.test.ts'",
     "test:renderer:coverage": "npm run compile && nyc ts-mocha -p src/test/tsconfig.json -r tsconfig-paths/register -r src/test/setup.ts 'src/test/unit/RendererComponents.test.ts'",
