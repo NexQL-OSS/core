@@ -300,7 +300,8 @@ describe('NotebookBuilder.showTemp()', () => {
   };
 
   it('opens an untitled notebook and never touches the saved-notebook path', async () => {
-    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(makeNotebookDoc(vscode.Uri.file('/tmp/nb')));
+    const untitled = makeNotebookDoc(vscode.Uri.file('/tmp/untitled'));
+    const openNotebook = sandbox.stub(vscode.workspace, 'openNotebookDocument').resolves(untitled);
     const showNotebook = sandbox.stub(vscode.window, 'showNotebookDocument').resolves(new (vscode.NotebookEditor as any)());
     const writeFile = sandbox.stub(vscode.workspace.fs, 'writeFile').resolves();
     const applyEdit = sandbox.stub(vscode.workspace, 'applyEdit').resolves(true);
@@ -311,13 +312,15 @@ describe('NotebookBuilder.showTemp()', () => {
     // (viewType, NotebookData): the untitled overload, not a file Uri.
     expect(openNotebook.firstCall.args[0]).to.equal('postgres-notebook');
     const data = openNotebook.firstCall.args[1] as any;
-    expect(data.cells).to.have.length(2);
     expect(data.metadata.connectionId).to.equal('conn-1');
     expect(data.metadata.databaseName).to.equal('appdb');
+    // Cells are inserted by a notebook edit on the new document (as show() does), so markdown renders.
+    expect(applyEdit.calledOnce).to.be.true;
+    const edit = applyEdit.firstCall.args[0] as any;
+    expect(edit.map.has(untitled.uri.toString())).to.be.true;
     expect(showNotebook.calledOnce).to.be.true;
-    // No scratch file, no append to an existing document, no registry entry.
+    // No scratch file and no registry entry.
     expect(writeFile.called).to.be.false;
-    expect(applyEdit.called).to.be.false;
     expect(SessionRegistry.get('conn-1:appdb')).to.be.undefined;
   });
 
@@ -331,7 +334,10 @@ describe('NotebookBuilder.showTemp()', () => {
 
     await new NotebookBuilder(metadata).addSql('SELECT 1').showTemp();
 
-    expect(applyEdit.called).to.be.false;
+    // The only edit targets the new untitled notebook, never the saved one.
+    expect(applyEdit.calledOnce).to.be.true;
+    const edit = applyEdit.firstCall.args[0] as any;
+    expect(edit.map.has(saved.uri.toString())).to.be.false;
     expect(SessionRegistry.get('conn-1:appdb')).to.equal(saved);
     expect(openNotebook.firstCall.args[0]).to.equal('postgres-notebook');
   });
