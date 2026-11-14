@@ -2,19 +2,39 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "build-mcp",
+      "type": "shell",
+      "command": "cargo build -p nexql-mcp",
+      "options": {
+        "cwd": "${workspaceFolder}/../mcp"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "dev-pro-build",
+      "type": "shell",
+      "command": "make dev-pro",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "dev-pro",
+      "dependsOn": [
+        "build-mcp",
+        "dev-pro-build"
+      ],
+      "dependsOrder": "sequence",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
       "type": "npm",
       "script": "esbuild",
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": []
-    },
-    {
-      "label": "dev-pro",
-      "type": "shell",
-      "command": "make dev-pro",
-      "group": "build",
       "problemMatcher": []
     },
     {
