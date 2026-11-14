@@ -92,9 +92,10 @@ vendor-nexql-mcp:
 # Package the pro version
 package-pro:
 	@echo "Merging pro manifest, building, and packaging pro VSIX..."
-	@# nexql-mcp is no longer vendored into the VSIX — users install it themselves
-	@# (npm/cargo/curl) and the Settings > MCP panel guides them through it.
-	@# `make vendor-nexql-mcp` still exists for local dev if you want a bundled copy.
+	@# nexql-mcp is not vendored into the pro VSIX: pro launches it via npx or
+	@# the user's own install, and Settings > MCP guides installation. Anything
+	@# left in bin/nexql-mcp/ (e.g. from `make vendor-nexql-mcp`) still ships.
+	@# Set VSCE_TARGET (e.g. linux-x64) to build a platform-specific VSIX.
 	@cp package.json package.json.bak
 	@trap 'if [ -f package.json.bak ]; then mv package.json.bak package.json; fi; (cd packages/pro/templates && find . -type f) | while read -r f; do rm -f "templates/$$f"; done; find templates -type d -empty -delete 2>/dev/null || true' EXIT INT TERM; \
 	$(NPM_BIN) run typecheck:pro; \
@@ -102,7 +103,7 @@ package-pro:
 	cp -r packages/pro/templates/. templates/; \
 	if [ -f README.md ]; then cp README.md README.md.bak; fi; \
 	cp MARKETPLACE.md README.md; \
-	$(VSCE_CMD) package --out postgres-explorer-pro.vsix; \
+	$(VSCE_CMD) package $(if $(VSCE_TARGET),--target $(VSCE_TARGET),) --out postgres-explorer-pro.vsix; \
 	EXIT_CODE=$$?; \
 	if [ -f README.md.bak ]; then mv README.md.bak README.md; fi; \
 	if [ -f package.json.bak ]; then mv package.json.bak package.json; fi; \
@@ -133,43 +134,15 @@ package-nightly: build
 	@echo "Nightly packages created:"
 	@ls -1 *.vsix
 
-# Publish the extension to VS Code Marketplace and Open VSX Registry
-publish: package
-	@echo "Publishing $(VSIX_FILE) to VS Code Marketplace..."
-	test -f ./pat || (echo "Error: pat file not found. Please create a file named 'pat' containing your Personal Access Token." && exit 1)
-	$(VSCE_CMD) publish --packagePath $(VSIX_FILE) -p $(shell cat ./pat)
-	@echo "Successfully published to VS Code Marketplace."
+# Registry publishing moved to the private pro repo (NexQL-OSS/pro): its
+# workflows publish the Pro build as ric-v.postgres-explorer. Publishing the
+# free VSIX from here would replace Pro on the Marketplace and Open VSX, so
+# these targets refuse. `make package` / `make package-pro` still build VSIXs.
+PUBLISH_MOVED_MSG = Registry publishing moved to NexQL-OSS/pro (Publish Extension (Pro) / Publish Nightly Extension (Pro)). Publishing the free build from core would replace the Pro listing. See RELEASING.md.
 
-	@echo "Publishing $(VSIX_FILE) to Open VSX Registry..."
-	test -f ./pat-open-vsx || (echo "Error: pat-open-vsx file not found. Please create a file named 'pat-open-vsx' containing your Open VSX Access Token." && exit 1)
-	$(OVSX_CMD) publish $(VSIX_FILE) -p $(shell cat ./pat-open-vsx)
-	@echo "Successfully published to Open VSX Registry."
-
-# Publish nightly artifacts to both VS Code Marketplace and Open VSX
-publish-nightly: package-nightly
-	@echo "Publishing nightly pre-release to VS Code Marketplace..."
-	test -f ./pat || (echo "Error: pat file not found. Please create a file named 'pat' containing your Personal Access Token." && exit 1)
-	@NIGHTLY_VERSION=$$($(NODE_BIN) ./scripts/compute-nightly-version.js); \
-	MARKET_VSIX="$(EXTENSION_NAME)-$$NIGHTLY_VERSION.vsix"; \
-	$(VSCE_CMD) publish --pre-release --packagePath $$MARKET_VSIX -p $$(cat ./pat)
-	@echo "Publishing nightly companion to Open VSX..."
-	test -f ./pat-open-vsx || (echo "Error: pat-open-vsx file not found. Please create a file named 'pat-open-vsx' containing your Open VSX Access Token." && exit 1)
-	@NIGHTLY_VERSION=$$($(NODE_BIN) ./scripts/compute-nightly-version.js); \
-	OPENVSX_VSIX="$(OPENVSX_NIGHTLY_NAME)-$$NIGHTLY_VERSION.vsix"; \
-	$(OVSX_CMD) publish $$OPENVSX_VSIX -p $$(cat ./pat-open-vsx)
-	@echo "Successfully published nightly builds to both registries."
-
-# Publish the extension to VS Code Marketplace only
-publish-vsx: package
-	@echo "Publishing $(VSIX_FILE) to VS Code Marketplace..."
-	test -f ./pat || (echo "Error: pat file not found" && exit 1)
-	$(VSCE_CMD) publish --packagePath $(VSIX_FILE) -p $(shell cat ./pat)
-
-# Publish the extension to Open VSX Registry only
-publish-ovsx: package
-	@echo "Publishing $(VSIX_FILE) to Open VSX Registry..."
-	test -f ./pat-open-vsx || (echo "Error: pat-open-vsx file not found" && exit 1)
-	$(OVSX_CMD) publish $(VSIX_FILE) -p $(shell cat ./pat-open-vsx)
+publish publish-nightly publish-vsx publish-ovsx:
+	@echo "Error: $(PUBLISH_MOVED_MSG)" >&2
+	@exit 1
 
 # Watch mode for development
 watch:

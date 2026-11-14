@@ -8,7 +8,7 @@
 
 [![Version](https://img.shields.io/visual-studio-marketplace/v/ric-v.postgres-explorer?style=for-the-badge&logo=visual-studio-code&logoColor=white&color=2563EB)](https://marketplace.visualstudio.com/items?itemName=ric-v.postgres-explorer)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/ric-v.postgres-explorer?style=for-the-badge&logo=visual-studio-code&logoColor=white&color=10B981)](https://marketplace.visualstudio.com/items?itemName=ric-v.postgres-explorer)
-[![Stable](https://img.shields.io/badge/stable-v2.4.0-0EA5E9?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://github.com/NexQL-OSS/NexQL-Core/blob/main/CHANGELOG.md)
+[![Stable](https://img.shields.io/badge/stable-v2.6.0-0EA5E9?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://github.com/NexQL-OSS/NexQL-Core/blob/main/CHANGELOG.md)
 
 NexQL is a PostgreSQL-native database workbench for VS Code: secure connections, schema exploration, interactive SQL notebooks, performance intelligence, visual results, AI assistance, and agent-ready MCP tools in one focused workflow.
 

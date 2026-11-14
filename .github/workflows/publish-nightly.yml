@@ -1,4 +1,7 @@
-name: Publish Extension (Nightly)
+name: Build Nightly (Free)
+
+# Builds the free/OSS nightly VSIXs as workflow artifacts only. Nightlies are
+# published by the pro repo's "Publish Nightly Extension (Pro)" workflow.
 
 permissions:
   contents: read
@@ -17,7 +20,7 @@ on:
         type: string
 
 concurrency:
-  group: publish-nightly
+  group: build-nightly-free
   cancel-in-progress: true
 
 jobs:
@@ -77,13 +80,6 @@ jobs:
           mv package.json.bak package.json
           echo "path=${VSIX_FILE}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish VS Code Marketplace nightly (pre-release)
-        run: |
-          npx -y "@vscode/vsce@${VSCE_VERSION}" publish \
-            --pre-release \
-            --packagePath "${{ steps.package_marketplace.outputs.path }}" \
-            -p "${{ secrets.VSCE_PAT }}"
-
       - name: Package Open VSX nightly companion
         id: package_openvsx
         run: |
@@ -94,12 +90,6 @@ jobs:
           npx -y "@vscode/vsce@${VSCE_VERSION}" package
           mv package.json.bak package.json
           echo "path=${VSIX_FILE}" >> "$GITHUB_OUTPUT"
-
-      - name: Publish Open VSX nightly companion
-        run: |
-          npx -y ovsx publish \
-            "${{ steps.package_openvsx.outputs.path }}" \
-            -p "${{ secrets.OVSX_PAT }}"
 
       - name: Upload nightly artifacts
         uses: actions/upload-artifact@v4
