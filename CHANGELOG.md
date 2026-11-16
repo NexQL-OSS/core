@@ -9,6 +9,10 @@ Quick links:
 
 ## [Unreleased]
 
+### Added
+
+- **Database Health is now a visual dashboard.** The Database Health action opens a panel with status tiles (cache hit ratio, transaction ID age, connections, longest open transaction, size), a short "What to do" list ordered by severity, and one card per check (table bloat, unused indexes, foreign keys without an index, blocking locks, slowest statements) with bars and one-click Copy SQL. Status always shows a word and a symbol as well as a colour. A check that cannot run (for example a missing permission) is shown as unavailable while the others still load. *Open as notebook* in the header gives the previous step-by-step notebook report.
+
 ### Changed
 
 - **Info and one-off actions open in a temporary notebook.** The database health report, schema, table and object operations, properties views, table profile / activity / index usage / definition, column statistics, maintenance, list views, and the Create / Edit / Drop / Truncate / Quick Clone helpers now open in a new untitled notebook instead of appending to your saved notebook for that database. Close the tab to discard it (VS Code may ask whether to save; choose Don't Save). Query Tool, New Notebook, View Data, Call Function / Procedure, Insert / Update Data and every Scripts submenu entry still go to your saved notebook. Note that *Drop Database* from the Scripts submenu now opens in a temporary notebook too, because it is the same command as the top-level Drop Database.
